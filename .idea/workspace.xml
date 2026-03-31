@@ -5,6 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
+<<<<<<< Updated upstream
       <change afterPath="$PROJECT_DIR$/.github/workflows/maven.yml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/.github/workflows/qodana_code_quality.yml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/controllers/IBidService.java" afterDir="false" />
@@ -13,6 +14,9 @@
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+=======
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+>>>>>>> Stashed changes
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,6 +33,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "dinhtrung-bit"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/dinhtrung-bit/Online-Auction-System.git",
+    "accountId": "dfc84a76-6890-4383-bf2b-3fbddc6455f6"
+  }
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
 }</component>
@@ -47,9 +63,9 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "dinhtrung",
+    "git-widget-placeholder": "#1 on dinhtrung",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/MyCode/LapTrinhNangCao/Online-Auction-System",
+    "last_opened_file_path": "C:/Users/Admin/Documents/GitHub/Online-Auction-System",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -84,7 +100,12 @@
       <workItem from="1774167433479" duration="919000" />
       <workItem from="1774168719082" duration="64000" />
       <workItem from="1774168854236" duration="670000" />
+<<<<<<< Updated upstream
       <workItem from="1774583249310" duration="2191000" />
+=======
+      <workItem from="1774583249310" duration="633000" />
+      <workItem from="1774967314401" duration="457000" />
+>>>>>>> Stashed changes
     </task>
     <servers />
   </component>
