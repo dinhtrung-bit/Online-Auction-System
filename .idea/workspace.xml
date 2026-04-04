@@ -5,9 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/AuctionManager.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/AuctionProduct.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/AuctionRoomDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/BidMessageDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/GenericDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/ItemDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/UserDAO.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/pom.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,7 +37,7 @@
   <component name="GithubPullRequestsUISettings"><![CDATA[{
   "selectedUrlAndAccountId": {
     "url": "https://github.com/dinhtrung-bit/Online-Auction-System.git",
-    "accountId": "7c940023-821b-44d8-9571-c9ae9abbb95d"
+    "accountId": "6f023320-f90c-4313-abd6-df2c9856db41"
   }
 }]]></component>
   <component name="ProjectColorInfo">{
@@ -54,7 +58,7 @@
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;dinhtrung&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;thắng&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/MyCode/LapTrinhNangCao/Online-Auction-System&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -93,6 +97,7 @@
       <workItem from="1774168854236" duration="670000" />
       <workItem from="1774583249310" duration="633000" />
       <workItem from="1775192865868" duration="474000" />
+      <workItem from="1775295921924" duration="1191000" />
     </task>
     <servers />
   </component>
