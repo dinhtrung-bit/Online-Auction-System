@@ -4,7 +4,22 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="" />
+    <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/controllers/Codesk.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/Codesk.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/controllers/IBidService.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/IBidService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/models/cautruc.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/models/cautruc.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/networks/Socket.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/networks/Socket.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/views/JavaFx.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/views/JavaFx.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/requestSocket.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/controllers/requestSocket.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/AuctionRoom.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/AuctionRoom.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/BidMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/BidMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Item.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/Item.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/network/ServerRocket.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/network/ServerRocket.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/ultis/InvalidBidException.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/ultis/InvalidBidException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/ultis/Validation.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/ultis/Validation.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -43,27 +58,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/MyCode/LapTrinhNangCao/Online-Auction-System",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/MyCode/LapTrinhNangCao/Online-Auction-System&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\Admin\Documents\Java\Online-Auction-System" />
@@ -88,6 +103,9 @@
       <workItem from="1774168719082" duration="64000" />
       <workItem from="1774168854236" duration="670000" />
       <workItem from="1774583249310" duration="633000" />
+      <workItem from="1775027831979" duration="1000" />
+      <workItem from="1775054755718" duration="105000" />
+      <workItem from="1775488030646" duration="1540000" />
     </task>
     <servers />
   </component>
