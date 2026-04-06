@@ -5,9 +5,30 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/AuctionManager.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/AuctionProduct.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-client/src/main/java/src/main/java/mainApp/ClientApp.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-client/src/main/java/src/main/java/mainApp/Launcher.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/ServerApp.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/dao/DatabaseDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Art.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/AuctionStatus.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Bidder.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Electronics.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Seller.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/AuctionManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/AuctionManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/AuctionProduct.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/AuctionProduct.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/requestSocket.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/AuctionRoom.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/AuctionRoom.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/BidMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/BidMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Item.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Item.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/network/ServerRocket.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/network/ServerRocket.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/ultis/Validation.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -23,6 +44,7 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="UPDATE_TYPE" value="REBASE" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {
@@ -30,12 +52,12 @@
     &quot;assignee&quot;: &quot;dinhtrung-bit&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/dinhtrung-bit/Online-Auction-System.git",
-    "accountId": "7c940023-821b-44d8-9571-c9ae9abbb95d"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/dinhtrung-bit/Online-Auction-System.git&quot;,
+    &quot;accountId&quot;: &quot;7c940023-821b-44d8-9571-c9ae9abbb95d&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
 }</component>
@@ -47,31 +69,120 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;dinhtrung&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/MyCode/LapTrinhNangCao/Online-Auction-System&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.ClientApp.executor": "Run",
+    "Application.Launcher.executor": "Run",
+    "Application.ServerApp.executor": "Run",
+    "Application.com.auctions.server.ServerApp (1).executor": "Run",
+    "Application.com.auctions.server.ServerApp.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "dinhtrung",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/MyCode/LapTrinhNangCao/Online-Auction-System",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\Admin\Documents\Java\Online-Auction-System" />
     </key>
+  </component>
+  <component name="RunManager" selected="Application.Launcher">
+    <configuration name="ClientApp" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="src.main.java.mainApp.ClientApp" />
+      <module name="auction-client" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="src.main.java.mainApp.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Launcher" type="Application" factoryName="Application" singleton="false" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="src.main.java.mainApp.Launcher" />
+      <module name="auction-client" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="src.main.java.mainApp.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="com.auctions.server.ServerApp (1)" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.auctions.server.ServerApp" />
+      <module name="auction-server" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.auctions.server.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="com.auctions.server.ServerApp (2)" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.auctions.server.ServerApp" />
+      <module name="auction-server" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.auctions.server.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="com.auctions.server.ServerApp" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.auctions.server.ServerApp" />
+      <module name="auction-server" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.auctions.server.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Application.com.auctions.server.ServerApp (1)" />
+      <item itemvalue="Application.com.auctions.server.ServerApp (2)" />
+      <item itemvalue="Application.ClientApp" />
+      <item itemvalue="Application.com.auctions.server.ServerApp" />
+      <item itemvalue="Application.Launcher" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.Launcher" />
+        <item itemvalue="Application.com.auctions.server.ServerApp (2)" />
+        <item itemvalue="Application.ClientApp" />
+        <item itemvalue="Application.com.auctions.server.ServerApp (1)" />
+        <item itemvalue="Application.com.auctions.server.ServerApp" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>

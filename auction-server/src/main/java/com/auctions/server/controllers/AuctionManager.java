@@ -1,4 +1,4 @@
-package src.main.java.com.auctions.server.controllers;
+package com.auctions.server.controllers;
 
 import java.util.ArrayList;
 import java.util.List;
