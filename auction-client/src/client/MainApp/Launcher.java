@@ -1,4 +1,4 @@
-package src.main.java.mainApp; // Chú ý dòng package này phải khớp với thư mục của bạn
+package src.client.MainApp; // Chú ý dòng package này phải khớp với thư mục của bạn
 
 public class Launcher {
     public static void main(String[] args) {

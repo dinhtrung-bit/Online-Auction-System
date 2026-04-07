@@ -5,30 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/auction-client/src/main/java/src/main/java/mainApp/ClientApp.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/auction-client/src/main/java/src/main/java/mainApp/Launcher.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/ServerApp.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/dao/DatabaseDAO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Art.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/AuctionStatus.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Bidder.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Electronics.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Seller.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-client/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/AuctionManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/AuctionManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/AuctionProduct.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/AuctionProduct.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/requestSocket.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/AuctionRoom.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/AuctionRoom.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/BidMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/BidMessage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Item.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Item.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/network/ServerRocket.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/network/ServerRocket.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/ultis/Validation.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/controllers/Codesk.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/Codesk.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/models/cautruc.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/models/cautruc.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/networks/Socket.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/networks/Socket.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/views/JavaFx.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/src/main/java/mainApp/ClientApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/MainApp/ClientApp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/src/main/java/mainApp/Launcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/MainApp/Launcher.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,7 +65,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "dinhtrung",
+    "git-widget-placeholder": "#4 on dinhtrung",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/MyCode/LapTrinhNangCao/Online-Auction-System",
     "node.js.detected.package.eslint": "true",
@@ -103,11 +86,11 @@
   </component>
   <component name="RunManager" selected="Application.Launcher">
     <configuration name="ClientApp" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="src.main.java.mainApp.ClientApp" />
+      <option name="MAIN_CLASS_NAME" value="src.client.MainApp.ClientApp" />
       <module name="auction-client" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="src.main.java.mainApp.*" />
+          <option name="PATTERN" value="src.client.MainApp.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -116,11 +99,11 @@
       </method>
     </configuration>
     <configuration name="Launcher" type="Application" factoryName="Application" singleton="false" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="src.main.java.mainApp.Launcher" />
+      <option name="MAIN_CLASS_NAME" value="src.client.MainApp.Launcher" />
       <module name="auction-client" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="src.main.java.mainApp.*" />
+          <option name="PATTERN" value="src.client.MainApp.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
