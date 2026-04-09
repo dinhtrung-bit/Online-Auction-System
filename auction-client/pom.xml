@@ -7,7 +7,6 @@
     <groupId>vn.edu.uet</groupId>
     <artifactId>auction-client</artifactId>
     <version>1.0-SNAPSHOT</version>
-
     <dependencies>
         <dependency>
             <groupId>com.google.code.gson</groupId>
