@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+import static java.lang.System.out;
+
 public class ClientMain {
     public static void main(String[] args) {
         try {
@@ -14,6 +16,8 @@ public class ClientMain {
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);      // khởi tạo socket truyền đi true là truyền đi
             out.println(jsonString);    // truyền đi
             System.out.println("Da gui: " + jsonString);    // in ra đã truyền
+            out.close() ;               // đóng file và ngắt kết nối tới server 
+            socket.close() ;
         } catch (Exception e) {
             e.printStackTrace();        // in lỗi
         }
