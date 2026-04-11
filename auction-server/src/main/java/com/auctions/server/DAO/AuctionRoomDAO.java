@@ -1,7 +1,7 @@
-package src.main.java.com.auctions.server.DAO;
+package com.auctions.server.DAO;
 
 
-import src.main.java.com.auctions.server.models.AuctionRoom;
+import com.auctions.server.models.AuctionRoom;
 
 import java.util.List;
 

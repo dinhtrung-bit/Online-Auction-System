@@ -5,13 +5,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/ItemDAOimpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/TestDB.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/UserDAOimpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_31_03_2026_02_14_CH_[Changes]/shelved.patch" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_31_03_2026_02_14_CH__Changes_.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/controllers/Codesk.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/Codesk.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/models/cautruc.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/models/cautruc.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/networks/Socket.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/networks/Socket.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/views/JavaFx.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/src/main/java/mainApp/ClientApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/MainApp/ClientApp.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/src/main/java/mainApp/Launcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/MainApp/Launcher.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/AuctionRoomDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/AuctionRoomDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/BidMessageDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/BidMessageDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/DBConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/DBConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/GenericDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/GenericDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/ItemDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/ItemDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/UserDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/DAO/UserDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/ServerApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/ServerApp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/dao/DatabaseDAO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/User.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,7 +47,7 @@
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/dinhtrung-bit/Online-Auction-System.git&quot;,
-    &quot;accountId&quot;: &quot;7c940023-821b-44d8-9571-c9ae9abbb95d&quot;
+    &quot;accountId&quot;: &quot;6f023320-f90c-4313-abd6-df2c9856db41&quot;
   }
 }</component>
   <component name="ProjectColorInfo">{
@@ -57,6 +66,7 @@
     "Application.ClientApp.executor": "Run",
     "Application.Launcher.executor": "Run",
     "Application.ServerApp.executor": "Run",
+    "Application.TestDB.executor": "Run",
     "Application.com.auctions.server.ServerApp (1).executor": "Run",
     "Application.com.auctions.server.ServerApp.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
@@ -65,7 +75,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "#4 on dinhtrung",
+    "git-widget-placeholder": "thắng",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/MyCode/LapTrinhNangCao/Online-Auction-System",
     "node.js.detected.package.eslint": "true",
@@ -84,7 +94,7 @@
       <recent name="C:\Users\Admin\Documents\Java\Online-Auction-System" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Launcher">
+  <component name="RunManager" selected="Application.TestDB">
     <configuration name="ClientApp" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="src.client.MainApp.ClientApp" />
       <module name="auction-client" />
@@ -104,6 +114,19 @@
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="src.client.MainApp.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="TestDB" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.auctions.server.DAO.TestDB" />
+      <module name="auction-server" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.auctions.server.DAO.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -137,33 +160,20 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="com.auctions.server.ServerApp" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="com.auctions.server.ServerApp" />
-      <module name="auction-server" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.auctions.server.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <list>
+      <item itemvalue="Application.TestDB" />
+      <item itemvalue="Application.ClientApp" />
+      <item itemvalue="Application.Launcher" />
       <item itemvalue="Application.com.auctions.server.ServerApp (1)" />
       <item itemvalue="Application.com.auctions.server.ServerApp (2)" />
-      <item itemvalue="Application.ClientApp" />
-      <item itemvalue="Application.com.auctions.server.ServerApp" />
-      <item itemvalue="Application.Launcher" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.TestDB" />
         <item itemvalue="Application.Launcher" />
         <item itemvalue="Application.com.auctions.server.ServerApp (2)" />
         <item itemvalue="Application.ClientApp" />
         <item itemvalue="Application.com.auctions.server.ServerApp (1)" />
-        <item itemvalue="Application.com.auctions.server.ServerApp" />
       </list>
     </recent_temporary>
   </component>
@@ -187,6 +197,10 @@
       <workItem from="1774168854236" duration="670000" />
       <workItem from="1774583249310" duration="633000" />
       <workItem from="1775192865868" duration="474000" />
+      <workItem from="1775789184294" duration="1039000" />
+      <workItem from="1775790256709" duration="2000" />
+      <workItem from="1775790892172" duration="10000" />
+      <workItem from="1775899119723" duration="8578000" />
     </task>
     <servers />
   </component>

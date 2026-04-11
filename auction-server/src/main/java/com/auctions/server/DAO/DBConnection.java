@@ -1,4 +1,4 @@
-package src.main.java.com.auctions.server.DAO;
+package com.auctions.server.DAO;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

@@ -1,4 +1,4 @@
-package src.main.java.com.auctions.server.DAO;
+package com.auctions.server.DAO;
 
 import java.util.List;
 
@@ -8,8 +8,6 @@ public interface GenericDAO<T> {
     void update(T obj) throws Exception;
 
     void delete(int id) throws Exception;
-
-    T findById(int id) throws Exception;
 
     List<T> findAll() throws Exception;
 }

@@ -1,7 +1,6 @@
-package src.main.java.com.auctions.server.DAO;
+package com.auctions.server.DAO;
 
-import src.main.java.com.auctions.server.models.Item;
-
+import com.auctions.server.models.Item;
 import java.util.List;
 
 public interface ItemDAO extends GenericDAO<Item> {

@@ -1,7 +1,8 @@
 package com.auctions.server;
 
 import com.auctions.server.models.*;
-import com.auctions.server.dao.DatabaseDAO;
+import com.auctions.server.DAO.*; // Import gói DAO để gọi DBConnection
+
 import java.io.*;
 import java.net.*;
 import java.time.LocalDateTime;
@@ -21,8 +22,8 @@ public class ServerApp {
     public static void main(String[] args) {
         System.out.println("--- KHỞI ĐỘNG SERVER ĐẤU GIÁ ---");
 
-        // Bước 1: Khởi tạo Database SQLite
-        DatabaseDAO.initDatabase();
+        // Bước 1: Khởi tạo/Kiểm tra kết nối Database MySQL
+        initDatabase();
 
         // Bước 2: Tạo dữ liệu mẫu
         initDummyData();
@@ -39,6 +40,19 @@ public class ServerApp {
             }
         } catch (IOException e) {
             System.out.println("[Lỗi] Server sập: " + e.getMessage());
+        }
+    }
+
+    // THÊM HÀM NÀY: Kiểm tra kết nối DB khi Server khởi động
+    private static void initDatabase() {
+        try {
+            if (DBConnection.getInstance().getConnection() != null) {
+                System.out.println("[DB] Đã kết nối thành công tới MySQL.");
+            } else {
+                System.out.println("[DB] Lỗi: Không thể kết nối Database!");
+            }
+        } catch (Exception e) {
+            System.out.println("[DB] Lỗi kết nối: " + e.getMessage());
         }
     }
 
@@ -87,8 +101,6 @@ public class ServerApp {
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 out = new PrintWriter(socket.getOutputStream(), true);
 
-                // KHÔNG put(out, null) ở đây để tránh lỗi mất kết nối
-
                 String message;
                 while ((message = in.readLine()) != null) {
                     if (message.startsWith("LOGIN:")) {
@@ -108,7 +120,7 @@ public class ServerApp {
                         String itemName = message.split(":")[1];
                         for (AuctionRoom room : allRooms) {
                             if (room.getItem().getName().equals(itemName)) {
-                                clientRooms.put(out, room); // Chỉ put khi đã xác định được phòng
+                                clientRooms.put(out, room);
                                 out.println("CURRENT_BID:" + room.getCurrentPrice());
                                 break;
                             }
@@ -121,8 +133,13 @@ public class ServerApp {
                             try {
                                 Bidder b = new Bidder("123", clientName, 999999.0);
                                 currentRoom.placeBid(b, bidAmount);
-                                // Lưu vào Database
-                                DatabaseDAO.saveBidHistory(currentRoom.getItem().getName(), clientName, bidAmount);
+
+                                // TẠM THỜI COMMENT: Khi nào bạn viết xong BidMessageDAO thì mở comment ra dùng
+                                /*
+                                BidMessageDAO bidDAO = new BidMessageDAO();
+                                bidDAO.saveBid(currentRoom.getItem().getName(), clientName, bidAmount);
+                                */
+
                                 broadcastToRoom(currentRoom, "NEW_BID:" + clientName + ":" + currentRoom.getCurrentPrice());
                             } catch (Exception e) {
                                 out.println("ERROR:" + e.getMessage());
@@ -133,8 +150,10 @@ public class ServerApp {
                         String[] p = message.split(":");
                         String name = p[1]; double price = Double.parseDouble(p[3]);
 
-                        // Lưu DB
-                        DatabaseDAO.saveNewItem(name, p[2], price, clientName);
+
+//                        //ItemDAO itemDAO = new ItemDAO();
+//                        //itemDAO.saveItem(name, p[2], price, clientName);
+//                        */
 
                         // Tạo phòng mới trên RAM
                         Item item = new Electronics("NEW", name, price, 12);

@@ -7,7 +7,7 @@ public abstract class User implements Serializable {
     protected String userId;
     protected String username;
     protected String role; // "BIDDER", "SELLER", "ADMIN"
-
+    protected String password_hash;
     public User(String userId, String username, String role) {
         this.userId = userId;
         this.username = username;
@@ -39,6 +39,7 @@ public abstract class User implements Serializable {
     public String getRole() {
         return role;
     }
+    public String getPasswordHash(){ return password_hash ;}
 }
 
 
