@@ -6,6 +6,7 @@
       <list>
         <option value="$PROJECT_DIR$/../auction-server/pom.xml" />
         <option value="$PROJECT_DIR$/../auction-client/pom.xml" />
+        <option value="$PROJECT_DIR$/auction-client/pom.xml" />
       </list>
     </option>
   </component>
