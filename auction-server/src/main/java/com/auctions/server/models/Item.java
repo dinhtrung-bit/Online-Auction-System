@@ -2,18 +2,18 @@ package com.auctions.server.models;
 import java.io.Serializable;
 
 public abstract class Item implements Serializable {
-    protected int itemId;
+    protected String itemId;
     protected String name;
     protected double startingPrice;
     protected String description;
-    public Item(int itemId, String name, double startingPrice,String description) {
+    public Item(String itemId, String name, double startingPrice,String description) {
         this.itemId = itemId;
         this.name = name;
         this.startingPrice = startingPrice;
         this.description=description;
     }
 
-    public void setItemId(int itemId) {
+    public void setItemId(String itemId) {
         this.itemId = itemId;
     }
 
@@ -25,7 +25,7 @@ public abstract class Item implements Serializable {
         this.startingPrice = startingPrice;
     }
 
-    public int getItemId() {
+    public String getItemId() {
         return itemId;
     }
 

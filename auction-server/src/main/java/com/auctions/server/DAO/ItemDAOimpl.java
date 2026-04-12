@@ -18,7 +18,7 @@ public class ItemDAOimpl implements ItemDAO {
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, item.getItemId());
+            pstmt.setString(1, item.getItemId());
             pstmt.setString(2, item.getName());
             pstmt.setString(3, item.getDescription());
             pstmt.setString(4,item.getCategory());
@@ -34,7 +34,7 @@ public class ItemDAOimpl implements ItemDAO {
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, item.getItemId()); // Điều kiện WHERE
+            pstmt.setString(1, item.getItemId()); // Điều kiện WHERE
             pstmt.setString(2, item.getName());
             pstmt.setString(3, item.getDescription());
             pstmt.setString(4, item.getCategory());

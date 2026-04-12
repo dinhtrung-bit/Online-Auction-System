@@ -57,7 +57,7 @@ public class ServerApp {
     }
 
     private static void initDummyData() {
-        Item laptop = new Electronics("ITM01", "MacBook Pro M3", 1000.0, 12);
+        Item laptop = new Electronics("ITM01", "MacBook Pro M3", 1000.0, 12,"beatifull");
         allRooms.add(new AuctionRoom(1L, laptop, LocalDateTime.now().plusMinutes(30)));
         System.out.println("[Hệ thống] Đã nạp sản phẩm mẫu.");
     }
@@ -156,7 +156,7 @@ public class ServerApp {
 //                        */
 
                         // Tạo phòng mới trên RAM
-                        Item item = new Electronics("NEW", name, price, 12);
+                        Item item = new Electronics("NEW", name, price, 12,"beatifull");
                         AuctionRoom room = new AuctionRoom((long)(allRooms.size()+1), item, LocalDateTime.now().plusMinutes(15));
                         allRooms.add(room);
 
