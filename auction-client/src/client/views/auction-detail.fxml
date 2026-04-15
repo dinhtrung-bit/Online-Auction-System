@@ -5,9 +5,9 @@
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.auctions.client.controllers.AuctionDetailController"
+      fx:controller="src.client.controllers.AuctionDetailController"
       spacing="12"
-      stylesheets="@/styles/app.css"
+      stylesheets="@/src/client/stylesient/styles/app.css"
       styleClass="root-pane">
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>

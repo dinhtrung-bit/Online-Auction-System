@@ -1,4 +1,4 @@
-package com.auctions.client.controllers;
+package src.client.controllers;
 
 import com.auctions.client.ClientApp;
 import com.auctions.client.models.Auction;
@@ -79,7 +79,7 @@ public class AuctionDetailController {
             );
             Scene scene = new Scene(loader.load(), 1000, 650);
             scene.getStylesheets().add(
-                    ClientApp.class.getResource("/styles/app.css").toExternalForm()
+                    ClientApp.class.getResource("/src/client/styles/app.css").toExternalForm()
             );
 
             Stage stage = (Stage) bidAmountField.getScene().getWindow();

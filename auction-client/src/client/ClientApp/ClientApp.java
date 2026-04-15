@@ -1,4 +1,4 @@
-package com.auctions.client;
+package src.client.ClientApp;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -15,7 +15,7 @@ public class ClientApp extends Application {
 
         Scene scene = new Scene(loader.load(), 900, 600);
         scene.getStylesheets().add(
-                ClientApp.class.getResource("/styles/app.css").toExternalForm()
+                ClientApp.class.getResource("/src/client/styles/app.css").toExternalForm()
         );
 
         stage.setTitle("Online Auction System");
