@@ -1,4 +1,4 @@
-package src.main.java.com.auctions.client.controllers;
+package client.controllers;
 
 public interface IBidService {
     // Hàm xử lý đặt giá chính thức

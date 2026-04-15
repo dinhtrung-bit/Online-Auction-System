@@ -1,10 +1,8 @@
-package com.auctions.client.networks;
+package client.networks;
 
 import com.google.gson.Gson;
 import java.io.PrintWriter;
 import java.net.Socket;
-
-import static java.lang.System.out;
 
 public class ClientMain {
     public static void main(String[] args) {

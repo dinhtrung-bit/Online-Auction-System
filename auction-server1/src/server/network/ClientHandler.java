@@ -1,4 +1,4 @@
-package com.auctions.server.network;
+package server.network;
 
 import java.net.Socket;
 

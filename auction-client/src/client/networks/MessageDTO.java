@@ -1,4 +1,4 @@
-package com.auctions.client.networks;
+package client.networks;
 
 public class MessageDTO {
     private String action;      // hành động làm để thực hiện chuyển dữ liệu thành json

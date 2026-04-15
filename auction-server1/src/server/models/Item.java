@@ -1,4 +1,4 @@
-package src.main.java.com.auctions.server.models;
+package server.models;
 import java.io.Serializable;
 
 public abstract class Item implements Serializable {

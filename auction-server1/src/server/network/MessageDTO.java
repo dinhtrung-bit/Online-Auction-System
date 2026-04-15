@@ -1,4 +1,4 @@
-package com.auctions.server.network;
+package server.network;
 
 public class MessageDTO {
     private String action;

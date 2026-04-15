@@ -1,4 +1,4 @@
-package src.main.java.com.auctions.server.ultis;
+package server.ultis;
 
 public class InvalidBidException extends Exception {
     public InvalidBidException(String message) {
