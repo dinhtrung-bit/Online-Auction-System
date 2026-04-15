@@ -1,7 +1,8 @@
-package com.auctions.server;
+package server;
 
-import com.auctions.server.models.*;
-import com.auctions.server.dao.DatabaseDAO;
+import server.dao.DatabaseDAO;
+import server.models.*;
+
 import java.io.*;
 import java.net.*;
 import java.time.LocalDateTime;

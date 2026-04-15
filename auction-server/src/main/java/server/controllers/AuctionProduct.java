@@ -1,4 +1,4 @@
-package com.auctions.server.controllers;
+package server.controllers;
 
 import java.util.Date;
 

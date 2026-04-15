@@ -1,4 +1,4 @@
-package com.auctions.server.models;
+package server.models;
 
 class Seller extends User {
     public Seller(String userId, String username) {

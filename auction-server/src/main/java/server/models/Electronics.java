@@ -1,4 +1,4 @@
-package com.auctions.server.models;
+package server.models;
 
 public class Electronics extends Item {
     private int warrantyMonths;

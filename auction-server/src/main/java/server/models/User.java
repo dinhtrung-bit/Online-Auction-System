@@ -1,4 +1,4 @@
-package com.auctions.server.models;
+package server.models;
 import java.io.Serializable;
 
 // implements Serializable để gửi được qua Socket [cite: 1436]

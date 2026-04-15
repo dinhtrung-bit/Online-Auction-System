@@ -1,0 +1,484 @@
+Index: auction-server/src/main/java/com/auctions/server/ServerApp.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/auction-server/src/main/java/com/auctions/server/ServerApp.java b/auction-server/src/main/java/server/ServerApp.java
+rename from auction-server/src/main/java/com/auctions/server/ServerApp.java
+rename to auction-server/src/main/java/server/ServerApp.java
+--- a/auction-server/src/main/java/com/auctions/server/ServerApp.java	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ b/auction-server/src/main/java/server/ServerApp.java	(date 1775789820649)
+@@ -1,7 +1,8 @@
+-package com.auctions.server;
++package server;
+ 
+-import com.auctions.server.models.*;
+-import com.auctions.server.dao.DatabaseDAO;
++import server.dao.DatabaseDAO;
++import server.models.*;
++
+ import java.io.*;
+ import java.net.*;
+ import java.time.LocalDateTime;
+Index: .idea/shelf/Uncommitted_changes_before_Update_at_31_03_2026_02_14_CH__Changes_.xml
+===================================================================
+diff --git a/.idea/shelf/Uncommitted_changes_before_Update_at_31_03_2026_02_14_CH__Changes_.xml b/.idea/shelf/Uncommitted_changes_before_Update_at_31_03_2026_02_14_CH__Changes_.xml
+deleted file mode 100644
+--- a/.idea/shelf/Uncommitted_changes_before_Update_at_31_03_2026_02_14_CH__Changes_.xml	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ /dev/null	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
+@@ -1,4 +0,0 @@
+-<changelist name="Uncommitted_changes_before_Update_at_31_03_2026_02_14_CH_[Changes]" date="1774941300403" recycled="true" deleted="true">
+-  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_31_03_2026_02_14_CH_[Changes]/shelved.patch" />
+-  <option name="DESCRIPTION" value="Uncommitted changes before Update at 31/03/2026 02:14 CH [Changes]" />
+-</changelist>
+\ No newline at end of file
+Index: .idea/shelf/Uncommitted_changes_before_Update_at_31_03_2026_02_14_CH_[Changes]/shelved.patch
+===================================================================
+diff --git a/.idea/shelf/Uncommitted_changes_before_Update_at_31_03_2026_02_14_CH_[Changes]/shelved.patch b/.idea/shelf/Uncommitted_changes_before_Update_at_31_03_2026_02_14_CH_[Changes]/shelved.patch
+deleted file mode 100644
+--- a/.idea/shelf/Uncommitted_changes_before_Update_at_31_03_2026_02_14_CH_[Changes]/shelved.patch	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ /dev/null	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
+@@ -1,43 +0,0 @@
+-Index: .idea/workspace.xml
+-IDEA additional info:
+-Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+-<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"AutoImportSettings\">\r\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\r\n  </component>\r\n  <component name=\"ChangeListManager\">\r\n    <list default=\"true\" id=\"f8a5b71a-742d-45ff-85aa-4306870d1750\" name=\"Changes\" comment=\"\" />\r\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\r\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\r\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\r\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\r\n  </component>\r\n  <component name=\"Git.Settings\">\r\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\r\n  </component>\r\n  <component name=\"ProjectColorInfo\">{\r\n  &quot;associatedIndex&quot;: 2\r\n}</component>\r\n  <component name=\"ProjectId\" id=\"3BICw0lldlkFK3Eaj9hlHwpEtlH\" />\r\n  <component name=\"ProjectViewState\">\r\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\r\n    <option name=\"showLibraryContents\" value=\"true\" />\r\n  </component>\r\n  <component name=\"PropertiesComponent\">{\r\n  &quot;keyToString&quot;: {\r\n    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,\r\n    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,\r\n    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,\r\n    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,\r\n    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,\r\n    &quot;git-widget-placeholder&quot;: &quot;main&quot;,\r\n    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,\r\n    &quot;last_opened_file_path&quot;: &quot;C:/Users/Admin/Documents/GitHub/Online-Auction-System&quot;,\r\n    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,\r\n    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,\r\n    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,\r\n    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,\r\n    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,\r\n    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,\r\n    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,\r\n    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,\r\n    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;\r\n  }\r\n}</component>\r\n  <component name=\"RecentsManager\">\r\n    <key name=\"MoveFile.RECENT_KEYS\">\r\n      <recent name=\"C:\\Users\\Admin\\Documents\\Java\\Online-Auction-System\" />\r\n    </key>\r\n  </component>\r\n  <component name=\"SharedIndexes\">\r\n    <attachedChunks>\r\n      <set>\r\n        <option value=\"bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.31033.145\" />\r\n        <option value=\"bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-IU-253.31033.145\" />\r\n      </set>\r\n    </attachedChunks>\r\n  </component>\r\n  <component name=\"TaskManager\">\r\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\r\n      <changelist id=\"f8a5b71a-742d-45ff-85aa-4306870d1750\" name=\"Changes\" comment=\"\" />\r\n      <created>1774167432183</created>\r\n      <option name=\"number\" value=\"Default\" />\r\n      <option name=\"presentableId\" value=\"Default\" />\r\n      <updated>1774167432183</updated>\r\n      <workItem from=\"1774167433479\" duration=\"919000\" />\r\n      <workItem from=\"1774168719082\" duration=\"64000\" />\r\n      <workItem from=\"1774168854236\" duration=\"670000\" />\r\n    </task>\r\n    <servers />\r\n  </component>\r\n  <component name=\"TypeScriptGeneratedFilesManager\">\r\n    <option name=\"version\" value=\"3\" />\r\n  </component>\r\n</project>
+-Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+-<+>UTF-8
+-===================================================================
+-diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+---- a/.idea/workspace.xml	(revision 52b9066af9d98b985bbde439684f67ec6533f662)
+-+++ b/.idea/workspace.xml	(date 1774193527024)
+-@@ -10,6 +10,13 @@
+-     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+-     <option name="LAST_RESOLUTION" value="IGNORE" />
+-   </component>
+-+  <component name="FileTemplateManagerImpl">
+-+    <option name="RECENT_TEMPLATES">
+-+      <list>
+-+        <option value="Class" />
+-+      </list>
+-+    </option>
+-+  </component>
+-   <component name="Git.Settings">
+-     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+-   </component>
+-@@ -17,6 +24,9 @@
+-   &quot;associatedIndex&quot;: 2
+- }</component>
+-   <component name="ProjectId" id="3BICw0lldlkFK3Eaj9hlHwpEtlH" />
+-+  <component name="ProjectLevelVcsManager">
+-+    <ConfirmationsSetting value="2" id="Add" />
+-+  </component>
+-   <component name="ProjectViewState">
+-     <option name="hideEmptyMiddlePackages" value="true" />
+-     <option name="showLibraryContents" value="true" />
+-@@ -64,7 +74,7 @@
+-       <updated>1774167432183</updated>
+-       <workItem from="1774167433479" duration="919000" />
+-       <workItem from="1774168719082" duration="64000" />
+--      <workItem from="1774168854236" duration="670000" />
+-+      <workItem from="1774168854236" duration="1146000" />
+-     </task>
+-     <servers />
+-   </component>
+Index: .idea/Online-Auction-System.iml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<module type=\"JAVA_MODULE\" version=\"4\">\r\n  <component name=\"NewModuleRootManager\" inherit-compiler-output=\"true\">\r\n    <exclude-output />\r\n    <content url=\"file://$MODULE_DIR$\">\r\n      <sourceFolder url=\"file://$MODULE_DIR$/auction-client\" isTestSource=\"false\" />\r\n      <sourceFolder url=\"file://$MODULE_DIR$/auction-client/src/main/java/com/auction/client/controllers\" isTestSource=\"false\" />\r\n      <sourceFolder url=\"file://$MODULE_DIR$/auction-server\" isTestSource=\"false\" />\r\n    </content>\r\n    <orderEntry type=\"inheritedJdk\" />\r\n    <orderEntry type=\"sourceFolder\" forTests=\"false\" />\r\n  </component>\r\n</module>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/Online-Auction-System.iml b/.idea/Online-Auction-System.iml
+--- a/.idea/Online-Auction-System.iml	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ b/.idea/Online-Auction-System.iml	(date 1775789745768)
+@@ -9,5 +9,6 @@
+     </content>
+     <orderEntry type="inheritedJdk" />
+     <orderEntry type="sourceFolder" forTests="false" />
++    <orderEntry type="library" name="lib" level="project" />
+   </component>
+ </module>
+\ No newline at end of file
+Index: auction-server/src/main/java/com/auctions/server/models/Bidder.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/auction-server/src/main/java/com/auctions/server/models/Bidder.java b/auction-server/src/main/java/server/models/Bidder.java
+rename from auction-server/src/main/java/com/auctions/server/models/Bidder.java
+rename to auction-server/src/main/java/server/models/Bidder.java
+--- a/auction-server/src/main/java/com/auctions/server/models/Bidder.java	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ b/auction-server/src/main/java/server/models/Bidder.java	(date 1775789756620)
+@@ -1,4 +1,4 @@
+-package com.auctions.server.models;
++package server.models;
+ 
+ public class Bidder extends User {
+     private double balance;
+Index: auction-server/src/main/java/com/auctions/server/models/Art.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/auction-server/src/main/java/com/auctions/server/models/Art.java b/auction-server/src/main/java/server/models/Art.java
+rename from auction-server/src/main/java/com/auctions/server/models/Art.java
+rename to auction-server/src/main/java/server/models/Art.java
+--- a/auction-server/src/main/java/com/auctions/server/models/Art.java	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ b/auction-server/src/main/java/server/models/Art.java	(date 1775789756671)
+@@ -1,4 +1,4 @@
+-package com.auctions.server.models;
++package server.models;
+ 
+ public class Art extends Item {
+     private String artist;
+Index: auction-server/src/main/java/com/auctions/server/models/Seller.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/auction-server/src/main/java/com/auctions/server/models/Seller.java b/auction-server/src/main/java/server/models/Seller.java
+rename from auction-server/src/main/java/com/auctions/server/models/Seller.java
+rename to auction-server/src/main/java/server/models/Seller.java
+--- a/auction-server/src/main/java/com/auctions/server/models/Seller.java	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ b/auction-server/src/main/java/server/models/Seller.java	(date 1775789756603)
+@@ -1,4 +1,4 @@
+-package com.auctions.server.models;
++package server.models;
+ 
+ class Seller extends User {
+     public Seller(String userId, String username) {
+Index: auction-server/src/main/java/com/auctions/server/models/AuctionStatus.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/auction-server/src/main/java/com/auctions/server/models/AuctionStatus.java b/auction-server/src/main/java/server/models/AuctionStatus.java
+rename from auction-server/src/main/java/com/auctions/server/models/AuctionStatus.java
+rename to auction-server/src/main/java/server/models/AuctionStatus.java
+--- a/auction-server/src/main/java/com/auctions/server/models/AuctionStatus.java	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ b/auction-server/src/main/java/server/models/AuctionStatus.java	(date 1775789756625)
+@@ -1,4 +1,4 @@
+-package com.auctions.server.models;
++package server.models;
+ 
+ // Enum định nghĩa trạng thái chuyên nghiệp của phiên đấu giá
+ public enum AuctionStatus {
+Index: .idea/libraries/lib.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/libraries/lib.xml b/.idea/libraries/lib.xml
+new file mode 100644
+--- /dev/null	(date 1775789745785)
++++ b/.idea/libraries/lib.xml	(date 1775789745785)
+@@ -0,0 +1,10 @@
++<component name="libraryTable">
++  <library name="lib">
++    <CLASSES>
++      <root url="file://$USER_HOME$/Downloads/openjfx-26_windows-x64_bin-sdk/javafx-sdk-26/lib" />
++    </CLASSES>
++    <JAVADOC />
++    <SOURCES />
++    <jarDirectory url="file://$USER_HOME$/Downloads/openjfx-26_windows-x64_bin-sdk/javafx-sdk-26/lib" recursive="false" />
++  </library>
++</component>
+\ No newline at end of file
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"AutoImportSettings\">\r\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\r\n  </component>\r\n  <component name=\"ChangeListManager\">\r\n    <list default=\"true\" id=\"f8a5b71a-742d-45ff-85aa-4306870d1750\" name=\"Changes\" comment=\"\">\r\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/controllers/Codesk.java\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/auction-client/src/client/controllers/Codesk.java\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/models/cautruc.java\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/auction-client/src/client/models/cautruc.java\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/networks/Socket.java\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/auction-client/src/client/networks/Socket.java\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/views/JavaFx.java\" beforeDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/auction-client/src/main/java/src/main/java/mainApp/ClientApp.java\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/auction-client/src/client/MainApp/ClientApp.java\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/auction-client/src/main/java/src/main/java/mainApp/Launcher.java\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/auction-client/src/client/MainApp/Launcher.java\" afterDir=\"false\" />\r\n    </list>\r\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\r\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\r\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\r\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\r\n  </component>\r\n  <component name=\"FileTemplateManagerImpl\">\r\n    <option name=\"RECENT_TEMPLATES\">\r\n      <list>\r\n        <option value=\"Class\" />\r\n      </list>\r\n    </option>\r\n  </component>\r\n  <component name=\"Git.Settings\">\r\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\r\n    <option name=\"UPDATE_TYPE\" value=\"REBASE\" />\r\n  </component>\r\n  <component name=\"GitHubPullRequestSearchHistory\">{\r\n  &quot;lastFilter&quot;: {\r\n    &quot;state&quot;: &quot;OPEN&quot;,\r\n    &quot;assignee&quot;: &quot;dinhtrung-bit&quot;\r\n  }\r\n}</component>\r\n  <component name=\"GithubPullRequestsUISettings\">{\r\n  &quot;selectedUrlAndAccountId&quot;: {\r\n    &quot;url&quot;: &quot;https://github.com/dinhtrung-bit/Online-Auction-System.git&quot;,\r\n    &quot;accountId&quot;: &quot;7c940023-821b-44d8-9571-c9ae9abbb95d&quot;\r\n  }\r\n}</component>\r\n  <component name=\"ProjectColorInfo\">{\r\n  &quot;associatedIndex&quot;: 2\r\n}</component>\r\n  <component name=\"ProjectId\" id=\"3BICw0lldlkFK3Eaj9hlHwpEtlH\" />\r\n  <component name=\"ProjectLevelVcsManager\">\r\n    <ConfirmationsSetting value=\"2\" id=\"Add\" />\r\n  </component>\r\n  <component name=\"ProjectViewState\">\r\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\r\n    <option name=\"showLibraryContents\" value=\"true\" />\r\n  </component>\r\n  <component name=\"PropertiesComponent\"><![CDATA[{\r\n  \"keyToString\": {\r\n    \"Application.ClientApp.executor\": \"Run\",\r\n    \"Application.Launcher.executor\": \"Run\",\r\n    \"Application.ServerApp.executor\": \"Run\",\r\n    \"Application.com.auctions.server.ServerApp (1).executor\": \"Run\",\r\n    \"Application.com.auctions.server.ServerApp.executor\": \"Run\",\r\n    \"ModuleVcsDetector.initialDetectionPerformed\": \"true\",\r\n    \"RunOnceActivity.ShowReadmeOnStart\": \"true\",\r\n    \"RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252\": \"true\",\r\n    \"RunOnceActivity.git.unshallow\": \"true\",\r\n    \"RunOnceActivity.typescript.service.memoryLimit.init\": \"true\",\r\n    \"SHARE_PROJECT_CONFIGURATION_FILES\": \"true\",\r\n    \"git-widget-placeholder\": \"#4 on dinhtrung\",\r\n    \"kotlin-language-version-configured\": \"true\",\r\n    \"last_opened_file_path\": \"C:/MyCode/LapTrinhNangCao/Online-Auction-System\",\r\n    \"node.js.detected.package.eslint\": \"true\",\r\n    \"node.js.detected.package.tslint\": \"true\",\r\n    \"node.js.selected.package.eslint\": \"(autodetect)\",\r\n    \"node.js.selected.package.tslint\": \"(autodetect)\",\r\n    \"nodejs_package_manager_path\": \"npm\",\r\n    \"project.structure.last.edited\": \"Modules\",\r\n    \"project.structure.proportion\": \"0.0\",\r\n    \"project.structure.side.proportion\": \"0.0\",\r\n    \"vue.rearranger.settings.migration\": \"true\"\r\n  }\r\n}]]></component>\r\n  <component name=\"RecentsManager\">\r\n    <key name=\"MoveFile.RECENT_KEYS\">\r\n      <recent name=\"C:\\Users\\Admin\\Documents\\Java\\Online-Auction-System\" />\r\n    </key>\r\n  </component>\r\n  <component name=\"RunManager\" selected=\"Application.Launcher\">\r\n    <configuration name=\"ClientApp\" type=\"Application\" factoryName=\"Application\" temporary=\"true\" nameIsGenerated=\"true\">\r\n      <option name=\"MAIN_CLASS_NAME\" value=\"src.client.MainApp.ClientApp\" />\r\n      <module name=\"auction-client\" />\r\n      <extension name=\"coverage\">\r\n        <pattern>\r\n          <option name=\"PATTERN\" value=\"src.client.MainApp.*\" />\r\n          <option name=\"ENABLED\" value=\"true\" />\r\n        </pattern>\r\n      </extension>\r\n      <method v=\"2\">\r\n        <option name=\"Make\" enabled=\"true\" />\r\n      </method>\r\n    </configuration>\r\n    <configuration name=\"Launcher\" type=\"Application\" factoryName=\"Application\" singleton=\"false\" temporary=\"true\" nameIsGenerated=\"true\">\r\n      <option name=\"MAIN_CLASS_NAME\" value=\"src.client.MainApp.Launcher\" />\r\n      <module name=\"auction-client\" />\r\n      <extension name=\"coverage\">\r\n        <pattern>\r\n          <option name=\"PATTERN\" value=\"src.client.MainApp.*\" />\r\n          <option name=\"ENABLED\" value=\"true\" />\r\n        </pattern>\r\n      </extension>\r\n      <method v=\"2\">\r\n        <option name=\"Make\" enabled=\"true\" />\r\n      </method>\r\n    </configuration>\r\n    <configuration name=\"com.auctions.server.ServerApp (1)\" type=\"Application\" factoryName=\"Application\" temporary=\"true\" nameIsGenerated=\"true\">\r\n      <option name=\"MAIN_CLASS_NAME\" value=\"com.auctions.server.ServerApp\" />\r\n      <module name=\"auction-server\" />\r\n      <extension name=\"coverage\">\r\n        <pattern>\r\n          <option name=\"PATTERN\" value=\"com.auctions.server.*\" />\r\n          <option name=\"ENABLED\" value=\"true\" />\r\n        </pattern>\r\n      </extension>\r\n      <method v=\"2\">\r\n        <option name=\"Make\" enabled=\"true\" />\r\n      </method>\r\n    </configuration>\r\n    <configuration name=\"com.auctions.server.ServerApp (2)\" type=\"Application\" factoryName=\"Application\" temporary=\"true\" nameIsGenerated=\"true\">\r\n      <option name=\"MAIN_CLASS_NAME\" value=\"com.auctions.server.ServerApp\" />\r\n      <module name=\"auction-server\" />\r\n      <extension name=\"coverage\">\r\n        <pattern>\r\n          <option name=\"PATTERN\" value=\"com.auctions.server.*\" />\r\n          <option name=\"ENABLED\" value=\"true\" />\r\n        </pattern>\r\n      </extension>\r\n      <method v=\"2\">\r\n        <option name=\"Make\" enabled=\"true\" />\r\n      </method>\r\n    </configuration>\r\n    <configuration name=\"com.auctions.server.ServerApp\" type=\"Application\" factoryName=\"Application\" temporary=\"true\" nameIsGenerated=\"true\">\r\n      <option name=\"MAIN_CLASS_NAME\" value=\"com.auctions.server.ServerApp\" />\r\n      <module name=\"auction-server\" />\r\n      <extension name=\"coverage\">\r\n        <pattern>\r\n          <option name=\"PATTERN\" value=\"com.auctions.server.*\" />\r\n          <option name=\"ENABLED\" value=\"true\" />\r\n        </pattern>\r\n      </extension>\r\n      <method v=\"2\">\r\n        <option name=\"Make\" enabled=\"true\" />\r\n      </method>\r\n    </configuration>\r\n    <list>\r\n      <item itemvalue=\"Application.com.auctions.server.ServerApp (1)\" />\r\n      <item itemvalue=\"Application.com.auctions.server.ServerApp (2)\" />\r\n      <item itemvalue=\"Application.ClientApp\" />\r\n      <item itemvalue=\"Application.com.auctions.server.ServerApp\" />\r\n      <item itemvalue=\"Application.Launcher\" />\r\n    </list>\r\n    <recent_temporary>\r\n      <list>\r\n        <item itemvalue=\"Application.Launcher\" />\r\n        <item itemvalue=\"Application.com.auctions.server.ServerApp (2)\" />\r\n        <item itemvalue=\"Application.ClientApp\" />\r\n        <item itemvalue=\"Application.com.auctions.server.ServerApp (1)\" />\r\n        <item itemvalue=\"Application.com.auctions.server.ServerApp\" />\r\n      </list>\r\n    </recent_temporary>\r\n  </component>\r\n  <component name=\"SharedIndexes\">\r\n    <attachedChunks>\r\n      <set>\r\n        <option value=\"bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.31033.145\" />\r\n        <option value=\"bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-IU-253.31033.145\" />\r\n      </set>\r\n    </attachedChunks>\r\n  </component>\r\n  <component name=\"TaskManager\">\r\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\r\n      <changelist id=\"f8a5b71a-742d-45ff-85aa-4306870d1750\" name=\"Changes\" comment=\"\" />\r\n      <created>1774167432183</created>\r\n      <option name=\"number\" value=\"Default\" />\r\n      <option name=\"presentableId\" value=\"Default\" />\r\n      <updated>1774167432183</updated>\r\n      <workItem from=\"1774167433479\" duration=\"919000\" />\r\n      <workItem from=\"1774168719082\" duration=\"64000\" />\r\n      <workItem from=\"1774168854236\" duration=\"670000\" />\r\n      <workItem from=\"1774583249310\" duration=\"633000\" />\r\n      <workItem from=\"1775192865868\" duration=\"474000\" />\r\n    </task>\r\n    <servers />\r\n  </component>\r\n  <component name=\"TypeScriptGeneratedFilesManager\">\r\n    <option name=\"version\" value=\"3\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ b/.idea/workspace.xml	(date 1775790050839)
+@@ -5,13 +5,23 @@
+   </component>
+   <component name="ChangeListManager">
+     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
++      <change afterPath="$PROJECT_DIR$/.idea/libraries/lib.xml" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/.idea/Online-Auction-System.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Online-Auction-System.iml" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/controllers/Codesk.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/Codesk.java" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/models/cautruc.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/models/cautruc.java" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/networks/Socket.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/networks/Socket.java" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/views/JavaFx.java" beforeDir="false" />
+-      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/src/main/java/mainApp/ClientApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/MainApp/ClientApp.java" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/src/main/java/mainApp/Launcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/MainApp/Launcher.java" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/ServerApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/server/ServerApp.java" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/AuctionManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/server/controllers/AuctionManager.java" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/controllers/AuctionProduct.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/server/controllers/AuctionProduct.java" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/dao/DatabaseDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/server/dao/DatabaseDAO.java" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Art.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/server/models/Art.java" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/AuctionRoom.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/server/models/AuctionRoom.java" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/AuctionStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/server/models/AuctionStatus.java" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/BidMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/server/models/BidMessage.java" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Bidder.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/server/models/Bidder.java" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Electronics.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/server/models/Electronics.java" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Item.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/server/models/Item.java" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/Seller.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/server/models/Seller.java" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/models/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/server/models/User.java" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/network/ServerRocket.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/main/java/server/network/ServerRocket.java" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -55,10 +65,13 @@
+   <component name="PropertiesComponent"><![CDATA[{
+   "keyToString": {
+     "Application.ClientApp.executor": "Run",
++    "Application.Launcher (1).executor": "Run",
+     "Application.Launcher.executor": "Run",
+     "Application.ServerApp.executor": "Run",
+     "Application.com.auctions.server.ServerApp (1).executor": "Run",
+     "Application.com.auctions.server.ServerApp.executor": "Run",
++    "Maven.auction-client [clean].executor": "Run",
++    "Maven.auction-client [install].executor": "Run",
+     "ModuleVcsDetector.initialDetectionPerformed": "true",
+     "RunOnceActivity.ShowReadmeOnStart": "true",
+     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+@@ -73,9 +86,9 @@
+     "node.js.selected.package.eslint": "(autodetect)",
+     "node.js.selected.package.tslint": "(autodetect)",
+     "nodejs_package_manager_path": "npm",
+-    "project.structure.last.edited": "Modules",
++    "project.structure.last.edited": "Libraries",
+     "project.structure.proportion": "0.0",
+-    "project.structure.side.proportion": "0.0",
++    "project.structure.side.proportion": "0.2",
+     "vue.rearranger.settings.migration": "true"
+   }
+ }]]></component>
+@@ -84,7 +97,7 @@
+       <recent name="C:\Users\Admin\Documents\Java\Online-Auction-System" />
+     </key>
+   </component>
+-  <component name="RunManager" selected="Application.Launcher">
++  <component name="RunManager" selected="Application.Launcher (1)">
+     <configuration name="ClientApp" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+       <option name="MAIN_CLASS_NAME" value="src.client.MainApp.ClientApp" />
+       <module name="auction-client" />
+@@ -98,9 +111,9 @@
+         <option name="Make" enabled="true" />
+       </method>
+     </configuration>
+-    <configuration name="Launcher" type="Application" factoryName="Application" singleton="false" temporary="true" nameIsGenerated="true">
++    <configuration name="Launcher (1)" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+       <option name="MAIN_CLASS_NAME" value="src.client.MainApp.Launcher" />
+-      <module name="auction-client" />
++      <module name="Online-Auction-System" />
+       <extension name="coverage">
+         <pattern>
+           <option name="PATTERN" value="src.client.MainApp.*" />
+@@ -111,12 +124,12 @@
+         <option name="Make" enabled="true" />
+       </method>
+     </configuration>
+-    <configuration name="com.auctions.server.ServerApp (1)" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+-      <option name="MAIN_CLASS_NAME" value="com.auctions.server.ServerApp" />
+-      <module name="auction-server" />
++    <configuration name="Launcher" type="Application" factoryName="Application" singleton="false" temporary="true" nameIsGenerated="true">
++      <option name="MAIN_CLASS_NAME" value="src.client.MainApp.Launcher" />
++      <module name="auction-client" />
+       <extension name="coverage">
+         <pattern>
+-          <option name="PATTERN" value="com.auctions.server.*" />
++          <option name="PATTERN" value="src.client.MainApp.*" />
+           <option name="ENABLED" value="true" />
+         </pattern>
+       </extension>
+@@ -124,12 +137,12 @@
+         <option name="Make" enabled="true" />
+       </method>
+     </configuration>
+-    <configuration name="com.auctions.server.ServerApp (2)" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+-      <option name="MAIN_CLASS_NAME" value="com.auctions.server.ServerApp" />
++    <configuration name="ServerApp" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
++      <option name="MAIN_CLASS_NAME" value="server.ServerApp" />
+       <module name="auction-server" />
+       <extension name="coverage">
+         <pattern>
+-          <option name="PATTERN" value="com.auctions.server.*" />
++          <option name="PATTERN" value="server.*" />
+           <option name="ENABLED" value="true" />
+         </pattern>
+       </extension>
+@@ -137,7 +150,7 @@
+         <option name="Make" enabled="true" />
+       </method>
+     </configuration>
+-    <configuration name="com.auctions.server.ServerApp" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
++    <configuration name="com.auctions.server.ServerApp (2)" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+       <option name="MAIN_CLASS_NAME" value="com.auctions.server.ServerApp" />
+       <module name="auction-server" />
+       <extension name="coverage">
+@@ -151,19 +164,19 @@
+       </method>
+     </configuration>
+     <list>
+-      <item itemvalue="Application.com.auctions.server.ServerApp (1)" />
++      <item itemvalue="Application.Launcher (1)" />
++      <item itemvalue="Application.ServerApp" />
+       <item itemvalue="Application.com.auctions.server.ServerApp (2)" />
+       <item itemvalue="Application.ClientApp" />
+-      <item itemvalue="Application.com.auctions.server.ServerApp" />
+       <item itemvalue="Application.Launcher" />
+     </list>
+     <recent_temporary>
+       <list>
++        <item itemvalue="Application.Launcher (1)" />
++        <item itemvalue="Application.ServerApp" />
+         <item itemvalue="Application.Launcher" />
+         <item itemvalue="Application.com.auctions.server.ServerApp (2)" />
+         <item itemvalue="Application.ClientApp" />
+-        <item itemvalue="Application.com.auctions.server.ServerApp (1)" />
+-        <item itemvalue="Application.com.auctions.server.ServerApp" />
+       </list>
+     </recent_temporary>
+   </component>
+Index: auction-server/src/main/java/com/auctions/server/dao/DatabaseDAO.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/auction-server/src/main/java/com/auctions/server/dao/DatabaseDAO.java b/auction-server/src/main/java/server/dao/DatabaseDAO.java
+rename from auction-server/src/main/java/com/auctions/server/dao/DatabaseDAO.java
+rename to auction-server/src/main/java/server/dao/DatabaseDAO.java
+--- a/auction-server/src/main/java/com/auctions/server/dao/DatabaseDAO.java	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ b/auction-server/src/main/java/server/dao/DatabaseDAO.java	(date 1775789756609)
+@@ -1,4 +1,4 @@
+-package com.auctions.server.dao;
++package server.dao;
+ 
+ import java.sql.*;
+ 
+Index: auction-server/src/main/java/com/auctions/server/models/Electronics.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/auction-server/src/main/java/com/auctions/server/models/Electronics.java b/auction-server/src/main/java/server/models/Electronics.java
+rename from auction-server/src/main/java/com/auctions/server/models/Electronics.java
+rename to auction-server/src/main/java/server/models/Electronics.java
+--- a/auction-server/src/main/java/com/auctions/server/models/Electronics.java	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ b/auction-server/src/main/java/server/models/Electronics.java	(date 1775789756636)
+@@ -1,4 +1,4 @@
+-package com.auctions.server.models;
++package server.models;
+ 
+ public class Electronics extends Item {
+     private int warrantyMonths;
+Index: auction-server/src/main/java/com/auctions/server/models/BidMessage.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/auction-server/src/main/java/com/auctions/server/models/BidMessage.java b/auction-server/src/main/java/server/models/BidMessage.java
+rename from auction-server/src/main/java/com/auctions/server/models/BidMessage.java
+rename to auction-server/src/main/java/server/models/BidMessage.java
+--- a/auction-server/src/main/java/com/auctions/server/models/BidMessage.java	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ b/auction-server/src/main/java/server/models/BidMessage.java	(date 1775789756642)
+@@ -1,4 +1,4 @@
+-package com.auctions.server.models;
++package server.models;
+ 
+ import java.io.Serializable;
+ import java.time.LocalDateTime;
+Index: auction-server/src/main/java/com/auctions/server/models/Item.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/auction-server/src/main/java/com/auctions/server/models/Item.java b/auction-server/src/main/java/server/models/Item.java
+rename from auction-server/src/main/java/com/auctions/server/models/Item.java
+rename to auction-server/src/main/java/server/models/Item.java
+--- a/auction-server/src/main/java/com/auctions/server/models/Item.java	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ b/auction-server/src/main/java/server/models/Item.java	(date 1775789756648)
+@@ -1,4 +1,4 @@
+-package com.auctions.server.models;
++package server.models;
+ import java.io.Serializable;
+ 
+ public abstract class Item implements Serializable {
+Index: auction-server/src/main/java/com/auctions/server/models/User.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/auction-server/src/main/java/com/auctions/server/models/User.java b/auction-server/src/main/java/server/models/User.java
+rename from auction-server/src/main/java/com/auctions/server/models/User.java
+rename to auction-server/src/main/java/server/models/User.java
+--- a/auction-server/src/main/java/com/auctions/server/models/User.java	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ b/auction-server/src/main/java/server/models/User.java	(date 1775789756666)
+@@ -1,4 +1,4 @@
+-package com.auctions.server.models;
++package server.models;
+ import java.io.Serializable;
+ 
+ // implements Serializable để gửi được qua Socket [cite: 1436]
+Index: auction-server/src/main/java/com/auctions/server/network/ServerRocket.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/auction-server/src/main/java/com/auctions/server/network/ServerRocket.java b/auction-server/src/main/java/server/network/ServerRocket.java
+rename from auction-server/src/main/java/com/auctions/server/network/ServerRocket.java
+rename to auction-server/src/main/java/server/network/ServerRocket.java
+--- a/auction-server/src/main/java/com/auctions/server/network/ServerRocket.java	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ b/auction-server/src/main/java/server/network/ServerRocket.java	(date 1775789756596)
+@@ -1,4 +1,4 @@
+-package com.auctions.server.network;
++package server.network;
+ 
+ public class ServerRocket {
+ }
+Index: auction-server/src/main/java/com/auctions/server/controllers/AuctionProduct.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/auction-server/src/main/java/com/auctions/server/controllers/AuctionProduct.java b/auction-server/src/main/java/server/controllers/AuctionProduct.java
+rename from auction-server/src/main/java/com/auctions/server/controllers/AuctionProduct.java
+rename to auction-server/src/main/java/server/controllers/AuctionProduct.java
+--- a/auction-server/src/main/java/com/auctions/server/controllers/AuctionProduct.java	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ b/auction-server/src/main/java/server/controllers/AuctionProduct.java	(date 1775789756652)
+@@ -1,4 +1,4 @@
+-package com.auctions.server.controllers;
++package server.controllers;
+ 
+ import java.util.Date;
+ 
+Index: auction-server/src/main/java/com/auctions/server/models/AuctionRoom.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/auction-server/src/main/java/com/auctions/server/models/AuctionRoom.java b/auction-server/src/main/java/server/models/AuctionRoom.java
+rename from auction-server/src/main/java/com/auctions/server/models/AuctionRoom.java
+rename to auction-server/src/main/java/server/models/AuctionRoom.java
+--- a/auction-server/src/main/java/com/auctions/server/models/AuctionRoom.java	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ b/auction-server/src/main/java/server/models/AuctionRoom.java	(date 1775789756631)
+@@ -1,4 +1,4 @@
+-package com.auctions.server.models;
++package server.models;
+ import java.io.Serializable;
+ import java.time.LocalDateTime;
+ import java.time.Duration;
+Index: auction-server/src/main/java/com/auctions/server/controllers/AuctionManager.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/auction-server/src/main/java/com/auctions/server/controllers/AuctionManager.java b/auction-server/src/main/java/server/controllers/AuctionManager.java
+rename from auction-server/src/main/java/com/auctions/server/controllers/AuctionManager.java
+rename to auction-server/src/main/java/server/controllers/AuctionManager.java
+--- a/auction-server/src/main/java/com/auctions/server/controllers/AuctionManager.java	(revision 7a9f9aabf7638dfbc049fad6dd1eac32e0873dfc)
++++ b/auction-server/src/main/java/server/controllers/AuctionManager.java	(date 1775789756615)
+@@ -1,4 +1,4 @@
+-package com.auctions.server.controllers;
++package server.controllers;
+ 
+ import java.util.ArrayList;
+ import java.util.List;

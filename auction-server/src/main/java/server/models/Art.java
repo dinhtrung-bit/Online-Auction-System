@@ -1,4 +1,4 @@
-package com.auctions.server.models;
+package server.models;
 
 public class Art extends Item {
     private String artist;
