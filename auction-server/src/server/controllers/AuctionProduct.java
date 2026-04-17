@@ -2,7 +2,7 @@ package server.controllers;
 
 import java.util.Date;
 
-public class AuctionProduct {
+class AuctionProduct {
     private String name;
     private String description;
     private double startingPrice;
