@@ -1,4 +1,4 @@
-package src.client.models;
+package client.models;
 
 public class AutionStatus {
 }

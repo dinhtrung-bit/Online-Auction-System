@@ -1,32 +1,15 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-package src.server.models;
-=======
 package server.models;
->>>>>>> dinhtrung
-=======
-package src.server.models;
->>>>>>> thắng
 import java.io.Serializable;
 
 public abstract class Item implements Serializable {
     protected String itemId;
     protected String name;
     protected double startingPrice;
-<<<<<<< HEAD
 
     public Item(String itemId, String name, double startingPrice) {
         this.itemId = itemId;
         this.name = name;
         this.startingPrice = startingPrice;
-=======
-    protected String description;
-    public Item(String itemId, String name, double startingPrice,String description) {
-        this.itemId = itemId;
-        this.name = name;
-        this.startingPrice = startingPrice;
-        this.description=description;
->>>>>>> thắng
     }
 
     public void setItemId(String itemId) {
@@ -52,13 +35,8 @@ public abstract class Item implements Serializable {
     public double getStartingPrice() {
         return startingPrice;
     }
-<<<<<<< HEAD
 
     public abstract String getCategoryInfo(); // Trả về thông tin đặc thù từng loại đồ
-=======
-public String getDescription(){return description;}
-    public abstract String getCategory(); // Trả về thông tin đặc thù từng loại đồ
->>>>>>> thắng
 }
 
 

@@ -1,4 +1,4 @@
-package src.server.DAO;
+package server.DAO;
 
 import server.models.Item;
 import java.util.List;

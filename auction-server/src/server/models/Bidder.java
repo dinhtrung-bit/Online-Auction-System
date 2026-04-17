@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 package server.models;
-=======
-package src.server.models;
->>>>>>> thắng
 
 public class Bidder extends User {
     private double balance;

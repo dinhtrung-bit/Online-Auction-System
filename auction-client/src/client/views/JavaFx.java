@@ -1,4 +1,4 @@
-package src.client.views;
+package client.views;
 
 public class JavaFx {
 }

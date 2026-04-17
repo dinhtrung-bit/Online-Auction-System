@@ -1,4 +1,4 @@
-package src.server.DAO;
+package server.DAO;
 
 import server.DAO.DBConnection;
 import java.sql.Connection;
