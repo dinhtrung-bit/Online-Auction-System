@@ -1,16 +1,27 @@
+<<<<<<< HEAD
 package client.MainApp;
+=======
+package src.client.MainApp;
+>>>>>>> thắng
 
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+<<<<<<< HEAD
+=======
+import javafx.scene.control.*;
+>>>>>>> thắng
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import java.io.*;
 import java.net.Socket;
+<<<<<<< HEAD
 import javafx.scene.control.*;
+=======
+>>>>>>> thắng
 
 public class ClientApp extends Application {
     private Socket socket;

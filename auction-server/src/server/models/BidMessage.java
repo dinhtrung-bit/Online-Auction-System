@@ -1,8 +1,12 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 package src.server.models;
 =======
 package server.models;
 >>>>>>> dinhtrung
+=======
+package src.server.models;
+>>>>>>> thắng
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

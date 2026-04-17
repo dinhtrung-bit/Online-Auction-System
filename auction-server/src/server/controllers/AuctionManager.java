@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 package server.controllers;
+=======
+package src.server.controllers;
+>>>>>>> thắng
 
 import java.util.ArrayList;
 import java.util.List;
