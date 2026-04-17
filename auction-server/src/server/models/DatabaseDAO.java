@@ -1,4 +1,4 @@
-package server.dao;
+package server.models;
 
 import java.sql.*;
 
