@@ -16,7 +16,7 @@ public class ClientMain {
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);      // khởi tạo socket truyền đi true là truyền đi
             out.println(jsonString);    // truyền đi
             System.out.println("Da gui: " + jsonString);    // in ra đã truyền
-            out.close() ;               // đóng file và ngắt kết nối tới server 
+            out.close() ;               // đóng file và ngắt kết nối tới server
             socket.close() ;
         } catch (Exception e) {
             e.printStackTrace();        // in lỗi
