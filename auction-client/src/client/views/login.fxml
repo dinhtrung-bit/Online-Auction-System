@@ -5,9 +5,9 @@
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.auctions.client.controllers.LoginController"
+      fx:controller="src.client.controllers.LoginController"
       alignment="CENTER" spacing="15"
-      stylesheets="@/styles/app.css"
+      stylesheets="@/src/client/stylesient/styles/app.css"
       styleClass="root-pane">
     <padding>
         <Insets top="30" right="30" bottom="30" left="30"/>

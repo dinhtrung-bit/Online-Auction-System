@@ -1,4 +1,4 @@
-package com.auctions.client.models;
+package src.client.models;
 
 public class Auction {
     private int id;

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 package client.ClientApp;
+=======
+package src.client.ClientApp;
+>>>>>>> e6fdc0c29820aeb4b000a79a18715e91b6bec51e
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -15,7 +19,11 @@ public class ClientApp extends Application {
 
         Scene scene = new Scene(loader.load(), 900, 600);
         scene.getStylesheets().add(
+<<<<<<< HEAD
                 ClientApp.class.getResource("/styles/app.css").toExternalForm()
+=======
+                ClientApp.class.getResource("/src/client/styles/app.css").toExternalForm()
+>>>>>>> e6fdc0c29820aeb4b000a79a18715e91b6bec51e
         );
 
         stage.setTitle("Online Auction System");

@@ -1,8 +1,12 @@
+<<<<<<< HEAD
 <<<<<<< HEAD:auction-client/src/main/java/com/auctions/client/controllers/AuctionDetailController.java
 package com.auctions.client.controllers;
 =======
 package client.controllers;
 >>>>>>> main:auction-client/src/client/controllers/AuctionDetailController.java
+=======
+package src.client.controllers;
+>>>>>>> e6fdc0c29820aeb4b000a79a18715e91b6bec51e
 
 import com.auctions.client.ClientApp;
 import com.auctions.client.models.Auction;
@@ -83,7 +87,7 @@ public class AuctionDetailController {
             );
             Scene scene = new Scene(loader.load(), 1000, 650);
             scene.getStylesheets().add(
-                    ClientApp.class.getResource("/styles/app.css").toExternalForm()
+                    ClientApp.class.getResource("/src/client/styles/app.css").toExternalForm()
             );
 
             Stage stage = (Stage) bidAmountField.getScene().getWindow();

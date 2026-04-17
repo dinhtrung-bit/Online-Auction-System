@@ -1,8 +1,12 @@
+<<<<<<< HEAD
 <<<<<<< HEAD:auction-client/src/main/java/com/auctions/client/controllers/AuctionListController.java
 package com.auctions.client.controllers;
 =======
 package client.controllers;
 >>>>>>> main:auction-client/src/client/controllers/AuctionListController.java
+=======
+package src.client.controllers;
+>>>>>>> e6fdc0c29820aeb4b000a79a18715e91b6bec51e
 
 import com.auctions.client.ClientApp;
 import com.auctions.client.models.Auction;
@@ -127,11 +131,17 @@ public class AuctionListController {
                     ClientApp.class.getResource("/views/auction-detail.fxml")
             );
             Scene scene = new Scene(loader.load(), 1000, 650);
+<<<<<<< HEAD
 
             var cssUrl = ClientApp.class.getResource("/styles/app.css");
             if (cssUrl != null) {
                 scene.getStylesheets().add(cssUrl.toExternalForm());
             }
+=======
+            scene.getStylesheets().add(
+                    ClientApp.class.getResource("/src/client/styles/app.css").toExternalForm()
+            );
+>>>>>>> e6fdc0c29820aeb4b000a79a18715e91b6bec51e
 
             AuctionDetailController controller = loader.getController();
             controller.setAuctionData(selected);
@@ -154,7 +164,7 @@ public class AuctionListController {
             );
             Scene scene = new Scene(loader.load(), 900, 600);
             scene.getStylesheets().add(
-                    ClientApp.class.getResource("/styles/app.css").toExternalForm()
+                    ClientApp.class.getResource("/src/client/styles/app.css").toExternalForm()
             );
 
             Stage stage = (Stage) auctionTable.getScene().getWindow();

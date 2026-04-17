@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 package server.models;
+=======
+package src.server.models;
+>>>>>>> e6fdc0c29820aeb4b000a79a18715e91b6bec51e
 import java.io.Serializable;
 
 // implements Serializable để gửi được qua Socket [cite: 1436]

@@ -7,8 +7,8 @@
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.auctions.client.controllers.AuctionListController"
-            stylesheets="@/styles/app.css"
+            fx:controller="src.client.controllers.AuctionListController"
+            stylesheets="@/src/client/stylesient/styles/app.css"
             styleClass="root-pane">
 
     <top>
