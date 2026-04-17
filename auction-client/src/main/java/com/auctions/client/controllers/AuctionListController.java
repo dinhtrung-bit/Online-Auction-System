@@ -45,21 +45,63 @@ public class AuctionListController {
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         itemNameColumn.setCellValueFactory(new PropertyValueFactory<>("itemName"));
         currentPriceColumn.setCellValueFactory(new PropertyValueFactory<>("currentPrice"));
+        currentPriceColumn.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
+            @Override
+            protected void updateItem(Double price, boolean empty) {
+                super.updateItem(price, empty);
+                if (empty || price == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("%,.0f VND", price));
+                }
+            }
+        });
         winnerColumn.setCellValueFactory(new PropertyValueFactory<>("currentWinner"));
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
+        statusColumn.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
+            @Override
+            protected void updateItem(String status, boolean empty) {
+                super.updateItem(status, empty);
+
+                if (empty || status == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(status);
+
+                    if ("RUNNING".equalsIgnoreCase(status)) {
+                        setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+                    } else if ("FINISHED".equalsIgnoreCase(status)) {
+                        setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                    } else {
+                        setStyle("");
+                    }
+                }
+            }
+        });
 
         auctionList.add(new Auction(1, "Laptop Dell", 12000000, "userA", "RUNNING"));
         auctionList.add(new Auction(2, "iPhone 13", 10000000, "userB", "RUNNING"));
         auctionList.add(new Auction(3, "Tai nghe Sony", 2000000, "userC", "FINISHED"));
 
         auctionTable.setItems(auctionList);
+        auctionTable.setRowFactory(tv -> {
+            javafx.scene.control.TableRow<Auction> row = new javafx.scene.control.TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                    Auction selected = row.getItem();
+                    openDetail(selected);
+                }
+            });
+            return row;
+        });
     }
 
     @FXML
     public void handleRefresh(ActionEvent event) {
         auctionTable.refresh();
-    }
 
+    }
     @FXML
     public void handleViewDetail(ActionEvent event) {
         Auction selected = auctionTable.getSelectionModel().getSelectedItem();
@@ -73,14 +115,19 @@ public class AuctionListController {
             return;
         }
 
+        openDetail(selected);
+    }
+    private void openDetail(Auction selected) {
         try {
             FXMLLoader loader = new FXMLLoader(
                     ClientApp.class.getResource("/views/auction-detail.fxml")
             );
             Scene scene = new Scene(loader.load(), 1000, 650);
-            scene.getStylesheets().add(
-                    ClientApp.class.getResource("/styles/app.css").toExternalForm()
-            );
+
+            var cssUrl = ClientApp.class.getResource("/styles/app.css");
+            if (cssUrl != null) {
+                scene.getStylesheets().add(cssUrl.toExternalForm());
+            }
 
             AuctionDetailController controller = loader.getController();
             controller.setAuctionData(selected);
@@ -93,6 +140,7 @@ public class AuctionListController {
             e.printStackTrace();
         }
     }
+
 
     @FXML
     public void handleLogout(ActionEvent event) {
