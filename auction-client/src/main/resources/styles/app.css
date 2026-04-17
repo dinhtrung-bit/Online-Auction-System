@@ -1,0 +1,22 @@
+.root-pane {
+    -fx-background-color: #f5f7fb;
+    -fx-font-family: "Segoe UI";
+}
+
+.title-label {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.button {
+    -fx-background-radius: 8;
+    -fx-padding: 8 16 8 16;
+}
+
+.text-field, .password-field {
+    -fx-background-radius: 8;
+}
+
+.table-view {
+    -fx-background-radius: 8;
+}
