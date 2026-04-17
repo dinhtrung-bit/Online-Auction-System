@@ -1,4 +1,4 @@
-package src.main.java.com.auctions.server.models;
+package src.server.models;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.Duration;
