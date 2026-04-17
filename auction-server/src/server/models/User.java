@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 package src.server.models;
+=======
+package server.models;
+>>>>>>> dinhtrung
 import java.io.Serializable;
 
 // implements Serializable để gửi được qua Socket [cite: 1436]
@@ -41,31 +45,5 @@ public abstract class User implements Serializable {
     }
 }
 
-class Bidder extends User {
-    private double balance;
 
-    public Bidder(String userId, String username, double balance) {
-        super(userId, username, "BIDDER");
-        this.balance = balance;
-    }
 
-    public double getBalance() {
-        return balance;
-    }
-
-    @Override
-    public void displayDashboard() {
-        System.out.println("Hiển thị danh sách sản phẩm đang đấu giá cho Bidder.");
-    }
-}
-
-class Seller extends User {
-    public Seller(String userId, String username) {
-        super(userId, username, "SELLER");
-    }
-
-    @Override
-    public void displayDashboard() {
-        System.out.println("Hiển thị chức năng Đăng sản phẩm mới cho Seller.");
-    }
-}

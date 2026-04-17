@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 package src.server.models;
+=======
+package server.models;
+>>>>>>> dinhtrung
 import java.io.Serializable;
 
 public abstract class Item implements Serializable {
@@ -39,30 +43,5 @@ public abstract class Item implements Serializable {
     public abstract String getCategoryInfo(); // Trả về thông tin đặc thù từng loại đồ
 }
 
-class Electronics extends Item {
-    private int warrantyMonths;
 
-    public Electronics(String itemId, String name, double startingPrice, int warranty) {
-        super(itemId, name, startingPrice);
-        this.warrantyMonths = warranty;
-    }
 
-    @Override
-    public String getCategoryInfo() {
-        return "Điện tử - Bảo hành: " + warrantyMonths + " tháng";
-    }
-}
-
-class Art extends Item {
-    private String artist;
-
-    public Art(String itemId, String name, double startingPrice, String artist) {
-        super(itemId, name, startingPrice);
-        this.artist = artist;
-    }
-
-    @Override
-    public String getCategoryInfo() {
-        return "Nghệ thuật - Tác giả: " + artist;
-    }
-}

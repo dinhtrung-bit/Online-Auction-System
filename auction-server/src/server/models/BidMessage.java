@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 package src.server.models;
+=======
+package server.models;
+>>>>>>> dinhtrung
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

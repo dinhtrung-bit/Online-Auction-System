@@ -1,14 +1,13 @@
+<<<<<<< HEAD
 package src.server.models;
+=======
+package server.models;
+>>>>>>> dinhtrung
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-
-// Enum định nghĩa trạng thái chuyên nghiệp của phiên đấu giá
-enum AuctionStatus {
-    OPEN, RUNNING, FINISHED, CANCELED
-}
 
 // implements Serializable để chuẩn bị cho việc gửi dữ liệu qua Socket
 public class AuctionRoom implements Serializable {
