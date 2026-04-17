@@ -1,4 +1,4 @@
-package src.client.controllers;
+package client.controllers;
 
 public class Codesk {
 }

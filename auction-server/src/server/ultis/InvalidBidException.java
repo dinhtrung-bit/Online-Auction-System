@@ -1,4 +1,5 @@
-package src.server.ultis;
+package server
+        .ultis;
 
 public class InvalidBidException extends Exception {
     public InvalidBidException(String message) {

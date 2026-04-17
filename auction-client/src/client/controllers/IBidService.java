@@ -1,4 +1,4 @@
-package src.client.controllers;
+package client.controllers;
 
 public interface IBidService {
     // Hàm xử lý đặt giá chính thức

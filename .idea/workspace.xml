@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
 <<<<<<< HEAD
+<<<<<<< HEAD
       <change afterPath="$PROJECT_DIR$/auction-server1/auction-server1.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
@@ -38,6 +39,10 @@
       <change beforePath="$PROJECT_DIR$/.idea/Online-Auction-System.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Online-Auction-System.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auction-client/auction-client.iml" beforeDir="false" />
 >>>>>>> thắng
+=======
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/networks/ClientMain.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/main/java/com/auctions/client/networks/ClientMain.java" afterDir="false" />
+>>>>>>> 0c0c43fb8717852317c5c1dcabbe15e7b24af0d0
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,6 +57,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="p1-networking" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="UPDATE_TYPE" value="REBASE" />
   </component>
@@ -66,6 +76,7 @@
     &quot;url&quot;: &quot;https://github.com/dinhtrung-bit/Online-Auction-System.git&quot;,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     &quot;accountId&quot;: &quot;dfc84a76-6890-4383-bf2b-3fbddc6455f6&quot;
 =======
     &quot;accountId&quot;: &quot;7c940023-821b-44d8-9571-c9ae9abbb95d&quot;
@@ -73,8 +84,18 @@
 =======
     &quot;accountId&quot;: &quot;6f023320-f90c-4313-abd6-df2c9856db41&quot;
 >>>>>>> thắng
+=======
+    &quot;accountId&quot;: &quot;bb0d145a-26b2-41aa-b468-e1f867bebbe1&quot;
+>>>>>>> 0c0c43fb8717852317c5c1dcabbe15e7b24af0d0
   }
 }</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/network/ClientHandler.java" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
 }</component>
@@ -90,22 +111,27 @@
 <<<<<<< HEAD
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;Application.ClientMain.executor&quot;: &quot;Run&quot;,
+    &quot;Application.ServerRocket.executor&quot;: &quot;Run&quot;,
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;#2 on p1-networking&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/MyCode/LapTrinhNangCao/Online-Auction-System&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/all/java/Online-Auction-System&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.excludes&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
 =======
 =======
@@ -164,6 +190,7 @@
     </key>
   </component>
 <<<<<<< HEAD
+<<<<<<< HEAD
   <component name="RunManager" selected="Application.Launcher">
 =======
   <component name="RunManager" selected="Application.TestDB">
@@ -174,6 +201,15 @@
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="src.client.MainApp.*" />
+=======
+  <component name="RunManager" selected="Application.ClientMain">
+    <configuration name="ClientMain" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.auctions.client.networks.ClientMain" />
+      <module name="auction-client" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.auctions.client.networks.*" />
+>>>>>>> 0c0c43fb8717852317c5c1dcabbe15e7b24af0d0
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -181,6 +217,7 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+<<<<<<< HEAD
     <configuration name="Launcher" type="Application" factoryName="Application" singleton="false" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="src.client.MainApp.Launcher" />
       <module name="auction-client" />
@@ -271,6 +308,14 @@
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="com.auctions.server.*" />
+=======
+    <configuration name="ServerRocket" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.auctions.server.network.ServerRocket" />
+      <module name="auction-server" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.auctions.server.network.*" />
+>>>>>>> 0c0c43fb8717852317c5c1dcabbe15e7b24af0d0
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -279,6 +324,7 @@
       </method>
     </configuration>
     <list>
+<<<<<<< HEAD
 <<<<<<< HEAD
       <item itemvalue="Application.com.auctions.server.ServerApp (1)" />
       <item itemvalue="Application.com.auctions.server.ServerApp (2)" />
@@ -307,6 +353,15 @@
         <item itemvalue="Application.ClientApp" />
         <item itemvalue="Application.com.auctions.server.ServerApp (1)" />
 >>>>>>> thắng
+=======
+      <item itemvalue="Application.ClientMain" />
+      <item itemvalue="Application.ServerRocket" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.ClientMain" />
+        <item itemvalue="Application.ServerRocket" />
+>>>>>>> 0c0c43fb8717852317c5c1dcabbe15e7b24af0d0
       </list>
     </recent_temporary>
   </component>
@@ -314,7 +369,6 @@
     <attachedChunks>
       <set>
         <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.31033.145" />
-        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-IU-253.31033.145" />
       </set>
     </attachedChunks>
   </component>
@@ -329,6 +383,7 @@
       <workItem from="1774168719082" duration="64000" />
       <workItem from="1774168854236" duration="670000" />
       <workItem from="1774583249310" duration="633000" />
+<<<<<<< HEAD
 <<<<<<< HEAD
       <workItem from="1775027831979" duration="1000" />
       <workItem from="1775054755718" duration="105000" />
@@ -347,6 +402,8 @@
       <workItem from="1776049884629" duration="82000" />
       <workItem from="1776402911314" duration="661000" />
 >>>>>>> thắng
+=======
+>>>>>>> 0c0c43fb8717852317c5c1dcabbe15e7b24af0d0
     </task>
     <servers />
   </component>

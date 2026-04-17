@@ -1,4 +1,4 @@
-package src.server.ultis;
+package server.ultis;
 
 public class Validation {
 }

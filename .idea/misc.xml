@@ -9,6 +9,7 @@
         <option value="$PROJECT_DIR$/auction-client/pom.xml" />
         <option value="$PROJECT_DIR$/auction-server/pom.xml" />
 <<<<<<< HEAD
+<<<<<<< HEAD
         <option value="$PROJECT_DIR$/auction-client/client/pom.xml" />
         <option value="$PROJECT_DIR$/auction-server1/src/server/pom.xml" />
 =======
@@ -19,4 +20,10 @@
   <component name="ProjectRootManager" version="2" default="true" project-jdk-name="25" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
+=======
+      </list>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="25" project-jdk-type="JavaSDK" />
+>>>>>>> 0c0c43fb8717852317c5c1dcabbe15e7b24af0d0
 </project>
