@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="src.client.controllers.AuctionListController"
+            stylesheets="@/src/client/stylesient/styles/app.css"
+            styleClass="root-pane">
+
+    <top>
+        <VBox spacing="10">
+            <padding>
+                <Insets top="15" right="15" bottom="15" left="15"/>
+            </padding>
+
+            <Label text="Danh sách phiên đấu giá" styleClass="title-label"/>
+
+            <HBox spacing="10">
+                <TextField fx:id="searchField" promptText="Tìm kiếm sản phẩm..."/>
+                <Button text="Refresh" onAction="#handleRefresh"/>
+                <Button text="Xem chi tiết" onAction="#handleViewDetail"/>
+                <Button text="Logout" onAction="#handleLogout"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="auctionTable">
+            <columns>
+                <TableColumn fx:id="idColumn" text="ID" prefWidth="80"/>
+                <TableColumn fx:id="itemNameColumn" text="Tên sản phẩm" prefWidth="250"/>
+                <TableColumn fx:id="currentPriceColumn" text="Giá hiện tại" prefWidth="150"/>
+                <TableColumn fx:id="winnerColumn" text="Người dẫn đầu" prefWidth="180"/>
+                <TableColumn fx:id="statusColumn" text="Trạng thái" prefWidth="120"/>
+            </columns>
+        </TableView>
+    </center>
+
+</BorderPane>

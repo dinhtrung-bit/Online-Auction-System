@@ -3,9 +3,10 @@
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/auction-client/src/main/java/com/auction/client/controllers" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/auction-server/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/auction-client/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/auction-client" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/auction-client/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/auction-client/java/main/java/com/auction/client/controllers" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
