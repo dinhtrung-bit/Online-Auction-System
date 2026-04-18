@@ -1,3 +1,4 @@
+<<<<<<< HEAD:auction-client/src/client/controllers/LoginController.java
 <<<<<<< HEAD
 <<<<<<< HEAD:auction-client/src/main/java/com/auctions/client/controllers/LoginController.java
 package com.auctions.client.controllers;
@@ -7,6 +8,9 @@ package client.controllers;
 =======
 package src.client.controllers;
 >>>>>>> e6fdc0c29820aeb4b000a79a18715e91b6bec51e
+=======
+package com.auctions.client.controllers;
+>>>>>>> main:auction-client/src/main/java/com.auctions.client/controllers/LoginController.java
 
 import com.auctions.client.ClientApp;
 import javafx.event.ActionEvent;

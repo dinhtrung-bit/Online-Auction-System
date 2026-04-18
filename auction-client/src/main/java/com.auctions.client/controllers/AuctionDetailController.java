@@ -1,3 +1,4 @@
+<<<<<<< HEAD:auction-client/src/client/controllers/AuctionDetailController.java
 <<<<<<< HEAD
 <<<<<<< HEAD:auction-client/src/main/java/com/auctions/client/controllers/AuctionDetailController.java
 package com.auctions.client.controllers;
@@ -7,6 +8,9 @@ package client.controllers;
 =======
 package src.client.controllers;
 >>>>>>> e6fdc0c29820aeb4b000a79a18715e91b6bec51e
+=======
+package com.auctions.client.controllers;
+>>>>>>> main:auction-client/src/main/java/com.auctions.client/controllers/AuctionDetailController.java
 
 import com.auctions.client.ClientApp;
 import com.auctions.client.models.Auction;

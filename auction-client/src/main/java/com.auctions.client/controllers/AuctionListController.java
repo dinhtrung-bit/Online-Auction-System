@@ -1,3 +1,4 @@
+<<<<<<< HEAD:auction-client/src/client/controllers/AuctionListController.java
 <<<<<<< HEAD
 <<<<<<< HEAD:auction-client/src/main/java/com/auctions/client/controllers/AuctionListController.java
 package com.auctions.client.controllers;
@@ -7,6 +8,9 @@ package client.controllers;
 =======
 package src.client.controllers;
 >>>>>>> e6fdc0c29820aeb4b000a79a18715e91b6bec51e
+=======
+package com.auctions.client.controllers;
+>>>>>>> main:auction-client/src/main/java/com.auctions.client/controllers/AuctionListController.java
 
 import com.auctions.client.ClientApp;
 import com.auctions.client.models.Auction;
@@ -93,37 +97,6 @@ public class AuctionListController {
         auctionList.add(new Auction(3, "Tai nghe Sony", 2000000, "userC", "FINISHED"));
 
         auctionTable.setItems(auctionList);
-        auctionTable.setRowFactory(tv -> {
-            javafx.scene.control.TableRow<Auction> row = new javafx.scene.control.TableRow<>();
-            row.setOnMouseClicked(event -> {
-                if (event.getClickCount() == 2 && !row.isEmpty()) {
-                    Auction selected = row.getItem();
-                    openDetail(selected);
-                }
-            });
-            return row;
-        });
-    }
-
-    @FXML
-    public void handleRefresh(ActionEvent event) {
-        auctionTable.refresh();
-
-    }
-    @FXML
-    public void handleViewDetail(ActionEvent event) {
-        Auction selected = auctionTable.getSelectionModel().getSelectedItem();
-
-        if (selected == null) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Cảnh báo");
-            alert.setHeaderText(null);
-            alert.setContentText("Vui lòng chọn một phiên đấu giá");
-            alert.showAndWait();
-            return;
-        }
-
-        openDetail(selected);
     }
     private void openDetail(Auction selected) {
         try {
@@ -155,6 +128,26 @@ public class AuctionListController {
         }
     }
 
+    @FXML
+    public void handleRefresh(ActionEvent event) {
+        auctionTable.refresh();
+    }
+
+    @FXML
+    public void handleViewDetail(ActionEvent event) {
+        Auction selected = auctionTable.getSelectionModel().getSelectedItem();
+
+        if (selected == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Cảnh báo");
+            alert.setHeaderText(null);
+            alert.setContentText("Vui lòng chọn một phiên đấu giá");
+            alert.showAndWait();
+            return;
+        }
+
+        openDetail(selected);
+    }
 
     @FXML
     public void handleLogout(ActionEvent event) {

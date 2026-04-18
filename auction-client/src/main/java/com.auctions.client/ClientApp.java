@@ -1,8 +1,12 @@
+<<<<<<< HEAD:auction-client/src/client/ClientApp/ClientApp.java
 <<<<<<< HEAD
 package client.ClientApp;
 =======
 package src.client.ClientApp;
 >>>>>>> e6fdc0c29820aeb4b000a79a18715e91b6bec51e
+=======
+package com.auctions.client;
+>>>>>>> main:auction-client/src/main/java/com.auctions.client/ClientApp.java
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
