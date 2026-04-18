@@ -31,7 +31,7 @@ public class UserDAOimpl implements UserDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, user.getUsername());
-//            pstmt.setString(2, user.getPasswordHash());
+           pstmt.setString(2, user.getPasswordHash());
             pstmt.setString(3, user.getRole());
             pstmt.setString(4, user.getUserId());
 
