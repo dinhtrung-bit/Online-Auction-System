@@ -1,13 +1,13 @@
-package src.client.controllers;
+package client.controllers;
 
-import com.auctions.client.ClientApp;
+import client.ClientApp;
 import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.fxml.FXML;
 import javafx.stage.Stage;
 
 public class LoginController {
@@ -34,12 +34,14 @@ public class LoginController {
 
         try {
             FXMLLoader loader = new FXMLLoader(
-                    ClientApp.class.getResource("/views/auction-list.fxml")
+                    ClientApp.class.getResource("/client/views/auction-list.fxml")
             );
             Scene scene = new Scene(loader.load(), 1000, 650);
-            scene.getStylesheets().add(
-                    ClientApp.class.getResource("/styles/app.css").toExternalForm()
-            );
+
+            var cssUrl = ClientApp.class.getResource("/client/views/app.css");
+            if (cssUrl != null) {
+                scene.getStylesheets().add(cssUrl.toExternalForm());
+            }
 
             Stage stage = (Stage) usernameField.getScene().getWindow();
             stage.setScene(scene);
