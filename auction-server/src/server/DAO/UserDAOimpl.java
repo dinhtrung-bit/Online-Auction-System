@@ -1,10 +1,13 @@
 package server.DAO;
 
+import server.models.Bidder;
+import server.models.Seller;
 import server.models.User;
-
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserDAOimpl implements UserDAO {
@@ -17,7 +20,7 @@ public class UserDAOimpl implements UserDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, user.getUsername());
-//            pstmt.setString(2, user.getPasswordHash());
+            pstmt.setString(2, user.getPasswordHash());
             pstmt.setString(3, user.getRole());
 
             pstmt.executeUpdate();
@@ -31,7 +34,7 @@ public class UserDAOimpl implements UserDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, user.getUsername());
-//            pstmt.setString(2, user.getPasswordHash());
+            pstmt.setString(2, user.getPasswordHash());
             pstmt.setString(3, user.getRole());
             pstmt.setString(4, user.getUserId());
 
@@ -57,6 +60,32 @@ public class UserDAOimpl implements UserDAO {
 
     @Override
     public List<User> findAll() throws Exception {
-        return List.of();
+        List<User> userList = new ArrayList<>();// 1. Tạo danh sách rỗng để chứa kết quả trả về
+        String sql = "SELECT user_id, username, role FROM users";//câu lệnh sql lấy toàn bộ người dùng in ra để mn xem
+        try (Connection conn = DBConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                // Lấy dữ liệu từ các cột tương ứng trong bảng 'users'
+                String userId = rs.getString("user_id");
+                String username = rs.getString("username");
+                String role = rs.getString("role");
+                User user = null;
+                if (role!=null){
+                    switch (role.toUpperCase()){
+                        case"BIDDER":
+                            user=new Bidder( userId, username,0.0);
+                            break;
+                        case"SELLER":
+                            user=new Seller(userId,username);
+                            break;
+                    }
+                }
+                if (user != null) {
+                    userList.add(user);
+                }
+            }
+        }
+        return userList;
     }
 }
