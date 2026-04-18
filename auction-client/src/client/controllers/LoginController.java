@@ -1,4 +1,4 @@
-package src.client.controllers;
+package client.controllers;
 
 import com.auctions.client.ClientApp;
 import javafx.event.ActionEvent;

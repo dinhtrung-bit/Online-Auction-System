@@ -1,13 +1,13 @@
-package src.client.models;
+package client.models;
 
-public class AuctionFX {
+public class Auction {
     private int id;
     private String itemName;
     private double currentPrice;
     private String currentWinner;
     private String status;
 
-    public AuctionFX(int id, String itemName, double currentPrice, String currentWinner, String status) {
+    public Auction(int id, String itemName, double currentPrice, String currentWinner, String status) {
         this.id = id;
         this.itemName = itemName;
         this.currentPrice = currentPrice;

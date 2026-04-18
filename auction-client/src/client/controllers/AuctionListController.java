@@ -1,4 +1,4 @@
-package src.client.controllers;
+package client.controllers;
 
 import com.auctions.client.ClientApp;
 import com.auctions.client.models.Auction;
@@ -89,7 +89,7 @@ public class AuctionListController {
     private void openDetail(Auction selected) {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    ClientApp.class.getResource("/views/auction-detail.fxml")
+                    client.controllers.ClientApp.class.getResource("/views/auction-detail.fxml")
             );
             Scene scene = new Scene(loader.load(), 1000, 650);
 
