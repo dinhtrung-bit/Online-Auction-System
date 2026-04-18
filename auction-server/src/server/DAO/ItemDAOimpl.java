@@ -18,8 +18,8 @@ public class ItemDAOimpl implements ItemDAO {
 
             pstmt.setString(1, item.getItemId());
             pstmt.setString(2, item.getName());
-//            pstmt.setString(3, item.getDescription());
-//            pstmt.setString(4,item.getCategory());
+           pstmt.setString(3, item.getDescription());
+            pstmt.setString(4,item.getCategoryInfo());
             pstmt.executeUpdate();
         }
     }
@@ -34,8 +34,8 @@ public class ItemDAOimpl implements ItemDAO {
 
             pstmt.setString(1, item.getItemId()); // Điều kiện WHERE
             pstmt.setString(2, item.getName());
-//            pstmt.setString(3, item.getDescription());
-//            pstmt.setString(4, item.getCategory());
+           pstmt.setString(3, item.getDescription());
+            pstmt.setString(4, item.getCategoryInfo());
 
             pstmt.executeUpdate();
         }
