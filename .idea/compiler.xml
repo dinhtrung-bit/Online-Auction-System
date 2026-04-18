@@ -6,18 +6,12 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-<<<<<<< HEAD
+        <module name="1" />
+        <module name="auction-client" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="1" target="17" />
-      <module name="auction-client" target="17" />
+      <module name="auction-server" target="17" />
     </bytecodeTargetLevel>
-=======
-        <module name="auction-client" />
-        <module name="auction-server" />
-      </profile>
-    </annotationProcessing>
->>>>>>> thắng
   </component>
 </project>
