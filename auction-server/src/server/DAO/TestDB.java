@@ -1,6 +1,5 @@
 package server.DAO;
 
-import server.DAO.DBConnection;
 import java.sql.Connection;
 
 public class TestDB {
