@@ -10,7 +10,7 @@ public class ItemDAOimpl implements ItemDAO {
 
     @Override
     public void insert(Item item) throws Exception {
-        // Giả sử bảng items có 4 cột cần thêm, item_id tự động tăng
+        // Giả sử bảng items có 4 cột cần thêm
         String sql = "INSERT INTO items (seller_id, name, description, category) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getInstance().getConnection();
