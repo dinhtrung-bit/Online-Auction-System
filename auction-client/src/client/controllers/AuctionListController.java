@@ -1,7 +1,6 @@
 package client.controllers;
 
 import client.ClientApp;
-import client.models.AuctionViewModel;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
