@@ -1,12 +1,12 @@
 package client.controllers;
 
-import com.auctions.client.ClientApp;
-import com.auctions.client.models.Auction;
+import client.ClientApp;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
@@ -31,15 +31,23 @@ public class AuctionDetailController {
     @FXML
     private TextField bidAmountField;
 
-    private Auction currentAuction;
+    @FXML
+    private Button bidButton;
 
-    public void setAuctionData(Auction auction) {
+    private AuctionViewModel currentAuction;
+
+    public void setAuctionData(AuctionViewModel auction) {
         this.currentAuction = auction;
         idLabel.setText("ID: " + auction.getId());
         itemNameLabel.setText("Tên sản phẩm: " + auction.getItemName());
-        currentPriceLabel.setText("Giá hiện tại: " + auction.getCurrentPrice());
+        currentPriceLabel.setText("Giá hiện tại: " + String.format("%,.0f VND", auction.getCurrentPrice()));
         winnerLabel.setText("Người dẫn đầu: " + auction.getCurrentWinner());
         statusLabel.setText("Trạng thái: " + auction.getStatus());
+
+        if ("FINISHED".equalsIgnoreCase(auction.getStatus())) {
+            bidAmountField.setDisable(true);
+            bidButton.setDisable(true);
+        }
     }
 
     @FXML
@@ -64,7 +72,8 @@ public class AuctionDetailController {
                 return;
             }
 
-            showAlert("Thành công", "Đặt giá thành công: " + bidAmount);
+            currentPriceLabel.setText("Giá hiện tại: " + String.format("%,.0f VND", bidAmount));
+            showAlert("Thành công", "Đặt giá thành công: " + String.format("%,.0f VND", bidAmount));
 
         } catch (NumberFormatException e) {
             showAlert("Lỗi", "Giá đấu phải là số");
@@ -75,12 +84,14 @@ public class AuctionDetailController {
     public void handleBack(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    ClientApp.class.getResource("/views/auction-list.fxml")
+                    ClientApp.class.getResource("/client/views/auction-list.fxml")
             );
             Scene scene = new Scene(loader.load(), 1000, 650);
-            scene.getStylesheets().add(
-                    ClientApp.class.getResource("/styles/app.css").toExternalForm()
-            );
+
+            var cssUrl = ClientApp.class.getResource("/client/views/app.css");
+            if (cssUrl != null) {
+                scene.getStylesheets().add(cssUrl.toExternalForm());
+            }
 
             Stage stage = (Stage) bidAmountField.getScene().getWindow();
             stage.setScene(scene);

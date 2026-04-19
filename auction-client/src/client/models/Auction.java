@@ -1,6 +1,8 @@
 package client.models;
 
 public class Auction {
+
+public class AuctionViewModel {
     private int id;
     private String itemName;
     private double currentPrice;
@@ -8,6 +10,7 @@ public class Auction {
     private String status;
 
     public Auction(int id, String itemName, double currentPrice, String currentWinner, String status) {
+    public AuctionViewModel(int id, String itemName, double currentPrice, String currentWinner, String status) {
         this.id = id;
         this.itemName = itemName;
         this.currentPrice = currentPrice;
