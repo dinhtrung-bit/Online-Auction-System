@@ -10,13 +10,15 @@ public class ClientApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         FXMLLoader loader = new FXMLLoader(
-                ClientApp.class.getResource("/views/login.fxml")
+                ClientApp.class.getResource("/client/views/login.fxml")
         );
 
         Scene scene = new Scene(loader.load(), 900, 600);
-        scene.getStylesheets().add(
-                ClientApp.class.getResource("/styles/app.css").toExternalForm()
-        );
+
+        var cssUrl = ClientApp.class.getResource("/client/views/app.css");
+        if (cssUrl != null) {
+            scene.getStylesheets().add(cssUrl.toExternalForm());
+        }
 
         stage.setTitle("Online Auction System");
         stage.setScene(scene);

@@ -1,7 +1,7 @@
 package client.controllers;
 
-import com.auctions.client.ClientApp;
-import com.auctions.client.models.Auction;
+import client.ClientApp;
+import client.models.AuctionViewModel;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -9,7 +9,9 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -21,31 +23,34 @@ public class AuctionListController {
     private TextField searchField;
 
     @FXML
-    private TableView<Auction> auctionTable;
+    private TableView<AuctionViewModel> auctionTable;
 
     @FXML
-    private TableColumn<Auction, Integer> idColumn;
+    private TableColumn<AuctionViewModel, Integer> idColumn;
 
     @FXML
-    private TableColumn<Auction, String> itemNameColumn;
+    private TableColumn<AuctionViewModel, String> itemNameColumn;
 
     @FXML
-    private TableColumn<Auction, Double> currentPriceColumn;
+    private TableColumn<AuctionViewModel, Double> currentPriceColumn;
 
     @FXML
-    private TableColumn<Auction, String> winnerColumn;
+    private TableColumn<AuctionViewModel, String> winnerColumn;
 
     @FXML
-    private TableColumn<Auction, String> statusColumn;
+    private TableColumn<AuctionViewModel, String> statusColumn;
 
-    private final ObservableList<Auction> auctionList = FXCollections.observableArrayList();
+    private final ObservableList<AuctionViewModel> auctionList = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         itemNameColumn.setCellValueFactory(new PropertyValueFactory<>("itemName"));
         currentPriceColumn.setCellValueFactory(new PropertyValueFactory<>("currentPrice"));
-        currentPriceColumn.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
+        winnerColumn.setCellValueFactory(new PropertyValueFactory<>("currentWinner"));
+        statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
+
+        currentPriceColumn.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(Double price, boolean empty) {
                 super.updateItem(price, empty);
@@ -56,9 +61,8 @@ public class AuctionListController {
                 }
             }
         });
-        winnerColumn.setCellValueFactory(new PropertyValueFactory<>("currentWinner"));
-        statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
-        statusColumn.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
+
+        statusColumn.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
@@ -68,7 +72,6 @@ public class AuctionListController {
                     setStyle("");
                 } else {
                     setText(status);
-
                     if ("RUNNING".equalsIgnoreCase(status)) {
                         setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
                     } else if ("FINISHED".equalsIgnoreCase(status)) {
@@ -80,20 +83,56 @@ public class AuctionListController {
             }
         });
 
-        auctionList.add(new Auction(1, "Laptop Dell", 12000000, "userA", "RUNNING"));
-        auctionList.add(new Auction(2, "iPhone 13", 10000000, "userB", "RUNNING"));
-        auctionList.add(new Auction(3, "Tai nghe Sony", 2000000, "userC", "FINISHED"));
+        auctionList.add(new AuctionViewModel(1, "Laptop Dell XPS 13", 12000000, "userA", "RUNNING"));
+        auctionList.add(new AuctionViewModel(2, "iPhone 13 Pro", 10000000, "userB", "RUNNING"));
+        auctionList.add(new AuctionViewModel(3, "Tai nghe Sony WH-1000XM4", 2000000, "userC", "FINISHED"));
 
         auctionTable.setItems(auctionList);
+
+        auctionTable.setRowFactory(tv -> {
+            TableRow<AuctionViewModel> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                    openDetail(row.getItem());
+                }
+            });
+            return row;
+        });
     }
-    private void openDetail(Auction selected) {
+
+    @FXML
+    public void handleRefresh(ActionEvent event) {
+        auctionTable.refresh();
+    }
+
+    @FXML
+    public void handleViewDetail(ActionEvent event) {
+        AuctionViewModel selected = auctionTable.getSelectionModel().getSelectedItem();
+
+        if (selected == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Cảnh báo");
+            alert.setHeaderText(null);
+            alert.setContentText("Vui lòng chọn một phiên đấu giá");
+            alert.showAndWait();
+            return;
+        }
+
+        openDetail(selected);
+    }
+
+    private void openDetail(AuctionViewModel selected) {
         try {
             FXMLLoader loader = new FXMLLoader(
+<<<<<<< HEAD
                     client.controllers.ClientApp.class.getResource("/views/auction-detail.fxml")
+=======
+                    ClientApp.class.getResource("/client/views/auction-detail.fxml")
+>>>>>>> 975c8bcf6c07664b14552ffc5de027defdcb0a70
             );
             Scene scene = new Scene(loader.load(), 1000, 650);
 
-            var cssUrl = ClientApp.class.getResource("/styles/app.css");
+            var cssUrl = ClientApp.class.getResource("/client/views/app.css");
             if (cssUrl != null) {
                 scene.getStylesheets().add(cssUrl.toExternalForm());
             }
@@ -111,36 +150,17 @@ public class AuctionListController {
     }
 
     @FXML
-    public void handleRefresh(ActionEvent event) {
-        auctionTable.refresh();
-    }
-
-    @FXML
-    public void handleViewDetail(ActionEvent event) {
-        Auction selected = auctionTable.getSelectionModel().getSelectedItem();
-
-        if (selected == null) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Cảnh báo");
-            alert.setHeaderText(null);
-            alert.setContentText("Vui lòng chọn một phiên đấu giá");
-            alert.showAndWait();
-            return;
-        }
-
-        openDetail(selected);
-    }
-
-    @FXML
     public void handleLogout(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    ClientApp.class.getResource("/views/login.fxml")
+                    ClientApp.class.getResource("/client/views/login.fxml")
             );
             Scene scene = new Scene(loader.load(), 900, 600);
-            scene.getStylesheets().add(
-                    ClientApp.class.getResource("/styles/app.css").toExternalForm()
-            );
+
+            var cssUrl = ClientApp.class.getResource("/client/views/app.css");
+            if (cssUrl != null) {
+                scene.getStylesheets().add(cssUrl.toExternalForm());
+            }
 
             Stage stage = (Stage) auctionTable.getScene().getWindow();
             stage.setScene(scene);

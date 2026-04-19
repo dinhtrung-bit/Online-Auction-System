@@ -5,6 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
+<<<<<<< HEAD
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
 <<<<<<< HEAD
       <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/ItemDAOimpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/DAO/ItemDAOimpl.java" afterDir="false" />
@@ -14,6 +15,10 @@
 =======
       <change beforePath="$PROJECT_DIR$/auction-client/src/client/models/AuctionFX.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/Auction.java" afterDir="false" />
 >>>>>>> 2e8fcb0264ba4ad1f92cacf8d3eb3daf6727e1f1
+=======
+      <change afterPath="$PROJECT_DIR$/auction-client/.ai/mcp/mcp.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+>>>>>>> 975c8bcf6c07664b14552ffc5de027defdcb0a70
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,17 +45,17 @@
     <option name="UPDATE_TYPE" value="REBASE" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
-        &quot;lastFilter&quot;: {
-        &quot;state&quot;: &quot;OPEN&quot;,
-        &quot;assignee&quot;: &quot;dinhtrung-bit&quot;
-        }
-        }</component>
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;dinhtrung-bit&quot;
+  }
+}</component>
   <component name="GithubPullRequestsUISettings">{
-        &quot;selectedUrlAndAccountId&quot;: {
-        &quot;url&quot;: &quot;https://github.com/dinhtrung-bit/Online-Auction-System.git&quot;,
-        &quot;accountId&quot;: &quot;bb0d145a-26b2-41aa-b468-e1f867bebbe1&quot;
-        }
-        }</component>
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/dinhtrung-bit/Online-Auction-System.git&quot;,
+    &quot;accountId&quot;: &quot;a7d98dde-f5f9-4b73-94bf-dfb466aadae2&quot;
+  }
+}</component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/network/ClientHandler.java" root0="FORCE_HIGHLIGHTING" />
   </component>
@@ -73,6 +78,7 @@
   &quot;keyToString&quot;: {
     &quot;Application.ClientMain.executor&quot;: &quot;Run&quot;,
     &quot;Application.ServerRocket.executor&quot;: &quot;Run&quot;,
+    &quot;Application.client.networks.ClientMain.executor&quot;: &quot;Run&quot;,
     &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
     &quot;Maven.auction-client [org.openjfx:javafx-maven-plugin:0.0.8:run].executor&quot;: &quot;Run&quot;,
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
@@ -81,8 +87,10 @@
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;D:/all/java/Online-Auction-System&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -94,16 +102,17 @@
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.excludes&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\views" />
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client" />
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\models" />
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\controllers" />
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\resources\views" />
-      <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\resources" />
     </key>
   </component>
   <component name="RunManager" selected="Application.client.networks.ClientMain">
@@ -135,7 +144,7 @@
     </configuration>
     <configuration name="client.networks.ClientMain" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="client.networks.ClientMain" />
-      <module name="Online-Auction-System" />
+      <module name="auction-client" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="client.networks.*" />
