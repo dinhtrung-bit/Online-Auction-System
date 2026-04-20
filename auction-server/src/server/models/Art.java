@@ -8,6 +8,6 @@ public class Art extends Item {
 
     @Override
     public String getCategoryInfo() {
-        return "Nghệ thuật" ;
+        return "ART" ;
     }
 }

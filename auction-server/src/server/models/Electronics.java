@@ -8,6 +8,6 @@ public class Electronics extends Item {
 
     @Override
     public String getCategoryInfo() {
-        return "Điện tử ";
+        return "ELECTRONIC";
     }
 }

@@ -1,10 +1,10 @@
 package server.models;
     public class ItemFactory {
-        public static Item createItem(String category, int itemId, String name, double startingPrice, String description) {
-            if (category == null) {
+        public static Item createItem(String CategoryInfo, int itemId, String name, double startingPrice, String description) {
+            if (CategoryInfo == null) {
                 return null;
             }
-            switch (category.toUpperCase()) {
+            switch (CategoryInfo.toUpperCase()) {
                 case "ART":
                     return new Art(itemId,name,startingPrice,description);
                 case "ELECTRONIC":
@@ -12,7 +12,7 @@ package server.models;
                 case "VEHICLE":
                     return new Vehicle( itemId, name, description, startingPrice);
                 default:
-                    throw new IllegalArgumentException("Loại sản phẩm không hợp lệ: " + category);
+                    throw new IllegalArgumentException("Loại sản phẩm không hợp lệ: " + CategoryInfo);
             }
         }
     }
