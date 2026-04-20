@@ -1,7 +1,7 @@
 package server.models;
 
 public class UserFactory {
-    public static User createUser(String role, String userId, String username) {
+    public static User createUser(String role, int userId, String username) {
         if (role == null) return null;
 
         switch (role.toUpperCase()) {

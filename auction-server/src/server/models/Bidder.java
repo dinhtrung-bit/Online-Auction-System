@@ -3,7 +3,7 @@ package server.models;
 public class Bidder extends User {
     private double balance;
 
-    public Bidder(String userId, String username, double balance) {
+    public Bidder(int userId, String username, double balance) {
         super(userId, username, "BIDDER");
         this.balance = balance;
     }

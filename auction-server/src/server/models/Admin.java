@@ -2,7 +2,7 @@ package server.models;
 
 public class Admin extends User {
 
-    public Admin(String userId, String username) {
+    public Admin(int userId, String username) {
         super(userId, username, "ADMIN");
     }
     @Override

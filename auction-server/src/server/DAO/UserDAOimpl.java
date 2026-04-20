@@ -24,7 +24,7 @@ public class UserDAOimpl implements UserDAO {
             pstmt.setString(2, user.getPasswordHash());
             pstmt.setString(3, user.getRole());
 
-            pstmt.executeUpdate();//thực thi câu lệnh sql
+            pstmt.executeUpdate();//thực thi câu lệnh sql trả về 1 int tượng trưng cho số hàng được tác động
         }
     }
 
@@ -37,7 +37,7 @@ public class UserDAOimpl implements UserDAO {
             pstmt.setString(1, user.getUsername());
             pstmt.setString(2, user.getPasswordHash());
             pstmt.setString(3, user.getRole());
-            pstmt.setString(4, user.getUserId());
+            pstmt.setInt(4, user.getUserId());
 
             pstmt.executeUpdate();
         }
@@ -65,10 +65,10 @@ public class UserDAOimpl implements UserDAO {
         String sql = "SELECT user_id, username, role FROM users";//câu lệnh sql lấy toàn bộ người dùng in ra để mn xem
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
+             ResultSet rs = pstmt.executeQuery()) {//trả về String thực thi truy vấn
             while (rs.next()) {
                 // Lấy dữ liệu từ các cột tương ứng trong bảng 'users'
-                String userId = rs.getString("user_id");
+                int userId = rs.getInt("user_id");
                 String username = rs.getString("username");
                 String role = rs.getString("role");
                 User user = UserFactory.createUser(role, userId, username);

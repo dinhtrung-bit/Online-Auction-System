@@ -4,12 +4,12 @@ package server.models;
             if (category == null) {
                 return null;
             }
-            switch (category.toLowerCase()) {
-                case "art":
+            switch (category.toUpperCase()) {
+                case "ART":
                     return new Art(itemId,name,startingPrice,description);
-                case "electronic":
+                case "ELECTRONIC":
                     return new Electronics(itemId, name, startingPrice,description);
-                case "vehicle":
+                case "VEHICLE":
                     return new Vehicle( itemId, name, description, startingPrice);
                 default:
                     throw new IllegalArgumentException("Loại sản phẩm không hợp lệ: " + category);
