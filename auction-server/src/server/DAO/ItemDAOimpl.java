@@ -30,15 +30,14 @@ public class ItemDAOimpl implements ItemDAO {
     @Override
     public void update(Item item) throws Exception {
         // Cập nhật thông tin sản phẩm dựa trên item_id
-        String sql = "UPDATE items SET seller_id = ?, name = ?, description = ?, category = ? WHERE item_id = ?";
+        String sql = "UPDATE items SET name = ?, description = ?, category = ? WHERE item_id = ?";
 
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setInt(1, item.getItemId()); // Điều kiện WHERE
-            pstmt.setString(2, item.getName());
-           pstmt.setString(3, item.getDescription());
-            pstmt.setString(4, item.getCategoryInfo());
+            pstmt.setString(1, item.getName());
+           pstmt.setString(2, item.getDescription());
+            pstmt.setString(3, item.getCategoryInfo());
+            pstmt.setInt(4, item.getItemId());// Điều kiện WHERE
 
             pstmt.executeUpdate();
         }
@@ -74,7 +73,7 @@ public class ItemDAOimpl implements ItemDAO {
                 String name = rs.getString("name");
                 double startingPrice = rs.getDouble("startingPrice");
                 String description = rs.getString("description");
-                String category = rs.getString("categoryinfo");
+                String category = rs.getString("CategoryInfo");
                 Item item = ItemFactory.createItem(category,itemId, name, startingPrice,description);
 
                 if (item != null) {

@@ -1,7 +1,5 @@
 package server.DAO;
 
-import server.models.Bidder;
-import server.models.Seller;
 import server.models.User;
 import server.models.UserFactory;
 
