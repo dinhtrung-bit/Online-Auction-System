@@ -1,5 +1,5 @@
 
-package server.controllers;
+package server.auction;
 
 
 import java.util.Date;
