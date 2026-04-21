@@ -1,6 +1,7 @@
 package client.controllers;
 
 import client.ClientApp;
+import client.models.AuctionViewModel;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -123,11 +124,7 @@ public class AuctionListController {
     private void openDetail(AuctionViewModel selected) {
         try {
             FXMLLoader loader = new FXMLLoader(
-<<<<<<< HEAD
-                    client.controllers.ClientApp.class.getResource("/views/auction-detail.fxml")
-=======
                     ClientApp.class.getResource("/client/views/auction-detail.fxml")
->>>>>>> 975c8bcf6c07664b14552ffc5de027defdcb0a70
             );
             Scene scene = new Scene(loader.load(), 1000, 650);
 
