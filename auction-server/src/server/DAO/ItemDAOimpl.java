@@ -58,9 +58,27 @@ public class ItemDAOimpl implements ItemDAO {
 
     @Override
     public List<Item> findBySellerId(int sellerId) throws Exception {
-        return List.of();
-    }
+        List<Item> itemlist = new ArrayList<>();
+        String sql = "SELECT * FROM items WHERE seller_id = ?";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, sellerId);
+            try (ResultSet rs = pstmt.executeQuery()) {
 
+                // Duyệt qua từng dòng dữ liệu (từng sản phẩm) lấy được từ Database
+                while (rs.next()) {
+                    int itemId = rs.getInt("item_id");
+                    String name = rs.getString("name");
+                    String description = rs.getString("description");
+                    String CategoryInfo=rs.getString("CategoryInfo");
+                    double startingPrice=rs.getDouble("startingPrice");
+                    Item item=ItemFactory.createItem(CategoryInfo,itemId,name,startingPrice,description);
+                    itemlist.add(item);
+                }
+            }
+        }
+        return itemlist;
+    }
     @Override
     public List<Item> findAll() throws Exception {
         List<Item> itemList = new ArrayList<>();
