@@ -4,11 +4,11 @@ import java.io.Serializable;
 // implements Serializable để gửi được qua Socket [cite: 1436]
 public abstract class User implements Serializable {
     private static final long serialVersionUID = 1L; // Đảm bảo đồng nhất phiên bản [cite: 1447]
-    protected String userId;
+    protected int userId;
     protected String username;
     protected String role; // "BIDDER", "SELLER", "ADMIN"
 protected String passwordhash;
-    public User(String userId, String username, String role) {
+    public User(int userId, String username, String role) {
         this.userId = userId;
         this.username = username;
         this.role = role;
@@ -16,7 +16,7 @@ protected String passwordhash;
 
     public abstract void displayDashboard(); // Tính trừu tượng: mỗi vai trò hiện một menu khác nhau [cite: 122]
 
-    public void setUserId(String userId) {
+    public void setUserId(int userId) {
         this.userId = userId;
     }
 
@@ -28,7 +28,7 @@ protected String passwordhash;
         this.role = role;
     }
 
-    public String getUserId() {
+    public int getUserId() {
         return userId;
     }
 

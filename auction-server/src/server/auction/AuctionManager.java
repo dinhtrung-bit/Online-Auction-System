@@ -1,4 +1,4 @@
-package server.controllers;
+package server.auction;
 
 import server.DAO.*;
 import server.models.*;

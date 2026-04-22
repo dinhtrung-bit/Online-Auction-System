@@ -1,8 +1,7 @@
 package server.DAO;
 
-import server.models.Bidder;
-import server.models.Seller;
 import server.models.User;
+import server.models.UserFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -14,7 +13,7 @@ public class UserDAOimpl implements UserDAO {
 
     @Override
     public void insert(User user) throws Exception {
-        // Đã sửa tên bảng thành 'users' và đưa PreparedStatement vào trong ngoặc tròn (try-with-resources)
+        // và đưa PreparedStatement biên dịch trước để tôis ưu và đảm bảo bảo mật cho câu lệnh
         String sql = "INSERT INTO users(username, password_hash, role) VALUES (?, ?, ?)";
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -23,7 +22,7 @@ public class UserDAOimpl implements UserDAO {
             pstmt.setString(2, user.getPasswordHash());
             pstmt.setString(3, user.getRole());
 
-            pstmt.executeUpdate();
+            pstmt.executeUpdate();//thực thi câu lệnh sql trả về 1 int tượng trưng cho số hàng được tác động
         }
     }
 
@@ -36,7 +35,7 @@ public class UserDAOimpl implements UserDAO {
             pstmt.setString(1, user.getUsername());
             pstmt.setString(2, user.getPasswordHash());
             pstmt.setString(3, user.getRole());
-            pstmt.setString(4, user.getUserId());
+            pstmt.setInt(4, user.getUserId());
 
             pstmt.executeUpdate();
         }
@@ -64,23 +63,13 @@ public class UserDAOimpl implements UserDAO {
         String sql = "SELECT user_id, username, role FROM users";//câu lệnh sql lấy toàn bộ người dùng in ra để mn xem
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
+             ResultSet rs = pstmt.executeQuery()) {//trả về String thực thi truy vấn
             while (rs.next()) {
                 // Lấy dữ liệu từ các cột tương ứng trong bảng 'users'
-                String userId = rs.getString("user_id");
+                int userId = rs.getInt("user_id");
                 String username = rs.getString("username");
                 String role = rs.getString("role");
-                User user = null;
-                if (role!=null){
-                    switch (role.toUpperCase()){
-                        case"BIDDER":
-                            user=new Bidder( userId, username,0.0);
-                            break;
-                        case"SELLER":
-                            user=new Seller(userId,username);
-                            break;
-                    }
-                }
+                User user = UserFactory.createUser(role, userId, username);
                 if (user != null) {
                     userList.add(user);
                 }

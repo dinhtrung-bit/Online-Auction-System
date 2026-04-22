@@ -2,19 +2,18 @@ package server.models;
 import java.io.Serializable;
 
 public abstract class Item implements Serializable {
-    protected String itemId;
+    protected int itemId;
     protected String name;
     protected double startingPrice;
     protected String description;
-
-    public Item(String itemId, String name, double startingPrice,String description) {
+    public Item(int itemId, String name, double startingPrice,String description) {
         this.itemId = itemId;
         this.name = name;
         this.startingPrice = startingPrice;
         this.description=description;
     }
 
-    public void setItemId(String itemId) {
+    public void setItemId(int itemId) {
         this.itemId = itemId;
     }
 
@@ -27,7 +26,7 @@ public abstract class Item implements Serializable {
     }
     public void setDescription(String description){this.description=description;}
 
-    public String getItemId() {
+    public int getItemId() {
         return itemId;
     }
 
