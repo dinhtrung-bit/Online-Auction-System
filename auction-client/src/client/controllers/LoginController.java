@@ -1,14 +1,18 @@
 package client.controllers;
 
-import client.ClientApp;
+import client.networks.NetworkManager;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import java.io.IOException;
 
 public class LoginController {
 
@@ -23,41 +27,43 @@ public class LoginController {
         String username = usernameField.getText();
         String password = passwordField.getText();
 
-        if (username == null || username.isBlank() || password == null || password.isBlank()) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Lỗi");
-            alert.setHeaderText(null);
-            alert.setContentText("Vui lòng nhập đầy đủ username và password");
-            alert.showAndWait();
+        if (username.isEmpty() || password.isEmpty()) {
+            showAlert("Lỗi", "Vui lòng nhập đầy đủ tài khoản và mật khẩu!");
             return;
         }
 
+        // Gửi yêu cầu đăng nhập qua Socket (chạy trên thread riêng của NetworkManager)
+        // Cấu trúc payload: username|password
+        NetworkManager.getInstance().sendRequest("LOGIN", username + "|" + password, response -> {
+            // Quay lại luồng UI để cập nhật giao diện
+            Platform.runLater(() -> {
+                if ("LOGIN_SUCCESS".equals(response.getAction())) {
+                    navigateToAuctionList(event);
+                } else {
+                    showAlert("Thất bại", "Sai tài khoản hoặc mật khẩu!");
+                }
+            });
+        });
+    }
+
+    private void navigateToAuctionList(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    ClientApp.class.getResource("/client/views/auction-list.fxml")
-            );
-            Scene scene = new Scene(loader.load(), 1000, 650);
-
-            var cssUrl = ClientApp.class.getResource("/client/views/app.css");
-            if (cssUrl != null) {
-                scene.getStylesheets().add(cssUrl.toExternalForm());
-            }
-
-            Stage stage = (Stage) usernameField.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Auction List");
+            Parent root = FXMLLoader.load(getClass().getResource("/client/views/auction-list.fxml"));
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Danh sách sản phẩm đấu giá");
             stage.show();
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
+            showAlert("Lỗi", "Không thể tải màn hình danh sách sản phẩm.");
         }
     }
 
-    @FXML
-    public void handleRegister(ActionEvent event) {
+    private void showAlert(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Thông báo");
+        alert.setTitle(title);
         alert.setHeaderText(null);
-        alert.setContentText("Chưa làm màn hình Register");
+        alert.setContentText(content);
         alert.showAndWait();
     }
 }

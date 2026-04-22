@@ -5,10 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/auction-client/src/client/networks/NetworkManager.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-client/src/client/networks/TestConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/server/auction/AuctionManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/auction/AuctionManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/server/auction/AuctionProduct.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/auction/AuctionProduct.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/server/auction/BidMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/auction/BidMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/LoginController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/models/BidMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/models/BidMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/UserDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/DAO/UserDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/UserDAOimpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/DAO/UserDAOimpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/networks/ClientHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/networks/ClientHandler.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,6 +75,7 @@
   "keyToString": {
     "Application.ClientMain.executor": "Run",
     "Application.ServerRocket.executor": "Run",
+    "Application.TestConnection.executor": "Run",
     "Application.client.networks.ClientMain.executor": "Run",
     "Application.server.networks.ServerRocket.executor": "Run",
     "DefaultHtmlFileTemplate": "HTML File",
@@ -79,7 +87,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "dinhtrung",
     "ignore.virus.scanning.warn.message": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
@@ -106,7 +114,7 @@
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\resources\views" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.server.networks.ServerRocket">
+  <component name="RunManager" selected="Application.TestConnection">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="auction-client" />
       <option name="ENV_FILES" value="" />
@@ -189,6 +197,14 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="TestConnection" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="UNNAMED_CLASS_CONFIGURATION" value="true" />
+      <option name="MAIN_CLASS_NAME" value="TestConnection" />
+      <module name="auction-client" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="client.networks.ClientMain" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="client.networks.ClientMain" />
       <module name="auction-client" />
@@ -204,6 +220,7 @@
     </configuration>
     <configuration name="server.networks.ServerRocket" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="server.networks.ServerRocket" />
+      <module name="auction-server" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="server.networks.*" />
@@ -214,18 +231,8 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="JetRunConfigurationType">
-      <module name="auction-client" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
-      <module name="auction-client" />
-      <option name="filePath" />
-      <method v="2" />
-    </configuration>
     <list>
+      <item itemvalue="Application.TestConnection" />
       <item itemvalue="Application.client.networks.ClientMain" />
       <item itemvalue="Application.server.networks.ServerRocket" />
       <item itemvalue="Application.ClientMain" />
@@ -233,6 +240,7 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.TestConnection" />
         <item itemvalue="Application.server.networks.ServerRocket" />
         <item itemvalue="Application.client.networks.ClientMain" />
         <item itemvalue="Application.ClientMain" />

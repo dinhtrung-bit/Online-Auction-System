@@ -77,4 +77,31 @@ public class UserDAOimpl implements UserDAO {
         }
         return userList;
     }
+    @Override
+    public User login(String username, String password) throws Exception {
+        // Câu lệnh SQL lấy thông tin user nếu đúng tài khoản và mật khẩu
+        String sql = "SELECT user_id, username, role FROM users WHERE username = ? AND password_hash = ?";
+
+        try (Connection conn = DBConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            // Truyền tham số vào dấu ?
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    // Nếu DB trả về kết quả -> Đăng nhập đúng -> Tạo đối tượng User
+                    int userId = rs.getInt("user_id");
+                    String uname = rs.getString("username");
+                    String role = rs.getString("role");
+
+                    // Sử dụng UserFactory có sẵn của bạn để tạo đúng loại User
+                    return UserFactory.createUser(role, userId, uname);
+                }
+            }
+        }
+        // Nếu không tìm thấy (sai tài khoản hoặc mật khẩu)
+        return null;
+    }
 }
