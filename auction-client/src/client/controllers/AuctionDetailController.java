@@ -2,6 +2,7 @@ package client.controllers;
 
 import client.ClientApp;
 import client.models.AuctionViewModel;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -11,6 +12,14 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+
+import static java.io.FileDescriptor.in;
 
 public class AuctionDetailController {
 
@@ -36,6 +45,10 @@ public class AuctionDetailController {
     private Button bidButton;
 
     private AuctionViewModel currentAuction;
+
+    private BufferedReader in;
+    private PrintWriter out;
+    private Socket socket;
 
     public void setAuctionData(AuctionViewModel auction) {
         this.currentAuction = auction;
@@ -109,5 +122,39 @@ public class AuctionDetailController {
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    @FXML
+    public void initialize() throws IOException {
+        socket = new Socket("localhost", 8080);
+        out = new PrintWriter(socket.getOutputStream(), true);
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        Thread listenerThread = new Thread(() -> {
+            try {
+                while (true) {
+                    String serverMessage = in.readLine(); // Radar liên tục nghe Server
+                    if (serverMessage == null) break;
+
+                    // NẾU RADAR BẮT ĐƯỢC TÍN HIỆU TỪ LOA PHƯỜNG:
+                    if (serverMessage.startsWith("NEW_HIGH_BID:")) {
+                        // Bóc tách lấy con số (Cắt bỏ chữ "NEW_HIGH_BID:")
+                        String newPrice = serverMessage.split(":")[1];
+
+                        // NHỜ LUỒNG CHÍNH CẬP NHẬT GIAO DIỆN
+                        Platform.runLater(() -> {
+                            // Giả sử nhãn hiển thị giá của bạn tên là CurrentPrice
+                            currentPriceLabel.setText(newPrice + " VNĐ");
+                            System.out.println("Giao dien da cap nhat gia moi: " + newPrice);
+                        });
+                    }
+                    // (Bạn có thể thêm các if khác ở đây để xử lý các tin nhắn khác)
+                }
+            } catch (Exception e) {
+                System.out.println("Mất kết nối ...");
+                e.printStackTrace()  ;
+            }
+        });
+        listenerThread.setDaemon(true);
+        listenerThread.start();
     }
 }
