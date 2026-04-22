@@ -2,6 +2,7 @@ package server.DAO;
 
 import server.models.Item;
 import server.models.ItemFactory;
+import server.models.Seller;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -14,15 +15,16 @@ public class ItemDAOimpl implements ItemDAO {
     @Override
     public void insert(Item item) throws Exception {
         // items có 4 cột cần thêm
-        String sql = "INSERT INTO items (seller_id, name, description, category) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO items (name, description, CategoryInfo,startingPrice) VALUES ( ?, ?, ?,?)";
 
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, item.getItemId());
-            pstmt.setString(2, item.getName());
-           pstmt.setString(3, item.getDescription());
-            pstmt.setString(4,item.getCategoryInfo());
+          // pstmt.setInt(1, item.getseller().getUserId());
+            pstmt.setString(1, item.getName());
+           pstmt.setString(2, item.getDescription());
+            pstmt.setString(3,item.getCategoryInfo());
+            pstmt.setDouble(4,item.getStartingPrice());
             pstmt.executeUpdate();
         }
     }
