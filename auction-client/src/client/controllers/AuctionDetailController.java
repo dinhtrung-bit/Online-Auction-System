@@ -135,19 +135,18 @@ public class AuctionDetailController {
                     String serverMessage = in.readLine(); // Radar liên tục nghe Server
                     if (serverMessage == null) break;
 
-                    // NẾU RADAR BẮT ĐƯỢC TÍN HIỆU TỪ LOA PHƯỜNG:
+                    // NẾU RADAR BẮT ĐƯỢC TÍN HIỆU TỪ SERVER:
                     if (serverMessage.startsWith("NEW_HIGH_BID:")) {
                         // Bóc tách lấy con số (Cắt bỏ chữ "NEW_HIGH_BID:")
                         String newPrice = serverMessage.split(":")[1];
 
                         // NHỜ LUỒNG CHÍNH CẬP NHẬT GIAO DIỆN
                         Platform.runLater(() -> {
-                            // Giả sử nhãn hiển thị giá của bạn tên là CurrentPrice
+                            // Giả sử nhãn hiển thị giá của bạn tên là CurrentPriceLabel
                             currentPriceLabel.setText(newPrice + " VNĐ");
                             System.out.println("Giao dien da cap nhat gia moi: " + newPrice);
                         });
                     }
-                    // (Bạn có thể thêm các if khác ở đây để xử lý các tin nhắn khác)
                 }
             } catch (Exception e) {
                 System.out.println("Mất kết nối ...");
