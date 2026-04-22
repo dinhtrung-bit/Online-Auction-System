@@ -5,10 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/server/auction/AuctionManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/auction/AuctionManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/server/auction/AuctionProduct.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/auction/AuctionProduct.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/server/auction/BidMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/auction/BidMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/testUser.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/DAO/testUser.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,8 +68,10 @@
   "keyToString": {
     "Application.ClientMain.executor": "Run",
     "Application.ServerRocket.executor": "Run",
+    "Application.TestDB.executor": "Run",
     "Application.client.networks.ClientMain.executor": "Run",
     "Application.server.networks.ServerRocket.executor": "Run",
+    "Application.testUser.executor": "Run",
     "DefaultHtmlFileTemplate": "HTML File",
     "Maven.auction-client [org.openjfx:javafx-maven-plugin:0.0.8:run].executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
@@ -106,7 +108,7 @@
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\resources\views" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.server.networks.ServerRocket">
+  <component name="RunManager" selected="Application.testUser">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="auction-client" />
       <option name="ENV_FILES" value="" />
@@ -176,12 +178,12 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="ServerRocket" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="com.auctions.server.network.ServerRocket" />
-      <module name="auction-server" />
+    <configuration name="TestDB" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="server.DAO.TestDB" />
+      <module name="1" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.auctions.server.network.*" />
+          <option name="PATTERN" value="server.DAO.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -214,6 +216,19 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="testUser" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="server.DAO.testUser" />
+      <module name="1" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="server.DAO.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration default="true" type="JetRunConfigurationType">
       <module name="auction-client" />
       <method v="2">
@@ -226,17 +241,19 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Application.TestDB" />
+      <item itemvalue="Application.testUser" />
       <item itemvalue="Application.client.networks.ClientMain" />
       <item itemvalue="Application.server.networks.ServerRocket" />
       <item itemvalue="Application.ClientMain" />
-      <item itemvalue="Application.ServerRocket" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.testUser" />
+        <item itemvalue="Application.TestDB" />
         <item itemvalue="Application.server.networks.ServerRocket" />
         <item itemvalue="Application.client.networks.ClientMain" />
         <item itemvalue="Application.ClientMain" />
-        <item itemvalue="Application.ServerRocket" />
       </list>
     </recent_temporary>
   </component>

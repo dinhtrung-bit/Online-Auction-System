@@ -9,7 +9,6 @@ public class testUser {
             UserDAO userDAO = new UserDAOimpl();
 
             User user = new Bidder(0, "bidder_test", 2000.0);
-            // sửa constructor này theo class Bidder thật của bạn
 
             userDAO.insert(user);
 
