@@ -5,17 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/auction-client/src/client/networks/NetworkManager.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/auction-client/src/client/networks/TestConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-client/src/client/Launcher.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-client/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/LoginController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-client/src/client/models/BidMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/models/BidMessage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/UserDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/DAO/UserDAO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/UserDAOimpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/DAO/UserDAOimpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/server/networks/ClientHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/networks/ClientHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/ClientApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/ClientApp.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -73,6 +65,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Application.ClientApp.executor": "Run",
     "Application.ClientMain.executor": "Run",
     "Application.ServerRocket.executor": "Run",
     "Application.TestConnection.executor": "Run",
@@ -114,7 +107,7 @@
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\resources\views" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.TestConnection">
+  <component name="RunManager" selected="Application.Launcher">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="auction-client" />
       <option name="ENV_FILES" value="" />
@@ -171,12 +164,12 @@
       <option name="USE_PATTERN" value="false" />
       <method v="2" />
     </configuration>
-    <configuration name="ClientMain" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="com.auctions.client.networks.ClientMain" />
+    <configuration name="ClientApp" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="client.ClientApp" />
       <module name="auction-client" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.auctions.client.networks.*" />
+          <option name="PATTERN" value="client.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -184,12 +177,12 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="ServerRocket" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="com.auctions.server.network.ServerRocket" />
-      <module name="auction-server" />
+    <configuration name="Launcher" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="client.Launcher" />
+      <module name="auction-client" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.auctions.server.network.*" />
+          <option name="PATTERN" value="client.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -232,19 +225,19 @@
       </method>
     </configuration>
     <list>
+      <item itemvalue="Application.ClientApp" />
+      <item itemvalue="Application.Launcher" />
       <item itemvalue="Application.TestConnection" />
       <item itemvalue="Application.client.networks.ClientMain" />
       <item itemvalue="Application.server.networks.ServerRocket" />
-      <item itemvalue="Application.ClientMain" />
-      <item itemvalue="Application.ServerRocket" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.TestConnection" />
+        <item itemvalue="Application.Launcher" />
+        <item itemvalue="Application.ClientApp" />
         <item itemvalue="Application.server.networks.ServerRocket" />
         <item itemvalue="Application.client.networks.ClientMain" />
-        <item itemvalue="Application.ClientMain" />
-        <item itemvalue="Application.ServerRocket" />
+        <item itemvalue="Application.TestConnection" />
       </list>
     </recent_temporary>
   </component>

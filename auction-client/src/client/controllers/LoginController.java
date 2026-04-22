@@ -66,4 +66,12 @@ public class LoginController {
         alert.setContentText(content);
         alert.showAndWait();
     }
+    @FXML
+    public void handleRegister(ActionEvent event) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Thông báo");
+        alert.setHeaderText(null);
+        alert.setContentText("Tính năng đăng ký đang được phát triển!");
+        alert.showAndWait();
+    }
 }
