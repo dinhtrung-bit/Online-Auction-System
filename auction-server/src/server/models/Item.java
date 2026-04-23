@@ -2,6 +2,7 @@ package server.models;
 import java.io.Serializable;
 
 public abstract class Item implements Serializable {
+    //protected Seller seller;
     protected int itemId;
     protected String name;
     protected double startingPrice;
@@ -11,7 +12,9 @@ public abstract class Item implements Serializable {
         this.name = name;
         this.startingPrice = startingPrice;
         this.description=description;
+      //  this.seller=seller;
     }
+    //public Seller getseller(){ return seller;}
 
     public void setItemId(int itemId) {
         this.itemId = itemId;

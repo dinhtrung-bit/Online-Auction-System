@@ -1,9 +1,9 @@
 package server.models;
 import java.io.Serializable;
 
-// implements Serializable để gửi được qua Socket [cite: 1436]
+// implements Serializable để gửi được qua Socket
 public abstract class User implements Serializable {
-    private static final long serialVersionUID = 1L; // Đảm bảo đồng nhất phiên bản [cite: 1447]
+    private static final long serialVersionUID = 1L; // Đảm bảo đồng nhất phiên bản
     protected int userId;
     protected String username;
     protected String role; // "BIDDER", "SELLER", "ADMIN"
