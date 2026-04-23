@@ -5,13 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/auction-server/src/server/DAO/testItem.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_15_04_2026_6_35_CH_[Changes]/shelved.patch" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_15_04_2026_6_35_CH__Changes_.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/ItemDAOimpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/DAO/ItemDAOimpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/Item.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/Item.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -72,6 +66,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Application.ClientApp.executor": "Run",
     "Application.ClientMain.executor": "Run",
     "Application.ServerRocket.executor": "Run",
     "Application.TestDB.executor": "Run",
@@ -115,7 +110,7 @@
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\resources\views" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.testItem">
+  <component name="RunManager" selected="Application.ClientApp">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="auction-client" />
       <option name="ENV_FILES" value="" />
@@ -172,6 +167,19 @@
       <option name="USE_PATTERN" value="false" />
       <method v="2" />
     </configuration>
+    <configuration name="ClientApp" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="client.ClientApp" />
+      <module name="auction-client" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="client.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="TestDB" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="server.DAO.TestDB" />
       <module name="1" />
@@ -185,21 +193,9 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="client.networks.ClientMain" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="client.networks.ClientMain" />
-      <module name="auction-client" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="client.networks.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="server.networks.ServerRocket" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="server.networks.ServerRocket" />
+      <module name="online-auction" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="server.networks.*" />
@@ -248,19 +244,19 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Application.ClientApp" />
       <item itemvalue="Application.testItem" />
       <item itemvalue="Application.TestDB" />
       <item itemvalue="Application.testUser" />
-      <item itemvalue="Application.client.networks.ClientMain" />
       <item itemvalue="Application.server.networks.ServerRocket" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.ClientApp" />
+        <item itemvalue="Application.server.networks.ServerRocket" />
         <item itemvalue="Application.testItem" />
         <item itemvalue="Application.testUser" />
         <item itemvalue="Application.TestDB" />
-        <item itemvalue="Application.server.networks.ServerRocket" />
-        <item itemvalue="Application.client.networks.ClientMain" />
       </list>
     </recent_temporary>
   </component>
