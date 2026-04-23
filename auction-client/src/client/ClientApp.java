@@ -2,30 +2,40 @@ package client;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class ClientApp extends Application {
 
     @Override
-    public void start(Stage stage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(
-                ClientApp.class.getResource("/client/views/login.fxml")
-        );
+    public void start(Stage primaryStage) {
+        try {
+            // 1. Tải file giao diện đăng nhập (FXML)
+            // Lưu ý: Đường dẫn bắt đầu bằng "/" để tìm từ thư mục src
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/login.fxml"));
+            Parent root = loader.load();
 
-        Scene scene = new Scene(loader.load(), 900, 600);
+            // 2. Thiết lập tiêu đề và Scene (màn hình) cho cửa sổ
+            primaryStage.setTitle("Hệ thống Đấu giá Trực tuyến - Đăng nhập");
+            primaryStage.setScene(new Scene(root));
 
-        var cssUrl = ClientApp.class.getResource("/client/views/app.css");
-        if (cssUrl != null) {
-            scene.getStylesheets().add(cssUrl.toExternalForm());
+            // 3. Một số tùy chỉnh giao diện (tùy chọn)
+            primaryStage.setResizable(false); // Không cho phóng to cửa sổ
+
+            // 4. Hiển thị cửa sổ
+            primaryStage.show();
+
+            System.out.println("[Client] 🚀 Giao diện JavaFX đã khởi động thành công.");
+
+        } catch (Exception e) {
+            System.err.println("[Lỗi] Không thể tải file login.fxml. Kiểm tra lại đường dẫn trong views!");
+            e.printStackTrace();
         }
-
-        stage.setTitle("Online Auction System");
-        stage.setScene(scene);
-        stage.show();
     }
 
     public static void main(String[] args) {
-        launch();
+        // Hàm này sẽ gọi đến phương thức start() ở trên
+        launch(args);
     }
 }

@@ -5,6 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -40,7 +41,7 @@
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/dinhtrung-bit/Online-Auction-System.git&quot;,
-    &quot;accountId&quot;: &quot;6f023320-f90c-4313-abd6-df2c9856db41&quot;
+    &quot;accountId&quot;: &quot;7c940023-821b-44d8-9571-c9ae9abbb95d&quot;
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
@@ -49,9 +50,6 @@
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
-  </component>
-  <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
         &quot;associatedIndex&quot;: 2
@@ -64,42 +62,41 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.ClientMain.executor": "Run",
-    "Application.ServerRocket.executor": "Run",
-    "Application.TestDB.executor": "Run",
-    "Application.client.networks.ClientMain.executor": "Run",
-    "Application.server.networks.ServerRocket.executor": "Run",
-    "Application.testItem.executor": "Run",
-    "Application.testUser.executor": "Run",
-    "DefaultHtmlFileTemplate": "HTML File",
-    "Maven.auction-client [org.openjfx:javafx-maven-plugin:0.0.8:run].executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "dev-main",
-    "ignore.virus.scanning.warn.message": "true",
-    "junie.onboarding.icon.badge.shown": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "D:/all/java/Online-Auction-System",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "reference.projectsettings.compiler.excludes",
-    "to.speed.mode.migration.done": "true",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.ClientApp.executor&quot;: &quot;Run&quot;,
+    &quot;Application.ClientMain.executor&quot;: &quot;Run&quot;,
+    &quot;Application.ServerRocket.executor&quot;: &quot;Run&quot;,
+    &quot;Application.TestConnection.executor&quot;: &quot;Run&quot;,
+    &quot;Application.client.networks.ClientMain.executor&quot;: &quot;Run&quot;,
+    &quot;Application.server.networks.ServerRocket.executor&quot;: &quot;Run&quot;,
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;Maven.auction-client [org.openjfx:javafx-maven-plugin:0.0.8:run].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;dinhtrung&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/all/java/Online-Auction-System&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.excludes&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\views" />
@@ -109,7 +106,7 @@
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\resources\views" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.server.networks.ServerRocket">
+  <component name="RunManager" selected="Application.Launcher">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="auction-client" />
       <option name="ENV_FILES" value="" />
@@ -166,15 +163,36 @@
       <option name="USE_PATTERN" value="false" />
       <method v="2" />
     </configuration>
-    <configuration name="TestDB" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="server.DAO.TestDB" />
-      <module name="1" />
+    <configuration name="ClientApp" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="client.ClientApp" />
+      <module name="auction-client" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="server.DAO.*" />
+          <option name="PATTERN" value="client.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Launcher" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="client.Launcher" />
+      <module name="auction-client" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="client.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="TestConnection" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="UNNAMED_CLASS_CONFIGURATION" value="true" />
+      <option name="MAIN_CLASS_NAME" value="TestConnection" />
+      <module name="auction-client" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -205,46 +223,29 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="testItem" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="server.DAO.testItem" />
-      <module name="online-auction" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="server.DAO.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
+    <configuration default="true" type="JetRunConfigurationType">
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="testUser" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="server.DAO.testUser" />
-      <module name="1" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="server.DAO.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <option name="filePath" />
+      <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Application.testItem" />
-      <item itemvalue="Application.TestDB" />
-      <item itemvalue="Application.testUser" />
+      <item itemvalue="Application.ClientApp" />
+      <item itemvalue="Application.Launcher" />
+      <item itemvalue="Application.TestConnection" />
       <item itemvalue="Application.client.networks.ClientMain" />
       <item itemvalue="Application.server.networks.ServerRocket" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.Launcher" />
         <item itemvalue="Application.server.networks.ServerRocket" />
-        <item itemvalue="Application.testItem" />
-        <item itemvalue="Application.testUser" />
-        <item itemvalue="Application.TestDB" />
+        <item itemvalue="Application.ClientApp" />
         <item itemvalue="Application.client.networks.ClientMain" />
+        <item itemvalue="Application.TestConnection" />
       </list>
     </recent_temporary>
   </component>
@@ -267,11 +268,7 @@
       <workItem from="1774168719082" duration="64000" />
       <workItem from="1774168854236" duration="670000" />
       <workItem from="1774583249310" duration="633000" />
-      <workItem from="1776837513894" duration="157000" />
-      <workItem from="1776839509022" duration="374000" />
-      <workItem from="1776839956728" duration="1472000" />
-      <workItem from="1776863446214" duration="87000" />
-      <workItem from="1776863554420" duration="3515000" />
+      <workItem from="1776821967470" duration="1443000" />
     </task>
     <servers />
   </component>
