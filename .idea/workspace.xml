@@ -5,13 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/auction-server/src/server/DAO/testItem.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_15_04_2026_6_35_CH_[Changes]/shelved.patch" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_15_04_2026_6_35_CH__Changes_.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/ItemDAOimpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/DAO/ItemDAOimpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/Item.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/Item.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/AuctionDetailController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/AuctionDetailController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/models/AuctionViewModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/models/AuctionViewModel.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -92,7 +88,7 @@
     "ignore.virus.scanning.warn.message": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "D:/all/java/Online-Auction-System",
+    "last_opened_file_path": "C:/Users/asus/Documents/GitHub/Online-Auction-System/auction-client/src/client/controllers",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -107,6 +103,9 @@
   }
 }]]></component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\controllers" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\views" />
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client" />
@@ -212,7 +211,6 @@
     </configuration>
     <configuration name="testItem" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="server.DAO.testItem" />
-      <module name="online-auction" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="server.DAO.*" />
