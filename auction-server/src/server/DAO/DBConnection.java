@@ -13,7 +13,7 @@ public class DBConnection {
 
     private DBConnection() {
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
+            Class.forName("com.mysql.cj.jdbc.Driver");//tạo ra cầu nối giữa java và csdl
             this.connection = DriverManager.getConnection(URL, USER, PASSWORD);
             System.out.println("Kết nối cơ sở dữ liệu thành công");
         }
@@ -22,7 +22,7 @@ public class DBConnection {
             throw new RuntimeException("Lỗi kết nối cơ sở dữ liệu");
         }
     }
-    public static DBConnection getInstance() {
+    public static synchronized DBConnection getInstance() {
         try {
             if (instance == null || instance.getConnection().isClosed()) {
                 instance = new DBConnection();
@@ -37,3 +37,4 @@ public class DBConnection {
         return connection;
     }
 }
+

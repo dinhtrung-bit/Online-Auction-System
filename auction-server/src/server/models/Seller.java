@@ -1,7 +1,7 @@
 package server.models;
 
-class Seller extends User {
-    public Seller(String userId, String username) {
+public class Seller extends User {
+    public Seller(int userId, String username) {
         super(userId, username, "SELLER");
     }
 

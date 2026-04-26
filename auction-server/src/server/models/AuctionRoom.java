@@ -56,8 +56,8 @@ public class AuctionRoom implements Serializable {
         this.currentWinner = bidder;
 
         // 5. Lưu vào lịch sử đấu giá
-        // Chuyển userId từ String (trong User.java) sang Long (trong BidMessage.java)
-        Long bidderIdLong = Long.parseLong(bidder.getUserId());
+        // Chuyển userId từ int (trong User.java) sang Long (trong BidMessage.java)
+        Long bidderIdLong =(long) bidder.getUserId();
         BidMessage bidEntry = new BidMessage(bidderIdLong, this.id, amount);
         this.bidHistory.add(bidEntry);
 
