@@ -5,7 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/auction-server/src/server/networks/ServerMain.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/UserDAOimpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/DAO/UserDAOimpl.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,6 +72,7 @@
   "keyToString": {
     "Application.ClientApp.executor": "Run",
     "Application.ClientMain.executor": "Run",
+    "Application.ServerMain.executor": "Run",
     "Application.ServerRocket.executor": "Run",
     "Application.TestDB.executor": "Run",
     "Application.client.networks.ClientMain.executor": "Run",
@@ -83,7 +88,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "thắng",
     "ignore.virus.scanning.warn.message": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
@@ -93,7 +98,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Project",
+    "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
     "settings.editor.selected.configurable": "reference.projectsettings.compiler.excludes",
@@ -110,7 +115,7 @@
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\resources\views" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.ClientApp">
+  <component name="RunManager" selected="Application.ServerMain">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="auction-client" />
       <option name="ENV_FILES" value="" />
@@ -180,12 +185,12 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="TestDB" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="server.DAO.TestDB" />
-      <module name="1" />
+    <configuration name="ServerMain" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="server.networks.ServerMain" />
+      <module name="online-auction" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="server.DAO.*" />
+          <option name="PATTERN" value="server.networks.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -244,19 +249,19 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Application.ServerMain" />
       <item itemvalue="Application.ClientApp" />
       <item itemvalue="Application.testItem" />
-      <item itemvalue="Application.TestDB" />
       <item itemvalue="Application.testUser" />
       <item itemvalue="Application.server.networks.ServerRocket" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.ServerMain" />
         <item itemvalue="Application.ClientApp" />
         <item itemvalue="Application.server.networks.ServerRocket" />
         <item itemvalue="Application.testItem" />
         <item itemvalue="Application.testUser" />
-        <item itemvalue="Application.TestDB" />
       </list>
     </recent_temporary>
   </component>

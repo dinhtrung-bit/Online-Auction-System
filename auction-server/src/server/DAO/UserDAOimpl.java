@@ -36,7 +36,7 @@ public class UserDAOimpl implements UserDAO {
             pstmt.setString(1, user.getUsername());
             pstmt.setString(2, user.getPasswordHash());
             pstmt.setString(3, user.getRole());
-            pstmt.setString(4, user.getUserId());
+            pstmt.setInt(4, user.getUserId());
 
             pstmt.executeUpdate();
         }
@@ -67,7 +67,7 @@ public class UserDAOimpl implements UserDAO {
              ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) {
                 // Lấy dữ liệu từ các cột tương ứng trong bảng 'users'
-                String userId = rs.getString("user_id");
+                int userId = rs.getInt("user_id");
                 String username = rs.getString("username");
                 String role = rs.getString("role");
                 User user = null;
