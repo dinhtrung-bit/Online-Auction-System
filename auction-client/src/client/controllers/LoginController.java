@@ -1,63 +1,101 @@
 package client.controllers;
 
-import client.ClientApp;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
+import java.io.IOException;
+
 public class LoginController {
 
-    @FXML
-    private TextField usernameField;
+
+    @FXML private Button btnAdmin;
+    @FXML private Button btnSeller;
+    @FXML private Button btnBidder;
+    @FXML private TextField txtUsername;
+    @FXML private PasswordField txtPassword;
+
+
+    private String selectedRole = "Bidder";
+
+
+    private final String IDLE_STYLE = "-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 5; -fx-background-radius: 5; -fx-text-fill: black;";
+    private final String ACTIVE_STYLE = "-fx-background-color: #ecfdf5; -fx-text-fill: #10B981; -fx-border-color: #a7f3d0; -fx-border-radius: 5; -fx-background-radius: 5; -fx-font-weight: bold;";
+
 
     @FXML
-    private PasswordField passwordField;
-
-    @FXML
-    public void handleLogin(ActionEvent event) {
-        String username = usernameField.getText();
-        String password = passwordField.getText();
-
-        if (username == null || username.isBlank() || password == null || password.isBlank()) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Lỗi");
-            alert.setHeaderText(null);
-            alert.setContentText("Vui lòng nhập đầy đủ username và password");
-            alert.showAndWait();
-            return;
-        }
-
-        try {
-            FXMLLoader loader = new FXMLLoader(
-                    ClientApp.class.getResource("/client/views/auction-list.fxml")
-            );
-            Scene scene = new Scene(loader.load(), 1000, 650);
-
-            var cssUrl = ClientApp.class.getResource("/client/views/app.css");
-            if (cssUrl != null) {
-                scene.getStylesheets().add(cssUrl.toExternalForm());
-            }
-
-            Stage stage = (Stage) usernameField.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Auction List");
-            stage.show();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    void selectAdmin(ActionEvent event) {
+        selectedRole = "Admin";
+        updateButtonStyles();
     }
 
+
     @FXML
-    public void handleRegister(ActionEvent event) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Thông báo");
-        alert.setHeaderText(null);
-        alert.setContentText("Chưa làm màn hình Register");
-        alert.showAndWait();
+    void selectSeller(ActionEvent event) {
+        selectedRole = "Seller";
+        updateButtonStyles();
+    }
+
+
+    @FXML
+    void selectBidder(ActionEvent event) {
+        selectedRole = "Bidder";
+        updateButtonStyles();
+    }
+
+
+    private void updateButtonStyles() {
+        btnAdmin.setStyle(selectedRole.equals("Admin") ? ACTIVE_STYLE : IDLE_STYLE);
+        btnSeller.setStyle(selectedRole.equals("Seller") ? ACTIVE_STYLE : IDLE_STYLE);
+        btnBidder.setStyle(selectedRole.equals("Bidder") ? ACTIVE_STYLE : IDLE_STYLE);
+    }
+
+
+    @FXML
+    void handleLogin(ActionEvent event) {
+        String username = txtUsername.getText().trim();
+        String password = txtPassword.getText().trim();
+
+        boolean isValid = false;
+
+
+        if (selectedRole.equals("Admin") && username.equals("admin") && password.equals("admin123")) {
+            isValid = true;
+        } else if (selectedRole.equals("Seller") && username.equals("seller1") && password.equals("seller123")) {
+            isValid = true;
+        } else if (selectedRole.equals("Bidder") && username.equals("bidder1") && password.equals("bidder123")) {
+            isValid = true;
+        }
+
+        if (isValid) {
+
+            try {
+
+
+                Parent root = FXMLLoader.load(getClass().getResource("/client/views/auction-list.fxml"));
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                Scene scene = new Scene(root, 1200, 700);
+                stage.setScene(scene);
+                stage.setMaximized(true); // Đảm bảo full màn hình
+                stage.show();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            // Đăng nhập thất bại -> Hiện thông báo
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Lỗi đăng nhập");
+            alert.setHeaderText(null);
+            alert.setContentText("Sai tài khoản, mật khẩu hoặc vai trò. Vui lòng kiểm tra lại thông tin Demo!");
+            alert.showAndWait();
+        }
     }
 }

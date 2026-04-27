@@ -22,6 +22,9 @@ public class ClientApp extends Application {
 
         stage.setTitle("Online Auction System");
         stage.setScene(scene);
+
+        stage.setMaximized(true);
+        stage.show();
         stage.show();
     }
 
