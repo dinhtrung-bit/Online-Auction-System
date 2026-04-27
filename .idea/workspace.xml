@@ -5,7 +5,48 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/auction-server/src/server/application/MainServer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/server/dao/impl/AuctionRoomDAOImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/server/models/items/ItemFactory.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/server/models/items/Vehicle.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/server/models/users/Admin.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/server/models/users/Bidder.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/server/models/users/Seller.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/server/models/users/User.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/server/models/users/UserFactory.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/AuctionRoomDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/interfaces/AuctionRoomDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/BidMessageDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/interfaces/BidMessageDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/DBConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/core/DBConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/GenericDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/core/GenericDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/ItemDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/interfaces/ItemDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/ItemDAOimpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/impl/ItemDAOimpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/TestDB.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/test/java/TestDB.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/UserDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/interfaces/UserDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/UserDAOimpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/impl/UserDAOimpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/testItem.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/test/java/testItem.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/DAO/testUser.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/test/java/testUser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/auction/AuctionManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/services/AuctionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/auction/AuctionProduct.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/auction/BidMessage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/Admin.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/Art.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/items/Art.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/AuctionRoom.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/auction/AuctionRoom.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/AuctionStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/auction/AuctionStatus.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/BidMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/auction/BidMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/Bidder.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/Electronics.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/items/Electronics.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/Item.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/items/Item.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/ItemFactory.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/Seller.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/User.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/UserFactory.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/Vehicle.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/networks/ClientHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/networks/ClientHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/networks/MessageDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/networks/dto/MessageDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/networks/ServerRocket.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/ultis/InvalidBidException.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/exceptions/InvalidBidException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/ultis/Validation.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/exceptions/Validation.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,8 +58,9 @@
       <list>
         <option value="HTML File" />
         <option value="module-info" />
-        <option value="package-info" />
+        <option value="Python Script" />
         <option value="Class" />
+        <option value="package-info" />
       </list>
     </option>
   </component>
@@ -64,43 +106,44 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.ClientApp.executor&quot;: &quot;Run&quot;,
-    &quot;Application.ClientMain.executor&quot;: &quot;Run&quot;,
-    &quot;Application.ServerRocket.executor&quot;: &quot;Run&quot;,
-    &quot;Application.TestDB.executor&quot;: &quot;Run&quot;,
-    &quot;Application.client.networks.ClientMain.executor&quot;: &quot;Run&quot;,
-    &quot;Application.server.networks.ServerRocket.executor&quot;: &quot;Run&quot;,
-    &quot;Application.testItem.executor&quot;: &quot;Run&quot;,
-    &quot;Application.testUser.executor&quot;: &quot;Run&quot;,
-    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
-    &quot;Maven.auction-client [org.openjfx:javafx-maven-plugin:0.0.8:run].executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/all/java/Online-Auction-System&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.excludes&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.ClientApp.executor": "Run",
+    "Application.ClientMain.executor": "Run",
+    "Application.Launcher.executor": "Run",
+    "Application.ServerRocket.executor": "Run",
+    "Application.TestDB.executor": "Run",
+    "Application.client.networks.ClientMain.executor": "Run",
+    "Application.server.networks.ServerRocket.executor": "Run",
+    "Application.testItem.executor": "Run",
+    "Application.testUser.executor": "Run",
+    "DefaultHtmlFileTemplate": "HTML File",
+    "Maven.auction-client [org.openjfx:javafx-maven-plugin:0.0.8:run].executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/all/java/Online-Auction-System",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "reference.projectsettings.compiler.excludes",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\views" />
@@ -108,6 +151,9 @@
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\models" />
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\controllers" />
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\resources\views" />
+    </key>
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="" />
     </key>
   </component>
   <component name="RunManager" selected="Application.Launcher">
@@ -137,12 +183,12 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="server.networks.ServerRocket" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="server.networks.ServerRocket" />
+    <configuration name="MainServer" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="application.MainServer" />
       <module name="online-auction" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="server.networks.*" />
+          <option name="PATTERN" value="application.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -151,11 +197,11 @@
       </method>
     </configuration>
     <configuration name="testItem" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="server.DAO.testItem" />
+      <option name="MAIN_CLASS_NAME" value="testItem" />
       <module name="online-auction" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="server.DAO.*" />
+          <option name="PATTERN" value=".*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -164,11 +210,11 @@
       </method>
     </configuration>
     <configuration name="testUser" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="server.DAO.testUser" />
-      <module name="1" />
+      <option name="MAIN_CLASS_NAME" value="testUser" />
+      <module name="online-auction" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="server.DAO.*" />
+          <option name="PATTERN" value=".*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -181,13 +227,13 @@
       <item itemvalue="Application.ClientApp" />
       <item itemvalue="Application.testItem" />
       <item itemvalue="Application.testUser" />
-      <item itemvalue="Application.server.networks.ServerRocket" />
+      <item itemvalue="Application.MainServer" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Application.Launcher" />
         <item itemvalue="Application.ClientApp" />
-        <item itemvalue="Application.server.networks.ServerRocket" />
+        <item itemvalue="Application.MainServer" />
         <item itemvalue="Application.testItem" />
         <item itemvalue="Application.testUser" />
       </list>
