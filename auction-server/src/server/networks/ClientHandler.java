@@ -1,15 +1,20 @@
 package server.networks;
 
 import com.google.gson.Gson;
-import server.DAO.UserDAO;
-import server.DAO.UserDAOimpl;
-import server.models.User;
-import server.models.UserFactory;
+import server.dao.interfaces.UserDAO;
+import server.dao.impl.UserDAOimpl;
+import server.models.users.User;
+import server.models.users.UserFactory;
+import server.models.users.Bidder;
+import server.models.items.Item;
+import server.networks.dto.MessageDTO;
+import server.services.AuctionService;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.time.LocalDateTime;
 
 public class ClientHandler implements Runnable {
     private Socket clientSocket;    // Socket kết nối trực tiếp với 1 Client cụ thể
@@ -28,20 +33,16 @@ public class ClientHandler implements Runnable {
             System.out.println("Dang xu ly: " + clientSocket.getInetAddress());
 
             // 1. Khởi tạo luồng Đọc (in) và Ghi (out) dữ liệu qua Socket
-            // InputStreamReader đọc byte từ Socket, BufferedReader giúp đọc từng dòng text (JSON)
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            // PrintWriter đẩy text về Client. Tham số 'true' giúp tự động đẩy (flush) ngay lập tức
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 
             String inputLine;
-            // 2. Vòng lặp while liên tục lắng nghe Client. Hàm readLine() sẽ block cho đến khi có tin nhắn mới
+            // 2. Vòng lặp while liên tục lắng nghe Client
             while ((inputLine = in.readLine()) != null) {
                 System.out.println("Server nhận yêu cầu: " + inputLine);
 
                 // 3. Biến chuỗi JSON Client gửi thành đối tượng MessageDTO
                 MessageDTO request = gson.fromJson(inputLine, MessageDTO.class);
-
-                // Khởi tạo đối tượng rỗng để chuẩn bị gửi phản hồi về Client
                 MessageDTO response = new MessageDTO();
 
                 // =======================================================
@@ -50,20 +51,16 @@ public class ClientHandler implements Runnable {
 
                 // ---> CHỨC NĂNG ĐĂNG NHẬP
                 if ("LOGIN".equals(request.getAction())) {
-                    // Giả sử Client gửi lên payload dạng: "username:password"
                     String[] credentials = request.getPayload().split(":");
 
                     if (credentials.length == 2) {
                         String username = credentials[0];
                         String password = credentials[1];
 
-                        // Gọi DAO tìm kiếm user dưới CSDL
                         User user = userDAO.findByUsername(username);
 
-                        // Kiểm tra: Nếu user tồn tại và password khớp với CSDL
                         if (user != null && password.equals(user.getPasswordHash())) {
                             response.setAction("LOGIN_SUCCESS");
-                            // Nén toàn bộ thông tin User thành JSON trả về cho giao diện Client
                             response.setPayload(gson.toJson(user));
                             System.out.println("[Thành công] User đăng nhập: " + username);
                         } else {
@@ -75,9 +72,9 @@ public class ClientHandler implements Runnable {
                         response.setPayload("Lỗi định dạng dữ liệu gửi lên.");
                     }
                 }
+
                 // ---> CHỨC NĂNG ĐĂNG KÝ
                 else if ("REGISTER".equals(request.getAction())) {
-                    // Giả sử payload đăng ký là: "username:password:role"
                     String[] data = request.getPayload().split(":");
 
                     if (data.length == 3) {
@@ -86,19 +83,15 @@ public class ClientHandler implements Runnable {
                         String role = data[2];
 
                         try {
-                            // Dùng Factory của Thành viên 1 để tạo đối tượng User mới
                             User newUser = UserFactory.createUser(role, 0, username);
-                            // Gắn password cho user (Xem lưu ý số 2 bên dưới)
-                            // newUser.setPasswordHash(password);
+                            // newUser.setPasswordHash(password); // Nhớ bỏ comment và set password ở đây
 
-                            // Đẩy xuống CSDL thông qua hàm insert đã viết ở DAO
                             userDAO.insert(newUser);
 
                             response.setAction("REGISTER_SUCCESS");
                             response.setPayload("Đăng ký tài khoản thành công!");
                             System.out.println("[Thành công] Đã tạo user mới: " + username);
                         } catch (Exception ex) {
-                            // Bắt lỗi Exception từ DB (ví dụ: trùng username UNIQUE)
                             response.setAction("REGISTER_FAILED");
                             response.setPayload("Tên đăng nhập đã tồn tại hoặc lỗi hệ thống.");
                         }
@@ -107,7 +100,73 @@ public class ClientHandler implements Runnable {
                         response.setPayload("Thiếu thông tin đăng ký.");
                     }
                 }
-                // Các chức năng khác như BID, CREATE_AUCTION sẽ được thêm bằng if-else (hoặc switch-case) ở đây
+
+                // ---> CHỨC NĂNG ĐẶT GIÁ (BID)
+                else if ("BID".equals(request.getAction())) {
+                    // Quy ước Client gửi payload dạng: "roomId:username:amount"
+                    String[] data = request.getPayload().split(":");
+
+                    if (data.length == 3) {
+                        try {
+                            Long roomId = Long.parseLong(data[0]);
+                            String username = data[1];
+                            double amount = Double.parseDouble(data[2]);
+
+                            // Tìm user từ DB
+                            User user = userDAO.findByUsername(username);
+
+                            if (user != null) {
+                                // Khởi tạo Bidder từ dữ liệu User (Bạn có thể cần sửa dòng này cho khớp với Constructor của class Bidder thực tế)
+                                Bidder bidder = new Bidder(user.getUserId(), user.getUsername(), user.getPasswordHash(), user.getEmail(), user.getAccountBalance());
+
+                                // Gọi Manager xử lý đặt giá
+                                String result = AuctionService.getInstance().handleBidRequest(roomId, bidder, amount);
+
+                                if ("SUCCESS".equals(result)) {
+                                    response.setAction("BID_SUCCESS");
+                                    response.setPayload("Đặt giá thành công!");
+                                    System.out.println("[Thành công] User " + username + " đã đặt " + amount + " cho phòng " + roomId);
+                                } else {
+                                    response.setAction("BID_FAILED");
+                                    response.setPayload(result); // VD: "Giá quá thấp"
+                                }
+                            } else {
+                                response.setAction("BID_FAILED");
+                                response.setPayload("Không tìm thấy thông tin người dùng.");
+                            }
+                        } catch (NumberFormatException e) {
+                            response.setAction("BID_FAILED");
+                            response.setPayload("Lỗi định dạng dữ liệu ID phòng hoặc Số tiền.");
+                        }
+                    } else {
+                        response.setAction("BID_FAILED");
+                        response.setPayload("Thiếu thông tin đặt giá. Yêu cầu: roomId:username:amount");
+                    }
+                }
+
+                // ---> CHỨC NĂNG TẠO PHIÊN ĐẤU GIÁ (SELLER)
+                else if ("CREATE_AUCTION".equals(request.getAction())) {
+                    try {
+                        // Nhận chuỗi JSON đại diện cho Item từ Client và ép kiểu
+                        Item newItem = gson.fromJson(request.getPayload(), Item.class);
+
+                        // Set thời gian kết thúc mặc định là 24h sau khi tạo
+                        LocalDateTime endTime = LocalDateTime.now().plusHours(24);
+
+                        // Lưu vào RAM và Database
+                        AuctionService.getInstance().createNewAuction(newItem, endTime);
+
+                        response.setAction("CREATE_AUCTION_SUCCESS");
+                        response.setPayload("Tạo phiên đấu giá thành công!");
+                        System.out.println("[Thành công] Đã tạo đấu giá cho sản phẩm: " + newItem.getName());
+
+                    } catch (Exception e) {
+                        response.setAction("CREATE_AUCTION_FAILED");
+                        response.setPayload("Lỗi hệ thống khi tạo phiên đấu giá: " + e.getMessage());
+                    }
+                }
+
+                // ---> CÁC HÀNH ĐỘNG KHÔNG XÁC ĐỊNH
                 else {
                     response.setAction("ERROR");
                     response.setPayload("Hành động không được hỗ trợ.");

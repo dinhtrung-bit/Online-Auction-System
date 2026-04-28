@@ -29,16 +29,53 @@ Dự án sử dụng **Maven** và được chia thành 2 module chính: `auctio
 online-auction-system/
 ├── README.md
 ├── .gitignore
-├── auction-server/                 # Module xử lý Server & Database
-│   ├── pom.xml
-│   └── src/server/
-│       ├── MainServer.java         # Entry point bật server
-│       ├── controller/             # Nhận request từ Client (Socket/API)
-│       ├── model/                  # Entities (User, Item, Auction, Bid)
-│       ├── dao/                    # Database Access Object (truy vấn DB)
-│       ├── service/                # Business Logic, Auto-Bidding, Anti-sniping
-│       └── utils/                  # DB Connection, ThreadPool, Constants
-│
+├── auction-server/
+├── pom.xml
+└── src/
+    ├── main/java/server/
+    │   ├── application/            # 1. Điểm khởi chạy Server
+    │   │   └── ServerApplication.java  (Đổi tên từ ServerRocket.java)
+    │   │
+    │   ├── network/                # 2. Tầng giao tiếp mạng (Socket)
+    │   │   ├── ClientHandler.java
+    │   │   └── dto/
+    │   │       └── MessageDTO.java     (Nơi chứa các đối tượng gửi/nhận qua mạng)
+    │   │
+    │   ├── services/               # 3. Tầng Business Logic (Bộ não xử lý)
+    │   │   └── AuctionManager.java     (Chuyển từ package 'auction' sang đây)
+    │   │
+    │   ├── dao/                    # 4. Tầng truy xuất dữ liệu (Giao tiếp Database)
+    │   │   ├── DBConnection.java
+    │   │   ├── GenericDAO.java
+    │   │   ├── interfaces/             (Gom các Interface lại cho gọn)
+    │   │   │   ├── UserDAO.java
+    │   │   │   ├── ItemDAO.java
+    │   │   │   ├── AuctionRoomDAO.java
+    │   │   │   └── BidMessageDAO.java
+    │   │   └── impl/                   (Gom các class triển khai Interface)
+    │   │       ├── UserDAOImpl.java    (Sửa chữ 'i' thường thành 'I' hoa)
+    │   │       ├── ItemDAOImpl.java    (Sửa chữ 'i' thường thành 'I' hoa)
+    │   │       └── AuctionRoomDAOImpl.java
+    │   │
+    │   ├── models/                 # 5. Tầng Dữ liệu (Entities/Models)
+    │   │   ├── users/
+    │   │   │   ├── User.java, Admin.java, Bidder.java, Seller.java, UserFactory.java
+    │   │   ├── items/
+    │   │   │   ├── Item.java, Art.java, Electronics.java, Vehicle.java, ItemFactory.java
+    │   │   └── auction/
+    │   │       ├── AuctionRoom.java, AuctionStatus.java, BidMessage.java
+    │   │
+    │   ├── exceptions/             # 6. Tầng xử lý lỗi ngoại lệ
+    │   │   └── InvalidBidException.java
+    │   │
+    │   └── utils/                  # 7. Các công cụ hỗ trợ dùng chung
+    │       └── Validation.java         (Đổi tên package từ 'ultis' đang bị sai chính tả)
+    │
+    └── test/java/server/           # 8. TẦNG KIỂM THỬ (Tách hoàn toàn khỏi luồng chạy chính)
+        └── dao/
+            ├── TestDB.java
+            ├── TestUser.java       (Đổi tên từ testUser)
+            └── TestItem.java       (Đổi tên từ testItem)
 └── auction-client/                 # Module giao diện UI (JavaFX)
     ├── pom.xml
     ├── src/client/

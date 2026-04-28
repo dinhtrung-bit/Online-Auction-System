@@ -1,46 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="client.controllers.AuctionListController"
-            styleClass="root-pane">
+<VBox spacing="20.0" styleClass="main-bg" stylesheets="@app.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.AuctionListController">
+    <padding><Insets bottom="20.0" left="30.0" right="30.0" top="20.0" /></padding>
 
-    <top>
-        <VBox spacing="10">
-            <padding>
-                <Insets top="15" right="15" bottom="15" left="15"/>
-            </padding>
+    <HBox alignment="CENTER_LEFT" spacing="20.0">
+        <Label text="Danh sách phiên đấu giá"><font><Font name="System Bold" size="24.0" /></font></Label>
+        <Region HBox.hgrow="ALWAYS" />
+        <TextField prefWidth="250.0" promptText="Tìm kiếm sản phẩm..." style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 5;" />
+        <Button text="Lọc" styleClass="btn-outline"/>
+    </HBox>
 
-            <Label text="Danh sách phiên đấu giá" styleClass="title-label"/>
+    <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" VBox.vgrow="ALWAYS">
+        <content>
+            <VBox spacing="15.0">
+                <HBox alignment="CENTER_LEFT" spacing="20.0" styleClass="card">
+                    <Label text="📱" textFill="#94a3b8"><font><Font size="40.0"/></font></Label>
 
-            <HBox spacing="10">
-                <TextField fx:id="searchField" promptText="Tìm kiếm sản phẩm..."/>
-                <Button text="Refresh" onAction="#handleRefresh"/>
-                <Button text="Xem chi tiết" onAction="#handleViewDetail"/>
-                <Button text="Logout" onAction="#handleLogout"/>
-            </HBox>
-        </VBox>
-    </top>
+                    <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Label text="Samsung QLED 4K 55&quot;"><font><Font name="System Bold" size="16.0"/></font></Label>
+                            <Label text="● Đang diễn ra" styleClass="badge-live"/>
+                        </HBox>
+                        <Label text="ELECTRONICS • Người bán: seller1 • ID: 327060FF" styleClass="text-muted"/>
 
-    <center>
-        <TableView fx:id="auctionTable">
-            <columns>
-                <TableColumn fx:id="idColumn" text="ID" prefWidth="80"/>
-                <TableColumn fx:id="itemNameColumn" text="Tên sản phẩm" prefWidth="280"/>
-                <TableColumn fx:id="currentPriceColumn" text="Giá hiện tại" prefWidth="180"/>
-                <TableColumn fx:id="winnerColumn" text="Người dẫn đầu" prefWidth="180"/>
-                <TableColumn fx:id="statusColumn" text="Trạng thái" prefWidth="140"/>
-            </columns>
-        </TableView>
-    </center>
+                        <HBox spacing="40.0" style="-fx-padding: 10 0 0 0;">
+                            <VBox><Label text="👤 Người dẫn đầu" styleClass="text-muted"/><Label text="bidder1"><font><Font name="System Bold"/></font></Label></VBox>
+                            <VBox><Label text="💰 Giá hiện tại" styleClass="text-muted"/><Label text="18.200.000 đ" textFill="#ef4444"><font><Font name="System Bold"/></font></Label></VBox>
+                            <VBox><Label text="Khởi điểm" styleClass="text-muted"/><Label text="15.000.000 đ"/></VBox>
+                            <VBox><Label text="Bắt đầu" styleClass="text-muted"/><Label text="19/04/26 04:44"/></VBox>
+                            <VBox><Label text="Kết thúc" styleClass="text-muted"/><Label text="20/04/26 04:44"/></VBox>
+                        </HBox>
+                    </VBox>
+                    <Button text="🔍 Chi tiết" styleClass="btn-outline" prefHeight="40" onAction="#viewDetail"/>
+                </HBox>
 
-</BorderPane>
+                <HBox alignment="CENTER_LEFT" spacing="20.0" styleClass="card">
+                    <Label text="🚗" textFill="#94a3b8"><font><Font size="40.0"/></font></Label>
+
+                    <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Label text="Honda City RS 2024"><font><Font name="System Bold" size="16.0"/></font></Label>
+                            <Label text="✓ Kết thúc" styleClass="badge-ended"/>
+                        </HBox>
+                        <Label text="VEHICLE • Người bán: seller2 • ID: ID71689" styleClass="text-muted"/>
+
+                        <HBox spacing="40.0" style="-fx-padding: 10 0 0 0;">
+                            <VBox><Label text="👤 Người dẫn đầu" styleClass="text-muted"/><Label text="bidder3"><font><Font name="System Bold"/></font></Label></VBox>
+                            <VBox><Label text="💰 Giá hiện tại" styleClass="text-muted"/><Label text="480.000.000 đ" textFill="#10b981"><font><Font name="System Bold"/></font></Label></VBox>
+                            <VBox><Label text="Khởi điểm" styleClass="text-muted"/><Label text="400.000.000 đ"/></VBox>
+                            <VBox><Label text="Bắt đầu" styleClass="text-muted"/><Label text="19/04/26 00:44"/></VBox>
+                            <VBox><Label text="Kết thúc" styleClass="text-muted"/><Label text="19/04/26 22:44"/></VBox>
+                        </HBox>
+                    </VBox>
+                    <Button text="🔍 Chi tiết" styleClass="btn-outline" prefHeight="40"/>
+                </HBox>
+            </VBox>
+        </content>
+    </ScrollPane>
+</VBox>

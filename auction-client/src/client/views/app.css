@@ -1,32 +1,130 @@
-.root-pane {
-    -fx-background-color: #f4f6fb;
-    -fx-font-family: "Segoe UI";
+.root {
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
 }
 
-.title-label {
-    -fx-font-size: 26px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #1f2d3d;
+/* Background chính */
+.main-bg {
+    -fx-background-color: #F8FAFC;
 }
 
-.label {
+/* Sidebar bên trái */
+.sidebar {
+    -fx-background-color: #1E293B;
+}
+
+/* Nút Sidebar */
+.sidebar-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #94A3B8;
+    -fx-alignment: center-left;
+    -fx-padding: 12 20 12 25;
     -fx-font-size: 14px;
-}
-
-.button {
-    -fx-background-color: #3b82f6;
-    -fx-text-fill: white;
-    -fx-background-radius: 8;
-    -fx-padding: 8 16 8 16;
+    -fx-font-weight: bold;
     -fx-cursor: hand;
 }
-
-.button:hover {
-    -fx-background-color: #2563eb;
+.sidebar-btn:hover {
+    -fx-background-color: #334155;
+    -fx-text-fill: white;
+}
+.sidebar-btn-active {
+    -fx-background-color: #2563EB;
+    -fx-text-fill: white;
+    -fx-border-color: transparent transparent transparent #60A5FA;
+    -fx-border-width: 0 0 0 4;
 }
 
-.text-field, .password-field {
-    -fx-background-radius: 8;
+/* Thẻ (Card) màu trắng */
+.card {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 2);
+    -fx-padding: 20;
+}
+
+/* Huy hiệu trạng thái (Badges) */
+.badge-danger {
+    -fx-background-color: #FEE2E2;
+    -fx-text-fill: #EF4444;
+    -fx-padding: 3 8 3 8;
+    -fx-background-radius: 12;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+.badge-success {
+    -fx-background-color: #DCFCE7;
+    -fx-text-fill: #22C55E;
+    -fx-padding: 3 8 3 8;
+    -fx-background-radius: 12;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+/* Màu chữ phụ */
+.text-muted {
+    -fx-text-fill: #64748b;
+}
+
+/* Nút Chi tiết trong danh sách */
+.btn-outline {
+    -fx-background-color: transparent;
+    -fx-border-color: #cbd5e1;
+    -fx-border-radius: 5;
+    -fx-text-fill: #475569;
+    -fx-cursor: hand;
+}
+.btn-outline:hover {
+    -fx-background-color: #f1f5f9;
+}
+
+/* Các huy hiệu trạng thái (giống video) */
+.badge-live {
+    -fx-background-color: #fef2f2;
+    -fx-text-fill: #ef4444;
+    -fx-padding: 3 8 3 8;
+    -fx-background-radius: 12;
+    -fx-font-weight: bold;
+    -fx-border-color: #fca5a5;
+    -fx-border-radius: 12;
+}
+.badge-ended {
+    -fx-background-color: #f0fdf4;
+    -fx-text-fill: #22c55e;
+    -fx-padding: 3 8 3 8;
+    -fx-background-radius: 12;
+    -fx-font-weight: bold;
+    -fx-border-color: #86efac;
+    -fx-border-radius: 12;
+}
+
+/* Ô màu xanh lá lớn hiển thị giá hiện tại trong màn Chi tiết */
+.price-box {
+    -fx-background-color: #ecfdf5;
+    -fx-border-color: #a7f3d0;
     -fx-border-radius: 8;
-    -fx-padding: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 20;
+    -fx-alignment: center;
+}
+/* Style cho ListView giống trong video */
+.list-view {
+    -fx-background-color: transparent;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 10;
+}
+
+.list-cell {
+    -fx-padding: 10;
+    -fx-border-color: transparent transparent #f1f5f9 transparent;
+}
+
+.list-cell:filled:hover {
+    -fx-background-color: #f8fafc;
+}
+
+/* Nút đặt giá */
+.button-bid {
+    -fx-background-color: #10b981;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 20;
+    -fx-cursor: hand;
 }
