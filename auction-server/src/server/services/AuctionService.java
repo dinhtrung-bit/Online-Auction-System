@@ -58,7 +58,9 @@ public class AuctionService {
     public void createNewAuction(Item item, LocalDateTime endTime) {
         // 1. Tạo ID ảo hoặc lấy từ Database (Ở đây giả định lấy currentTime làm ID)
         Long roomId = System.currentTimeMillis();
-        AuctionRoom newRoom = new AuctionRoom(roomId, item, endTime);
+
+        // ĐÃ SỬA LỖI Ở ĐÂY: Ép kiểu roomId.intValue() và thêm LocalDateTime.now() cho starttime
+        AuctionRoom newRoom = new AuctionRoom(roomId.intValue(), item, LocalDateTime.now(), endTime);
 
         // 2. Lưu vào RAM để quản lý
         activeRooms.put(roomId, newRoom);
@@ -81,7 +83,7 @@ public class AuctionService {
     /**
      * Xử lý cú click "Đặt giá" từ Client gửi lên.
      */
-    public synchronized String handleBidRequest(Long roomId, Bidder bidder, double amount) {
+    public String handleBidRequest(Long roomId, Bidder bidder, double amount) {
         AuctionRoom room = activeRooms.get(roomId);
 
         if (room == null) return "LỖI: Không tìm thấy phòng đấu giá!";

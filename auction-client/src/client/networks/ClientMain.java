@@ -1,27 +1,40 @@
 package client.networks;
 
-import com.google.gson.Gson;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Scanner;
-
-import static java.lang.System.out;
 
 public class ClientMain {
-    public static void main(String[] args) {
+    private static Socket socket;
+    private static PrintWriter out;
+    private static BufferedReader in;
+
+    // Gọi hàm này 1 lần duy nhất lúc khởi động app JavaFX
+    public static void connectToServer() {
         try {
-            Socket socket = new Socket("localhost", 8080);//kết nôí tới server
-            Scanner sc = new Scanner(System.in) ;
-            MessageDTO message = new MessageDTO("BID", "50000");        // tạo hành động của client kèm dữ liệu
-            Gson gson = new Gson(); // khởi tạo gson
-            String jsonString = gson.toJson(message);       // ép đối tượng thành chuỗi json
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);      // khởi tạo socket truyền đi true là truyền đi
-            out.println(jsonString);    // truyền đi
-            System.out.println("Da gui: " + jsonString);    // in ra đã truyền
-            out.close() ;               // đóng file và ngắt kết nối tới server
-            socket.close() ;
+            if (socket == null || socket.isClosed()) {
+                socket = new Socket("localhost", 8080);
+                out = new PrintWriter(socket.getOutputStream(), true);
+                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                System.out.println("Đã kết nối thành công tới Server!");
+            }
         } catch (Exception e) {
-            e.printStackTrace();        // in lỗi
+            System.err.println("Lỗi kết nối tới Server: " + e.getMessage());
         }
+    }
+
+    public static void send(String jsonString) {
+        if (out != null) {
+            out.println(jsonString);
+            System.out.println("Đã gửi: " + jsonString);
+        }
+    }
+
+    public static String receive() throws Exception {
+        if (in != null) {
+            return in.readLine();
+        }
+        return null;
     }
 }
