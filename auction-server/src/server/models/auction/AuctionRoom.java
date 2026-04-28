@@ -13,20 +13,22 @@ import java.util.List;
 public class AuctionRoom implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private Long id;
+    private int id;
     private Item item;
     private double currentPrice;
     private User currentWinner;
     private List<BidMessage> bidHistory;
+    private LocalDateTime starttime;
 
     private LocalDateTime endTime;
     private AuctionStatus status;
 
-    public AuctionRoom(Long id, Item item, LocalDateTime endTime) {
+    public AuctionRoom(int id, Item item,LocalDateTime starttime, LocalDateTime endTime) {
         this.id = id;
         this.item = item;
         this.currentPrice = item.getStartingPrice();
         this.bidHistory = new ArrayList<>();
+        this.starttime=starttime;
         this.endTime = endTime;
         this.status = AuctionStatus.RUNNING; // Mặc định khi tạo là đang chạy
     }
@@ -61,9 +63,9 @@ public class AuctionRoom implements Serializable {
 
         // 5. Lưu vào lịch sử đấu giá
         // Chuyển userId từ int (trong User.java) sang Long (trong BidMessage.java)
-        Long bidderIdLong =(long) bidder.getUserId();
-        BidMessage bidEntry = new BidMessage(bidderIdLong, this.id, amount);
-        this.bidHistory.add(bidEntry);
+        //Long bidderIdLong =(long) bidder.getUserId();
+        //BidMessage bidEntry = new BidMessage(bidderIdLong, this.id, amount);
+        //this.bidHistory.add(bidEntry);
 
         System.out.println(">>> [Cập nhật] " + bidder.getUsername() + " đã vươn lên dẫn đầu với mức giá: " + amount);
 
@@ -78,8 +80,8 @@ public class AuctionRoom implements Serializable {
 
     // ================= GETTER VÀ SETTER =================
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
     public Item getItem() { return item; }
     public void setItem(Item item) { this.item = item; }
@@ -92,6 +94,8 @@ public class AuctionRoom implements Serializable {
 
     public List<BidMessage> getBidHistory() { return bidHistory; }
     public void setBidHistory(List<BidMessage> bidHistory) { this.bidHistory = bidHistory; }
+    public LocalDateTime getStarttime(){return starttime;}
+    public void setStarttime(LocalDateTime startime){this.starttime=startime;}
 
     public LocalDateTime getEndTime() { return endTime; }
     public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }

@@ -17,18 +17,18 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
 
     @Override
     public void insert(AuctionRoom room) throws Exception {
-        String sql = "INSERT INTO auction_rooms (id, item_id, current_price, end_time, status) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO auctions ( item_id, current_highest_price,start_time, end_time, status,winner_id) VALUES (?, ?, ?, ?, ?,?)";
 
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setLong(1, room.getId());
             // Giả sử Item đã được lưu trước và có ID
-            pstmt.setInt(2, room.getItem().getItemId());
-            pstmt.setDouble(3, room.getCurrentPrice());
+            pstmt.setInt(1, room.getItem().getItemId());
+            pstmt.setDouble(2, room.getCurrentPrice());
             // Chuyển đổi từ LocalDateTime trong Java sang Timestamp trong SQL
+            pstmt.setTimestamp(3, Timestamp.valueOf(room.getStarttime()));
             pstmt.setTimestamp(4, Timestamp.valueOf(room.getEndTime()));
             pstmt.setString(5, room.getStatus().name());
+            pstmt.setInt(6, room.getCurrentWinner().getUserId());
 
             pstmt.executeUpdate();
         }
@@ -36,24 +36,27 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
 
     @Override
     public void update(AuctionRoom room) throws Exception {
-        String sql = "UPDATE auction_rooms SET current_price = ?, winner_id = ?, status = ? WHERE id = ?";
+        // Thêm start_time và end_time vào câu lệnh SQL
+        String sql = "UPDATE auctions SET current_highest_price = ?, winner_id = ?, end_time = ?, status = ? WHERE auction_id = ?";
 
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setDouble(1, room.getCurrentPrice());
 
-            // Nếu đã có người thắng thì lưu ID, ngược lại để NULL
+            // Winner tạm thời
             if (room.getCurrentWinner() != null) {
                 pstmt.setInt(2, room.getCurrentWinner().getUserId());
             } else {
                 pstmt.setNull(2, java.sql.Types.INTEGER);
             }
+            pstmt.setTimestamp(3, Timestamp.valueOf(room.getEndTime()));
 
-            pstmt.setString(3, room.getStatus().name());
-            pstmt.setLong(4, room.getId());
+            pstmt.setString(4, room.getStatus().name());
+            pstmt.setLong(5, room.getId());
 
             pstmt.executeUpdate();
+
         }
     }
 
@@ -64,7 +67,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setLong(1, id);
+            pstmt.setInt(1, id);
             pstmt.executeUpdate();
         }
     }
@@ -105,9 +108,10 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
 
     // Hàm hỗ trợ map dữ liệu từ DB sang Object (Giúp tránh lặp code)
     private AuctionRoom mapResultSetToAuctionRoom(ResultSet rs) throws Exception {
-        Long id = rs.getLong("id");
+        int id = rs.getInt("id");
         int itemId = rs.getInt("item_id");
         double currentPrice = rs.getDouble("current_price");
+        Timestamp startTimeTS = rs.getTimestamp("start_time");
         Timestamp endTimeTs = rs.getTimestamp("end_time");
         String statusStr = rs.getString("status");
 
@@ -116,7 +120,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
         Item item = null;
 
         // Khởi tạo phòng đấu giá
-        AuctionRoom room = new AuctionRoom(id, item, endTimeTs.toLocalDateTime());
+        AuctionRoom room = new AuctionRoom(id, item,startTimeTS.toLocalDateTime(),endTimeTs.toLocalDateTime());
         room.setCurrentPrice(currentPrice);
         room.setStatus(AuctionStatus.valueOf(statusStr));
 

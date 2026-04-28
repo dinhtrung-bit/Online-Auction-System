@@ -21,6 +21,7 @@ public class Bidder extends User {
     public String getRole() {
         return "BIDDER";
     }
+    public double getBalance(){return accountBalance;}
 
     public int getReputationScore() { return reputationScore; }
     public void setReputationScore(int reputationScore) { this.reputationScore = reputationScore; }
