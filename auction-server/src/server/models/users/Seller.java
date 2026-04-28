@@ -6,7 +6,7 @@ public class Seller extends User {
     private double sellerRating; // Đánh giá sao (vd: 4.8/5.0)
     private int totalItemsSold;  // Số sản phẩm đã bán thành công
 
-    public Seller() {
+    public Seller(int i, String thắng) {
         super();
         this.sellerRating = 5.0;
         this.totalItemsSold = 0;
