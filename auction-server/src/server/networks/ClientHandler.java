@@ -1,224 +1,172 @@
 package server.networks;
 
 import com.google.gson.Gson;
-<<<<<<< HEAD
-import server.DAO.UserDAOimpl;
-import server.models.User;
+import server.dao.interfaces.UserDAO;
+import server.dao.impl.UserDAOimpl;
+import server.models.users.User;
+import server.models.users.UserFactory;
+import server.models.users.Bidder;
+import server.models.items.Item;
+import server.networks.dto.MessageDTO;
+import server.services.AuctionService;
 
 import java.io.BufferedReader;
-import java.io.IOException;
-=======
-import server.DAO.UserDAO;
-import server.DAO.UserDAOimpl;
-import server.models.User;
-import server.models.UserFactory;
-
-import java.io.BufferedReader;
->>>>>>> main
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ClientHandler implements Runnable {
-<<<<<<< HEAD
+    // OBSERVER PATTERN: Danh sách an toàn đa luồng quản lý tất cả các Client đang bật app
+    private static final List<ClientHandler> activeClients = new CopyOnWriteArrayList<>();
+
     private Socket clientSocket;
-    private BufferedReader in;
-    private PrintWriter out;
-    private Gson gson = new Gson();
-=======
-    private Socket clientSocket;    // Socket kết nối trực tiếp với 1 Client cụ thể
-    private Gson gson;              // Đối tượng Gson để chuyển đổi JSON <-> Java Object
-    private UserDAO userDAO;        // Tầng DAO tương tác với bảng users trong Database
->>>>>>> main
+    private Gson gson;
+    private UserDAO userDAO;
+    private PrintWriter out; // Kéo biến out ra ngoài để dùng cho việc Phát thanh
 
     public ClientHandler(Socket socket) {
         this.clientSocket = socket;
-        this.gson = new Gson();               // Khởi tạo Gson
-        this.userDAO = new UserDAOimpl();     // Khởi tạo DAO
+        this.gson = new Gson();
+        this.userDAO = new UserDAOimpl();
+
+        // Vừa kết nối là chèn ngay vào danh sách quản lý
+        activeClients.add(this);
+    }
+
+    // OBSERVER PATTERN: Hàm phát thanh tin nhắn tới TẤT CẢ mọi người
+    private static void broadcast(String jsonMessage) {
+        for (ClientHandler client : activeClients) {
+            try {
+                if (client.out != null) {
+                    client.out.println(jsonMessage);
+                }
+            } catch (Exception e) {
+                System.err.println("Lỗi gửi tin tới 1 client");
+            }
+        }
     }
 
     @Override
     public void run() {
         try {
-<<<<<<< HEAD
-            // Khởi tạo luồng Đọc/Ghi dữ liệu với Client
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            System.out.println("Dang xu ly: " + clientSocket.getInetAddress());
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             out = new PrintWriter(clientSocket.getOutputStream(), true);
 
             String inputLine;
-            // Vòng lặp vô tận để giữ kết nối và liên tục lắng nghe Client
-            while ((inputLine = in.readLine()) != null) {
-                System.out.println("[Server] Nhận được dữ liệu: " + inputLine);
-
-                // Chuyển chuỗi JSON nhận được thành đối tượng MessageDTO
-                MessageDTO request = gson.fromJson(inputLine, MessageDTO.class);
-
-                // ==========================================
-                // XỬ LÝ CÁC YÊU CẦU TỪ CLIENT Ở ĐÂY
-                // ==========================================
-                if ("LOGIN".equals(request.getAction())) {
-                    handleLogin(request.getPayload());
-                }
-                else if ("BID".equals(request.getAction())) {
-                    // TODO: Xử lý chức năng đấu giá sau này
-                }
-            }
-        } catch (IOException e) {
-            System.out.println("[Server] Client đã ngắt kết nối: " + clientSocket.getInetAddress());
-        } finally {
-            closeConnections();
-        }
-    }
-
-    /**
-     * Hàm xử lý logic đăng nhập
-     */
-    private void handleLogin(String payload) {
-        try {
-            // Tách username và password từ payload (Cấu trúc: "username|password")
-            String[] credentials = payload.split("\\|");
-            if (credentials.length < 2) {
-                sendResponse("LOGIN_FAILURE", "Dữ liệu gửi lên không hợp lệ");
-                return;
-            }
-
-            String username = credentials[0];
-            String password = credentials[1];
-
-            // Gọi DAO để truy vấn Database
-            UserDAOimpl userDAO = new UserDAOimpl();
-            User user = userDAO.login(username, password); // Đảm bảo bạn có hàm login(user, pass) trong UserDAOimpl
-
-            // Kiểm tra kết quả và phản hồi lại Client
-            if (user != null) {
-                sendResponse("LOGIN_SUCCESS", "Đăng nhập thành công! Chào " + user.getUsername());
-            } else {
-                sendResponse("LOGIN_FAILURE", "Sai tài khoản hoặc mật khẩu!");
-            }
-
-        } catch (Exception e) {
-            System.err.println("[Server] Lỗi xử lý đăng nhập: " + e.getMessage());
-            sendResponse("LOGIN_FAILURE", "Lỗi hệ thống máy chủ!");
-        }
-    }
-
-    /**
-     * Hàm hỗ trợ đóng gói và gửi phản hồi dạng JSON
-     */
-    private void sendResponse(String action, String payload) {
-        MessageDTO response = new MessageDTO(action, payload);
-        String jsonResponse = gson.toJson(response);
-        out.println(jsonResponse);
-        System.out.println("[Server] Đã gửi phản hồi: " + jsonResponse);
-    }
-
-    /**
-     * Dọn dẹp tài nguyên khi Client thoát
-     */
-    private void closeConnections() {
-        try {
-            if (in != null) in.close();
-            if (out != null) out.close();
-            if (clientSocket != null) clientSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-=======
-            System.out.println("Dang xu ly: " + clientSocket.getInetAddress());
-
-            // 1. Khởi tạo luồng Đọc (in) và Ghi (out) dữ liệu qua Socket
-            // InputStreamReader đọc byte từ Socket, BufferedReader giúp đọc từng dòng text (JSON)
-            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            // PrintWriter đẩy text về Client. Tham số 'true' giúp tự động đẩy (flush) ngay lập tức
-            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-
-            String inputLine;
-            // 2. Vòng lặp while liên tục lắng nghe Client. Hàm readLine() sẽ block cho đến khi có tin nhắn mới
             while ((inputLine = in.readLine()) != null) {
                 System.out.println("Server nhận yêu cầu: " + inputLine);
 
-                // 3. Biến chuỗi JSON Client gửi thành đối tượng MessageDTO
                 MessageDTO request = gson.fromJson(inputLine, MessageDTO.class);
-
-                // Khởi tạo đối tượng rỗng để chuẩn bị gửi phản hồi về Client
                 MessageDTO response = new MessageDTO();
 
-                // =======================================================
-                // 4. ĐIỀU HƯỚNG CÁC CHỨC NĂNG (ROUTING)
-                // =======================================================
-
-                // ---> CHỨC NĂNG ĐĂNG NHẬP
                 if ("LOGIN".equals(request.getAction())) {
-                    // Giả sử Client gửi lên payload dạng: "username:password"
                     String[] credentials = request.getPayload().split(":");
-
                     if (credentials.length == 2) {
                         String username = credentials[0];
                         String password = credentials[1];
-
-                        // Gọi DAO tìm kiếm user dưới CSDL
                         User user = userDAO.findByUsername(username);
 
-                        // Kiểm tra: Nếu user tồn tại và password khớp với CSDL
                         if (user != null && password.equals(user.getPasswordHash())) {
                             response.setAction("LOGIN_SUCCESS");
-                            // Nén toàn bộ thông tin User thành JSON trả về cho giao diện Client
                             response.setPayload(gson.toJson(user));
                             System.out.println("[Thành công] User đăng nhập: " + username);
                         } else {
                             response.setAction("LOGIN_FAILED");
                             response.setPayload("Sai tên đăng nhập hoặc mật khẩu!");
                         }
-                    } else {
-                        response.setAction("LOGIN_FAILED");
-                        response.setPayload("Lỗi định dạng dữ liệu gửi lên.");
                     }
                 }
-                // ---> CHỨC NĂNG ĐĂNG KÝ
                 else if ("REGISTER".equals(request.getAction())) {
-                    // Giả sử payload đăng ký là: "username:password:role"
                     String[] data = request.getPayload().split(":");
-
                     if (data.length == 3) {
-                        String username = data[0];
-                        String password = data[1];
-                        String role = data[2];
-
                         try {
-                            // Dùng Factory của Thành viên 1 để tạo đối tượng User mới
-                            User newUser = UserFactory.createUser(role, 0, username);
-                            // Gắn password cho user (Xem lưu ý số 2 bên dưới)
-                            // newUser.setPasswordHash(password);
-
-                            // Đẩy xuống CSDL thông qua hàm insert đã viết ở DAO
+                            User newUser = UserFactory.createUser(data[2], 0, data[0]);
                             userDAO.insert(newUser);
-
                             response.setAction("REGISTER_SUCCESS");
                             response.setPayload("Đăng ký tài khoản thành công!");
-                            System.out.println("[Thành công] Đã tạo user mới: " + username);
                         } catch (Exception ex) {
-                            // Bắt lỗi Exception từ DB (ví dụ: trùng username UNIQUE)
                             response.setAction("REGISTER_FAILED");
                             response.setPayload("Tên đăng nhập đã tồn tại hoặc lỗi hệ thống.");
                         }
-                    } else {
-                        response.setAction("REGISTER_FAILED");
-                        response.setPayload("Thiếu thông tin đăng ký.");
                     }
                 }
-                // Các chức năng khác như BID, CREATE_AUCTION sẽ được thêm bằng if-else (hoặc switch-case) ở đây
+                else if ("CREATE_AUCTION".equals(request.getAction())) {
+                    try {
+                        Item newItem = gson.fromJson(request.getPayload(), Item.class);
+                        LocalDateTime endTime = LocalDateTime.now().plusHours(24);
+                        AuctionService.getInstance().createNewAuction(newItem, endTime);
+
+                        response.setAction("CREATE_AUCTION_SUCCESS");
+                        response.setPayload("Tạo phiên đấu giá thành công!");
+                    } catch (Exception e) {
+                        response.setAction("CREATE_AUCTION_FAILED");
+                        response.setPayload("Lỗi hệ thống khi tạo phiên đấu giá: " + e.getMessage());
+                    }
+                }
+                // CHỨC NĂNG ĐẶT GIÁ (ĐÃ TÍCH HỢP ĐỒNG BỘ VÀ PHÁT THANH)
+                else if ("BID".equals(request.getAction())) {
+                    String[] data = request.getPayload().split(":");
+
+                    if (data.length == 3) {
+                        try {
+                            Long roomId = Long.parseLong(data[0]);
+                            String username = data[1];
+                            double amount = Double.parseDouble(data[2]);
+
+                            User user = userDAO.findByUsername(username);
+
+                            if (user != null) {
+                                Bidder bidder = new Bidder(user.getUserId(), user.getUsername(), user.getPasswordHash(), user.getEmail(), user.getAccountBalance());
+                                String result = AuctionService.getInstance().handleBidRequest(roomId, bidder, amount);
+
+                                if ("SUCCESS".equals(result)) {
+                                    // 1. Trả lời riêng cho người vừa đặt là thành công
+                                    response.setAction("BID_SUCCESS");
+                                    response.setPayload("Đặt giá thành công!");
+                                    out.println(gson.toJson(response)); // Gửi ngay
+
+                                    System.out.println("[Thành công] " + username + " đặt " + amount + " cho phòng " + roomId);
+
+                                    // 2. OBSERVER: Phát thanh giá mới tới TẤT CẢ mọi người
+                                    MessageDTO updateMsg = new MessageDTO();
+                                    updateMsg.setAction("UPDATE_PRICE");
+                                    updateMsg.setPayload(roomId + ":" + amount + ":" + username);
+                                    broadcast(gson.toJson(updateMsg));
+
+                                    continue; // Đã gửi response rồi nên bỏ qua lệnh gửi ở cuối vòng lặp
+                                } else {
+                                    response.setAction("BID_FAILED");
+                                    response.setPayload(result);
+                                }
+                            } else {
+                                response.setAction("BID_FAILED");
+                                response.setPayload("Không tìm thấy thông tin người dùng.");
+                            }
+                        } catch (Exception e) {
+                            response.setAction("BID_FAILED");
+                            response.setPayload("Lỗi hệ thống khi đặt giá.");
+                        }
+                    }
+                }
                 else {
                     response.setAction("ERROR");
                     response.setPayload("Hành động không được hỗ trợ.");
                 }
 
-                // 5. Đóng gói response thành JSON và gửi ngược lại về Client
+                // Gửi response cho các trường hợp không phải BID_SUCCESS
                 String jsonResponse = gson.toJson(response);
                 out.println(jsonResponse);
             }
         } catch (Exception e) {
             System.out.println("Client đã ngắt kết nối: " + clientSocket.getInetAddress());
         } finally {
-            // 6. Luôn nhớ đóng kết nối khi Client ngắt ngang để giải phóng RAM cho Server
+            // RẤT QUAN TRỌNG: Xóa khách khỏi danh sách khi họ tắt app để giải phóng RAM
+            activeClients.remove(this);
             try {
                 if (clientSocket != null && !clientSocket.isClosed()) {
                     clientSocket.close();
@@ -226,7 +174,6 @@ public class ClientHandler implements Runnable {
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
->>>>>>> main
         }
     }
 }

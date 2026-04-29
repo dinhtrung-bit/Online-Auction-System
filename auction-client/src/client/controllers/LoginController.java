@@ -1,7 +1,5 @@
 package client.controllers;
 
-import client.networks.NetworkManager;
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -9,69 +7,95 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+
 import java.io.IOException;
 
 public class LoginController {
 
-    @FXML
-    private TextField usernameField;
+
+    @FXML private Button btnAdmin;
+    @FXML private Button btnSeller;
+    @FXML private Button btnBidder;
+    @FXML private TextField txtUsername;
+    @FXML private PasswordField txtPassword;
+
+
+    private String selectedRole = "Bidder";
+
+
+    private final String IDLE_STYLE = "-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 5; -fx-background-radius: 5; -fx-text-fill: black;";
+    private final String ACTIVE_STYLE = "-fx-background-color: #ecfdf5; -fx-text-fill: #10B981; -fx-border-color: #a7f3d0; -fx-border-radius: 5; -fx-background-radius: 5; -fx-font-weight: bold;";
+
 
     @FXML
-    private PasswordField passwordField;
+    void selectAdmin(ActionEvent event) {
+        selectedRole = "Admin";
+        updateButtonStyles();
+    }
+
 
     @FXML
-    public void handleLogin(ActionEvent event) {
-        String username = usernameField.getText();
-        String password = passwordField.getText();
+    void selectSeller(ActionEvent event) {
+        selectedRole = "Seller";
+        updateButtonStyles();
+    }
 
-        if (username.isEmpty() || password.isEmpty()) {
-            showAlert("Lỗi", "Vui lòng nhập đầy đủ tài khoản và mật khẩu!");
-            return;
+
+    @FXML
+    void selectBidder(ActionEvent event) {
+        selectedRole = "Bidder";
+        updateButtonStyles();
+    }
+
+
+    private void updateButtonStyles() {
+        btnAdmin.setStyle(selectedRole.equals("Admin") ? ACTIVE_STYLE : IDLE_STYLE);
+        btnSeller.setStyle(selectedRole.equals("Seller") ? ACTIVE_STYLE : IDLE_STYLE);
+        btnBidder.setStyle(selectedRole.equals("Bidder") ? ACTIVE_STYLE : IDLE_STYLE);
+    }
+
+
+    @FXML
+    void handleLogin(ActionEvent event) {
+        String username = txtUsername.getText().trim();
+        String password = txtPassword.getText().trim();
+
+        boolean isValid = false;
+
+
+        if (selectedRole.equals("Admin") && username.equals("admin") && password.equals("admin123")) {
+            isValid = true;
+        } else if (selectedRole.equals("Seller") && username.equals("seller1") && password.equals("seller123")) {
+            isValid = true;
+        } else if (selectedRole.equals("Bidder") && username.equals("bidder1") && password.equals("bidder123")) {
+            isValid = true;
         }
 
-        // Gửi yêu cầu đăng nhập qua Socket (chạy trên thread riêng của NetworkManager)
-        // Cấu trúc payload: username|password
-        NetworkManager.getInstance().sendRequest("LOGIN", username + "|" + password, response -> {
-            // Quay lại luồng UI để cập nhật giao diện
-            Platform.runLater(() -> {
-                if ("LOGIN_SUCCESS".equals(response.getAction())) {
-                    navigateToAuctionList(event);
-                } else {
-                    showAlert("Thất bại", "Sai tài khoản hoặc mật khẩu!");
-                }
-            });
-        });
-    }
+        if (isValid) {
 
-    private void navigateToAuctionList(ActionEvent event) {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/client/views/auction-list.fxml"));
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Danh sách sản phẩm đấu giá");
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            showAlert("Lỗi", "Không thể tải màn hình danh sách sản phẩm.");
+            try {
+
+
+                Parent root = FXMLLoader.load(getClass().getResource("/client/views/auction-list.fxml"));
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                Scene scene = new Scene(root, 1200, 700);
+                stage.setScene(scene);
+                stage.setMaximized(true); // Đảm bảo full màn hình
+                stage.show();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            // Đăng nhập thất bại -> Hiện thông báo
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Lỗi đăng nhập");
+            alert.setHeaderText(null);
+            alert.setContentText("Sai tài khoản, mật khẩu hoặc vai trò. Vui lòng kiểm tra lại thông tin Demo!");
+            alert.showAndWait();
         }
-    }
-
-    private void showAlert(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
-    @FXML
-    public void handleRegister(ActionEvent event) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Thông báo");
-        alert.setHeaderText(null);
-        alert.setContentText("Tính năng đăng ký đang được phát triển!");
-        alert.showAndWait();
     }
 }

@@ -1,28 +1,84 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.PasswordField?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
 
-<VBox xmlns:fx="http://javafx.com/fxml"
-      fx:controller="client.controllers.LoginController"
-      alignment="CENTER"
-      spacing="15"
-      styleClass="root-pane">
+<HBox alignment="CENTER" prefHeight="600.0" prefWidth="900.0" stylesheets="@app.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.LoginController">
 
-    <padding>
-        <Insets top="30" right="30" bottom="30" left="30"/>
-    </padding>
+    <VBox alignment="CENTER" spacing="25.0" style="-fx-background-color: #10B981;" HBox.hgrow="ALWAYS">
+        <padding>
+            <Insets bottom="50.0" left="50.0" right="50.0" top="50.0" />
+        </padding>
+        <children>
+            <VBox maxWidth="400.0" spacing="25.0">
+                <children>
+                    <Label text="🏛" textFill="WHITE"><font><Font size="50.0" /></font></Label>
+                    <VBox>
+                        <Label text="AuctionVN" textFill="WHITE">
+                            <font><Font name="System Bold" size="40.0" /></font>
+                        </Label>
+                        <Label text="Nền tảng đấu giá trực tuyến" textFill="#a7f3d0">
+                            <font><Font size="16.0" /></font>
+                        </Label>
+                    </VBox>
 
-    <Label text="Online Auction System" styleClass="title-label"/>
+                    <VBox spacing="15.0">
+                        <Label text="✓ Đấu giá real-time không trễ" textFill="WHITE" />
+                        <Label text="✓ Auto-bid thông minh" textFill="WHITE" />
+                        <Label text="✓ Anti-sniping tự động gia hạn" textFill="WHITE" />
+                        <Label text="✓ Bảo mật &amp; minh bạch" textFill="WHITE" />
+                    </VBox>
 
-    <TextField fx:id="usernameField" promptText="Username" maxWidth="260"/>
-    <PasswordField fx:id="passwordField" promptText="Password" maxWidth="260"/>
+                    <VBox style="-fx-background-color: rgba(255,255,255,0.1); -fx-padding: 15; -fx-background-radius: 10;">
+                        <Label text="ℹ Tài khoản demo:" textFill="WHITE"><font><Font name="System Bold" size="12.0"/></font></Label>
+                        <Label text="- admin / admin123   (Admin)" textFill="#a7f3d0" />
+                        <Label text="- seller1 / seller123 (Seller)" textFill="#a7f3d0" />
+                        <Label text="- bidder1 / bidder123 (Bidder)" textFill="#a7f3d0" />
+                    </VBox>
+                </children>
+            </VBox>
+        </children>
+    </VBox>
 
-    <Button text="Login" onAction="#handleLogin" maxWidth="260"/>
-    <Button text="Register" onAction="#handleRegister" maxWidth="260"/>
+    <VBox alignment="CENTER" spacing="20.0" style="-fx-background-color: white;" HBox.hgrow="ALWAYS">
+        <padding>
+            <Insets bottom="50.0" left="50.0" right="50.0" top="50.0" />
+        </padding>
+        <children>
+            <VBox maxWidth="400.0" spacing="20.0">
+                <children>
+                    <Label text="Đăng nhập">
+                        <font><Font name="System Bold" size="28.0" /></font>
+                    </Label>
+                    <Label text="Chào mừng trở lại!" textFill="#64748b" />
 
-</VBox>
+                    <VBox spacing="10.0">
+                        <Label text="Vai trò của bạn">
+                            <font><Font name="System Bold" size="12.0" /></font>
+                        </Label>
+                        <HBox spacing="10.0">
+                            <Button fx:id="btnAdmin" onAction="#selectAdmin" prefWidth="100.0" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 5; -fx-background-radius: 5;" text="Admin" />
+                            <Button fx:id="btnSeller" onAction="#selectSeller" prefWidth="100.0" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 5; -fx-background-radius: 5;" text="Seller" />
+                            <Button fx:id="btnBidder" onAction="#selectBidder" prefWidth="100.0" style="-fx-background-color: #ecfdf5; -fx-text-fill: #10B981; -fx-border-color: #a7f3d0; -fx-border-radius: 5; -fx-background-radius: 5;" text="Bidder" />
+                        </HBox>
+                    </VBox>
+
+                    <VBox spacing="5.0">
+                        <Label text="Tên đăng nhập" />
+                        <TextField fx:id="txtUsername" prefHeight="40.0" promptText="username..." style="-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0; -fx-border-radius: 5;" />
+                    </VBox>
+
+                    <VBox spacing="5.0">
+                        <Label text="Mật khẩu" />
+                        <PasswordField fx:id="txtPassword" prefHeight="40.0" promptText="mật khẩu..." style="-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0; -fx-border-radius: 5;" />
+                    </VBox>
+
+                    <Button maxWidth="Infinity" onAction="#handleLogin" prefHeight="45.0" style="-fx-background-color: #10B981; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold; -fx-cursor: hand;" text="Đăng nhập ➔">
+                        <VBox.margin><Insets top="10.0" /></VBox.margin>
+                    </Button>
+                </children>
+            </VBox>
+        </children>
+    </VBox>
+</HBox>
