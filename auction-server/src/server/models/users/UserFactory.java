@@ -1,5 +1,7 @@
 package server.models.users;
 
+import java.math.BigDecimal;
+
 /**
  * UserFactory: Áp dụng Factory Design Pattern để quản lý việc khởi tạo người dùng.
  * Giúp đáp ứng tiêu chí "Áp dụng design pattern phù hợp" của bài tập lớn.
@@ -25,15 +27,15 @@ public class UserFactory {
             case "BIDDER":
                 // Trả về đối tượng Bidder với các giá trị mặc định ban đầu
                 // passwordHash, email được để trống để cập nhật sau qua Setter hoặc DAO
-                return new Bidder(id, username, "", "", 0.0);
+                return new Bidder(id, username, "", "", BigDecimal.valueOf(0));
 
             case "SELLER":
                 // Trả về đối tượng Seller cho người bán hàng
-                return new Seller(id, username, "", "", 0.0);
+                return new Seller(id, username, "", "", BigDecimal.valueOf(0));
 
             case "ADMIN":
                 // Khởi tạo Admin (lớp Admin kế thừa User đã có trong source của bạn)
-                return new Admin(id, username, "", "", 0.0);
+                return new Admin(id, username, "", "", BigDecimal.valueOf(0));
 
             default:
                 // Xử lý lỗi nếu Role gửi lên từ Client không nằm trong danh sách hỗ trợ

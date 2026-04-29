@@ -1,16 +1,19 @@
 package server.models.items;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 public abstract class Item implements Serializable {
     //protected Seller seller;
     protected int itemId;
     protected String name;
-    protected double startingPrice;
+    protected BigDecimal startingPrice;
+    protected BigDecimal currenthightestprice;
     protected String description;
-    public Item(int itemId, String name, double startingPrice,String description) {
+    public Item(int itemId, String name, BigDecimal startingPrice,BigDecimal currenthightestprice,String description) {
         this.itemId = itemId;
         this.name = name;
         this.startingPrice = startingPrice;
+        this.currenthightestprice=currenthightestprice;
         this.description=description;
       //  this.seller=seller;
     }
@@ -24,9 +27,10 @@ public abstract class Item implements Serializable {
         this.name = name;
     }
 
-    public void setStartingPrice(double startingPrice) {
+    public void setStartingPrice(BigDecimal startingPrice) {
         this.startingPrice = startingPrice;
     }
+    public void setCurrenthightestPrice(BigDecimal currenthightestprice){this.currenthightestprice=currenthightestprice;}
     public void setDescription(String description){this.description=description;}
 
     public int getItemId() {
@@ -37,9 +41,10 @@ public abstract class Item implements Serializable {
         return name;
     }
 
-    public double getStartingPrice() {
+    public BigDecimal getStartingPrice() {
         return startingPrice;
     }
+    public BigDecimal getCurrenthightestPrice(){return currenthightestprice; }
 
     public abstract String getCategoryInfo(); // Trả về thông tin đặc thù từng loại đồ
     public String getDescription(){

@@ -8,6 +8,7 @@ import server.models.users.UserFactory;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,27 +57,45 @@ public class UserDAOimpl implements UserDAO {
 
     @Override
     public User findByUsername(String username) throws Exception {
-        return null;
-    }
+        String sql = "SELECT * FROM users WHERE username = ?";
 
-    @Override
-    public List<User> findAll() throws Exception {
-        List<User> userList = new ArrayList<>();// 1. Tạo danh sách rỗng để chứa kết quả trả về
-        String sql = "SELECT user_id, username, role FROM users";//câu lệnh sql lấy toàn bộ người dùng in ra để mn xem
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {//trả về String thực thi truy vấn
-            while (rs.next()) {
-                // Lấy dữ liệu từ các cột tương ứng trong bảng 'users'
-                int userId = rs.getInt("user_id");
-                String username = rs.getString("username");
-                String role = rs.getString("role");
-                User user = UserFactory.createUser(role, userId, username);
-                if (user != null) {
-                    userList.add(user);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, username);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    int userId = rs.getInt("user_id");
+                    String uname= rs.getString("username");
+                    String passwordHash = rs.getString("password_hash");
+                    String role = rs.getString("role");
+
+                    return UserFactory.createUser(role, userId, uname);
                 }
             }
         }
-        return userList;
+
+        return null;
     }
-}
+        @Override
+        public List<User> findAll () throws Exception {
+            List<User> userList = new ArrayList<>();// 1. Tạo danh sách rỗng để chứa kết quả trả về
+            String sql = "SELECT user_id, username, role FROM users";//câu lệnh sql lấy toàn bộ người dùng in ra để mn xem
+            try (Connection conn = DBConnection.getInstance().getConnection();
+                 PreparedStatement pstmt = conn.prepareStatement(sql);
+                 ResultSet rs = pstmt.executeQuery()) {//trả về String thực thi truy vấn
+                while (rs.next()) {
+                    // Lấy dữ liệu từ các cột tương ứng trong bảng 'users'
+                    int userId = rs.getInt("user_id");
+                    String username = rs.getString("username");
+                    String role = rs.getString("role");
+                    User user = UserFactory.createUser(role, userId, username);
+                    if (user != null) {
+                        userList.add(user);
+                    }
+                }
+            }
+            return userList;
+        }
+    }

@@ -4,6 +4,7 @@ import server.models.users.Bidder;
 import server.models.users.User;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -15,7 +16,8 @@ public class AuctionRoom implements Serializable {
 
     private int id;
     private Item item;
-    private double currentPrice;
+    private BigDecimal startPrice;
+    private BigDecimal currentPrice;
     private User currentWinner;
     private List<BidMessage> bidHistory;
     private LocalDateTime starttime;
@@ -26,7 +28,8 @@ public class AuctionRoom implements Serializable {
     public AuctionRoom(int id, Item item,LocalDateTime starttime, LocalDateTime endTime) {
         this.id = id;
         this.item = item;
-        this.currentPrice = item.getStartingPrice();
+        this.startPrice = item.getStartingPrice();
+        this.currentPrice=item.getCurrenthightestPrice();
         this.bidHistory = new ArrayList<>();
         this.starttime=starttime;
         this.endTime = endTime;
@@ -39,7 +42,7 @@ public class AuctionRoom implements Serializable {
     }
 
     // Nghiệp vụ đặt giá: Đã thêm 'synchronized' để xử lý an toàn khi nhiều người đặt cùng lúc
-    public synchronized void placeBid(Bidder bidder, double amount) throws Exception {
+    public synchronized void placeBid(Bidder bidder, BigDecimal amount) throws Exception {
 
         // 1. Kiểm tra trạng thái và thời gian
         if (this.status != AuctionStatus.RUNNING || isExpired()) {
@@ -48,12 +51,22 @@ public class AuctionRoom implements Serializable {
         }
 
         // 2. Kiểm tra giá đặt (phải lớn hơn giá hiện tại)
-        if (amount <= this.currentPrice) {
+        /*if (amount <= this.currentPrice) {
             throw new Exception("Lỗi: Giá đặt (" + amount + ") phải cao hơn giá hiện tại (" + this.currentPrice + ")!");
         }
 
         // 3. Kiểm tra số dư tài khoản của người dùng
         if (bidder.getBalance() < amount) {
+            throw new Exception("Lỗi: Số dư tài khoản của bạn không đủ để đặt mức giá này!");
+        }*/
+        // 2. Kiểm tra giá đặt phải lớn hơn giá hiện tại
+        if (amount.compareTo(this.startPrice) <= 0) {
+            throw new Exception("Lỗi: Giá đặt (" + amount +
+                    ") phải cao hơn giá hiện tại (" + this.startPrice + ")");
+        }
+
+// 3. Kiểm tra số dư tài khoản
+        if (bidder.getBalance().compareTo(amount) < 0) {
             throw new Exception("Lỗi: Số dư tài khoản của bạn không đủ để đặt mức giá này!");
         }
 
@@ -85,9 +98,11 @@ public class AuctionRoom implements Serializable {
 
     public Item getItem() { return item; }
     public void setItem(Item item) { this.item = item; }
+    public BigDecimal getStartPrice(){return startPrice;}
+    public void setStartPrice(BigDecimal startprice){this.startPrice=startprice;}
 
-    public double getCurrentPrice() { return currentPrice; }
-    public void setCurrentPrice(double currentPrice) { this.currentPrice = currentPrice; }
+    public BigDecimal getCurrentPrice() { return currentPrice; }
+    public void setCurrentPrice(BigDecimal currentPrice) { this.currentPrice = currentPrice; }
 
     public User getCurrentWinner() { return currentWinner; }
     public void setCurrentWinner(User currentWinner) { this.currentWinner = currentWinner; }

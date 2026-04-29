@@ -1,5 +1,7 @@
 package server.models.users;
 
+import java.math.BigDecimal;
+
 /**
  * Admin: Lớp dành cho người quản trị hệ thống.
  * Kế thừa từ User và bổ sung các quyền hạn đặc biệt.
@@ -15,7 +17,7 @@ public class Admin extends User {
         this.department = "General Management";
     }
 
-    public Admin(int userId, String username, String passwordHash, String email, double accountBalance) {
+    public Admin(int userId, String username, String passwordHash, String email, BigDecimal accountBalance) {
         // Gọi Constructor của lớp cha (User)
         super(userId, username, passwordHash, email, accountBalance);
         this.accessLevel = 1;

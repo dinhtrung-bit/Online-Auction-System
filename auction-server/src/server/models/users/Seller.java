@@ -1,5 +1,7 @@
 package server.models.users;
 
+import java.math.BigDecimal;
+
 // 4. INHERITANCE: Seller kế thừa từ User
 public class Seller extends User {
     // Thuộc tính riêng của người bán
@@ -12,7 +14,7 @@ public class Seller extends User {
         this.totalItemsSold = 0;
     }
 
-    public Seller(int userId, String username, String passwordHash, String email, double accountBalance) {
+    public Seller(int userId, String username, String passwordHash, String email, BigDecimal accountBalance) {
         super(userId, username, passwordHash, email, accountBalance);
         this.sellerRating = 5.0;
         this.totalItemsSold = 0;
