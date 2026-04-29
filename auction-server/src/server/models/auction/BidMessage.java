@@ -1,6 +1,7 @@
 package server.models.auction;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 // Đây là đối tượng DTO (Data Transfer Object) kiêm Entity
@@ -11,12 +12,12 @@ public class BidMessage implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int bidderId;
-    private Long auctionRoomId;
-    private double bidAmount;
+    private int auctionRoomId;
+    private BigDecimal bidAmount;
     private LocalDateTime timestamp;
 
     // Constructor đầy đủ tham số khi người dùng bấm nút "Đặt giá"
-    public BidMessage(int bidderId, Long auctionRoomId, double bidAmount) {
+    public BidMessage(int bidderId, int auctionRoomId, BigDecimal bidAmount) {
         this.bidderId = bidderId;
         this.auctionRoomId = auctionRoomId;
         this.bidAmount = bidAmount;
@@ -37,19 +38,19 @@ public class BidMessage implements Serializable {
         this.bidderId = bidderId;
     }
 
-    public Long getAuctionRoomId() {
+    public int getAuctionRoomId() {
         return auctionRoomId;
     }
 
-    public void setAuctionRoomId(Long auctionRoomId) {
+    public void setAuctionRoomId(int auctionRoomId) {
         this.auctionRoomId = auctionRoomId;
     }
 
-    public double getBidAmount() {
+    public BigDecimal getBidAmount() {
         return bidAmount;
     }
 
-    public void setBidAmount(double bidAmount) {
+    public void setBidAmount(BigDecimal bidAmount) {
         this.bidAmount = bidAmount;
     }
 

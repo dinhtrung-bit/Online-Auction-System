@@ -25,7 +25,7 @@ public class ItemDAOimpl implements ItemDAO {
             pstmt.setString(1, item.getName());
            pstmt.setString(2, item.getDescription());
             pstmt.setString(3,item.getCategoryInfo());
-            pstmt.setDouble(4,item.getStartingPrice());
+            pstmt.setBigDecimal(4,item.getStartingPrice());
             pstmt.executeUpdate();
         }
     }
