@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane styleClass="main-bg" stylesheets="@app.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.AdminDashboardController">
+
+    <left>
+        <VBox prefWidth="250.0" style="-fx-background-color: #0f172a;"> <padding><Insets top="20.0" bottom="20.0"/></padding>
+            <Label text="AuctionVN Admin" textFill="WHITE">
+                <font><Font name="System Bold" size="22.0" /></font>
+                <VBox.margin><Insets bottom="30.0" left="20.0" right="20.0" /></VBox.margin>
+            </Label>
+
+            <Button maxWidth="Infinity" text="📊 Tổng quan hệ thống" styleClass="sidebar-btn, sidebar-btn-active" />
+            <Button maxWidth="Infinity" text="👥 Quản lý người dùng" styleClass="sidebar-btn" />
+            <Button maxWidth="Infinity" text="⚖️ Kiểm duyệt phiên đấu" styleClass="sidebar-btn" />
+            <Button maxWidth="Infinity" text="⚙️ Cài đặt hệ thống" styleClass="sidebar-btn" />
+
+            <Pane VBox.vgrow="ALWAYS" />
+
+            <Button maxWidth="Infinity" text="🚪 Đăng xuất" styleClass="sidebar-btn" style="-fx-text-fill: #ef4444;" onAction="#handleLogout" />
+        </VBox>
+    </left>
+
+    <center>
+        <VBox spacing="20.0">
+            <padding><Insets bottom="30.0" left="30.0" right="30.0" top="30.0" /></padding>
+
+            <HBox alignment="CENTER_LEFT">
+                <Label text="Tổng quan hệ thống">
+                    <font><Font name="System Bold" size="24.0" /></font>
+                </Label>
+                <Pane HBox.hgrow="ALWAYS" />
+                <Button text="Tải lại dữ liệu" styleClass="btn-outline" style="-fx-padding: 8 15;" />
+            </HBox>
+
+            <HBox spacing="20.0">
+                <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="5">
+                    <Label text="Tổng người dùng" styleClass="text-muted" />
+                    <Label text="1,248" textFill="#2563eb"><font><Font name="System Bold" size="24.0" /></font></Label>
+                    <Label text="+12 user mới hôm nay" style="-fx-text-fill: #22c55e; -fx-font-size: 11px;" />
+                </VBox>
+                <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="5">
+                    <Label text="Sản phẩm chờ duyệt" styleClass="text-muted" />
+                    <Label text="18" textFill="#ef4444"><font><Font name="System Bold" size="24.0" /></font></Label>
+                    <Label text="Cần xử lý ngay" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;" />
+                </VBox>
+                <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="5">
+                    <Label text="Tổng doanh thu phí sàn" styleClass="text-muted" />
+                    <Label text="24.500.000 đ" textFill="#10b981"><font><Font name="System Bold" size="24.0" /></font></Label>
+                    <Label text="Trong tháng này" style="-fx-text-fill: #64748b; -fx-font-size: 11px;" />
+                </VBox>
+            </HBox>
+
+            <Label text="Danh sách người dùng mới nhất"><font><Font name="System Bold" size="16.0" /></font></Label>
+
+            <TableView fx:id="tableUsers" VBox.vgrow="ALWAYS" styleClass="table-view-custom">
+                <columns>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="80" />
+                    <TableColumn fx:id="colUsername" text="Tên đăng nhập" prefWidth="250" />
+                    <TableColumn fx:id="colRole" text="Vai trò" prefWidth="150" />
+                    <TableColumn fx:id="colStatus" text="Trạng thái" prefWidth="150" />
+                </columns>
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                </columnResizePolicy>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>

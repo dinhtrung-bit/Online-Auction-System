@@ -27,13 +27,14 @@ public class AuctionDetailController implements Initializable {
     @FXML private TextField txtBidAmount;
     @FXML private Label lblTimer;
     @FXML private Label lblCurrentPrice;
+    private volatile boolean isRunning = true;
 
     private int seconds = 3560;
     private Timer timer;
 
     private Gson gson = new Gson();
 
-    // BẠN SẼ CẦN SỬA 2 BIẾN NÀY SAU ĐỂ LẤY TỪ PHIÊN ĐĂNG NHẬP THẬT:
+    //cần sửa 2 biến này để đăng nhập thật
     private Long currentRoomId = 1L;
     private String myUsername = "nguoidung1";
 
@@ -44,7 +45,7 @@ public class AuctionDetailController implements Initializable {
 
         startTimer();
 
-        // Bật Radar lắng nghe Server
+
         startListeningFromServer();
     }
 
@@ -63,38 +64,38 @@ public class AuctionDetailController implements Initializable {
         }, 0, 1000);
     }
 
-    // =================================================================
-    // MẪU OBSERVER: Luồng chạy ngầm để lắng nghe Server phát sóng giá mới
-    // =================================================================
+
+
+
     private void startListeningFromServer() {
         Thread listenerThread = new Thread(() -> {
             try {
-                while (true) {
+                while (isRunning) {
                     String json = ClientMain.receive();
                     if (json == null) continue;
 
                     MessageDTO msg = gson.fromJson(json, MessageDTO.class);
 
-                    // NẾU SERVER PHÁT THANH CÓ GIÁ MỚI
+
                     if ("UPDATE_PRICE".equals(msg.getAction())) {
                         String[] data = msg.getPayload().split(":");
                         Long roomId = Long.parseLong(data[0]);
                         String newPrice = data[1];
                         String bidderName = data[2];
 
-                        // Kiểm tra xem có đúng là phòng mình đang xem không
+
                         if (roomId.equals(currentRoomId)) {
                             String time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
                             String displayTxt = time + " - " + bidderName + " vừa đặt: " + newPrice + " đ";
 
-                            // Cập nhật giao diện an toàn
+
                             Platform.runLater(() -> {
                                 if (lblCurrentPrice != null) lblCurrentPrice.setText(newPrice + " đ");
                                 historyList.getItems().add(0, displayTxt);
                             });
                         }
                     }
-                    // NẾU SERVER BÁO MÌNH ĐẶT BỊ LỖI (GIÁ THẤP QUÁ, V.V..)
+
                     else if ("BID_FAILED".equals(msg.getAction())) {
                         Platform.runLater(() -> {
                             Alert alert = new Alert(Alert.AlertType.ERROR, msg.getPayload());
@@ -107,7 +108,7 @@ public class AuctionDetailController implements Initializable {
             }
         });
 
-        listenerThread.setDaemon(true); // Luồng ngầm tự chết khi tắt ứng dụng
+        listenerThread.setDaemon(true);
         listenerThread.start();
     }
 
@@ -116,7 +117,7 @@ public class AuctionDetailController implements Initializable {
         String amount = txtBidAmount.getText().trim();
         if (!amount.isEmpty()) {
 
-            // Đóng gói tin nhắn: Hành động BID, Dữ liệu gồm "ID_Phòng : Tên_User : Số_Tiền"
+
             MessageDTO req = new MessageDTO();
             req.setAction("BID");
             req.setPayload(currentRoomId + ":" + myUsername + ":" + amount);
@@ -128,13 +129,29 @@ public class AuctionDetailController implements Initializable {
         }
     }
 
+
     @FXML
     void handleBackToList(ActionEvent event) {
         if (timer != null) timer.cancel();
+        isRunning = false;
+
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/client/views/auction-list.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-        } catch (Exception e) { e.printStackTrace(); }
+
+
+            Scene scene = stage.getScene();
+            scene.setRoot(root);
+
+
+            if (root instanceof javafx.scene.layout.Region) {
+                javafx.scene.layout.Region region = (javafx.scene.layout.Region) root;
+                region.prefWidthProperty().bind(scene.widthProperty());
+                region.prefHeightProperty().bind(scene.heightProperty());
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

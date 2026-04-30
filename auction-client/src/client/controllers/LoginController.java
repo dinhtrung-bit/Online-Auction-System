@@ -80,17 +80,35 @@ public class LoginController {
             try {
 
 
-                Parent root = FXMLLoader.load(getClass().getResource("/client/views/auction-list.fxml"));
+                String fxmlPath = "";
+                if (selectedRole.equals("Bidder")) {
+                    fxmlPath = "/client/views/auction-list.fxml";
+                } else if (selectedRole.equals("Seller")) {
+                    fxmlPath = "/client/views/seller-dashboard.fxml";
+                } else if (selectedRole.equals("Admin")) {
+                    fxmlPath = "/client/views/admin-dashboard.fxml";
+                }
+
+                Parent root = FXMLLoader.load(getClass().getResource(fxmlPath));
+
+
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                Scene scene = new Scene(root, 1200, 700);
-                stage.setScene(scene);
-                stage.setMaximized(true); // Đảm bảo full màn hình
+
+
+
+                stage.getScene().setRoot(root);
+
+
+                if (!stage.isMaximized()) {
+                    stage.setMaximized(true);
+                }
+
                 stage.show();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
-            // Đăng nhập thất bại -> Hiện thông báo
+
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Lỗi đăng nhập");
             alert.setHeaderText(null);

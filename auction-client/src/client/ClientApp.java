@@ -2,33 +2,26 @@ package client;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class ClientApp extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(
-                ClientApp.class.getResource("/client/views/login.fxml")
-        );
-
-        Scene scene = new Scene(loader.load(), 900, 600);
-
-        var cssUrl = ClientApp.class.getResource("/client/views/app.css");
-        if (cssUrl != null) {
-            scene.getStylesheets().add(cssUrl.toExternalForm());
-        }
-
-        stage.setTitle("Online Auction System");
+        Parent root = FXMLLoader.load(getClass().getResource("/client/views/login.fxml"));
+        Scene scene = new Scene(root);
         stage.setScene(scene);
 
+
         stage.setMaximized(true);
-        stage.show();
+
         stage.show();
     }
 
     public static void main(String[] args) {
-        launch();
+        launch(args);
     }
 }

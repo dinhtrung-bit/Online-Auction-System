@@ -23,8 +23,26 @@ public class AuctionListController {
     private void switchScene(ActionEvent event, String fxmlPath) {
         try {
             Parent root = FXMLLoader.load(getClass().getResource(fxmlPath));
+
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
+
+
+
+            boolean isMax = stage.isMaximized();
+
+
+            Scene scene = new Scene(root, stage.getWidth(), stage.getHeight());
+            stage.setScene(scene);
+
+
+            if (isMax) {
+                stage.setMaximized(false);
+                stage.setMaximized(true);
+            }
+
+
+            stage.setMaximized(true);
+
             stage.show();
         } catch (Exception e) {
             System.err.println("Lỗi load file FXML: " + fxmlPath);

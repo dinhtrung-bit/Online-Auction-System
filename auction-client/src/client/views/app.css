@@ -128,3 +128,34 @@
     -fx-background-radius: 20;
     -fx-cursor: hand;
 }
+/* --- Style cho Bảng Seller (TableView) --- */
+.table-view-custom {
+    -fx-background-color: transparent;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+.table-view-custom .column-header-background {
+    -fx-background-color: #f1f5f9;
+    -fx-background-radius: 8 8 0 0;
+}
+.table-view-custom .column-header {
+    -fx-background-color: transparent;
+    -fx-padding: 10 5 10 5;
+}
+.table-view-custom .column-header .label {
+    -fx-text-fill: #475569;
+    -fx-font-weight: bold;
+}
+.table-view-custom .table-row-cell {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #f1f5f9 transparent;
+    -fx-cell-size: 45px; /* Chiều cao mỗi hàng */
+}
+.table-view-custom .table-row-cell:odd {
+    -fx-background-color: #f8fafc;
+}
+.table-view-custom .table-row-cell:selected {
+    -fx-background-color: #e0f2fe;
+    -fx-text-fill: #0f172a;
+}

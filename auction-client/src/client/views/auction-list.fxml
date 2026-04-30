@@ -4,15 +4,23 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<VBox spacing="20.0" styleClass="main-bg" stylesheets="@app.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.AuctionListController">
+<VBox spacing="20.0" styleClass="main-bg" stylesheets="@app.css"
+      xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="client.controllers.AuctionListController">
     <padding><Insets bottom="20.0" left="30.0" right="30.0" top="20.0" /></padding>
 
     <HBox alignment="CENTER_LEFT" spacing="20.0">
-        <Label text="Danh sách phiên đấu giá"><font><Font name="System Bold" size="24.0" /></font></Label>
-        <Region HBox.hgrow="ALWAYS" />
-        <TextField prefWidth="250.0" promptText="Tìm kiếm sản phẩm..." style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 5;" />
-        <Button text="Lọc" styleClass="btn-outline"/>
+        <Label text="Danh sách phiên đấu giá">
+            <font><Font name="System Bold" size="24.0" /></font>
+        </Label>
+
+        <Pane HBox.hgrow="ALWAYS" />
+
+        <TextField promptText="Tìm kiếm..." prefWidth="250.0" style="-fx-background-color: white;" />
+        <Button text="Lọc" styleClass="btn-outline" />
+        <Button text="Đăng xuất" textFill="#ef4444" styleClass="btn-outline" onAction="#handleLogout" />
     </HBox>
+
 
     <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" VBox.vgrow="ALWAYS">
         <content>
