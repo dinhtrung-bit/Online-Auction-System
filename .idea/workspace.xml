@@ -5,9 +5,38 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/BidServiceImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/DAO/AuctionRoomDAO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/DAO/BidMessageDAO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/DAO/DBConnection.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/DAO/GenericDAO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/DAO/ItemDAO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/DAO/ItemDAOimpl.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/DAO/TestDB.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/DAO/UserDAO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/DAO/UserDAOimpl.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/DAO/testUser.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/auction/AuctionManager.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/auction/AuctionProduct.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/Admin.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/Art.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/AuctionRoom.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/AuctionStatus.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/BidMessage.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/Bidder.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/Electronics.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/Item.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/ItemFactory.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/Seller.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/User.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/UserFactory.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/Vehicle.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/networks/ClientHandler.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/networks/MessageDTO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/networks/ServerRocket.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/ultis/InvalidBidException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/ultis/Validation.class" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,7 +114,7 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;#8 on dinhtrung&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
@@ -112,7 +141,7 @@
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\resources\views" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.ClientApp">
+  <component name="RunManager" selected="Application.Launcher">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="auction-client" />
       <option name="ENV_FILES" value="" />
@@ -182,12 +211,12 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="TestDB" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="server.DAO.TestDB" />
-      <module name="1" />
+    <configuration name="Launcher" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="client.Launcher" />
+      <module name="auction-client" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="server.DAO.*" />
+          <option name="PATTERN" value="client.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -234,31 +263,20 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="JetRunConfigurationType">
-      <module name="auction-client" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
-      <module name="auction-client" />
-      <option name="filePath" />
-      <method v="2" />
-    </configuration>
     <list>
+      <item itemvalue="Application.Launcher" />
       <item itemvalue="Application.ClientApp" />
       <item itemvalue="Application.testItem" />
-      <item itemvalue="Application.TestDB" />
       <item itemvalue="Application.testUser" />
       <item itemvalue="Application.server.networks.ServerRocket" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.Launcher" />
         <item itemvalue="Application.ClientApp" />
         <item itemvalue="Application.server.networks.ServerRocket" />
         <item itemvalue="Application.testItem" />
         <item itemvalue="Application.testUser" />
-        <item itemvalue="Application.TestDB" />
       </list>
     </recent_temporary>
   </component>
