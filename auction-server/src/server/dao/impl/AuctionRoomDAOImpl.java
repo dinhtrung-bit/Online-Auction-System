@@ -2,9 +2,12 @@ package server.dao.impl;
 
 import server.dao.interfaces.AuctionRoomDAO;
 import server.dao.core.DBConnection;
+import server.dao.interfaces.ItemDAO;
+import server.dao.interfaces.UserDAO;
 import server.models.auction.AuctionRoom;
 import server.models.auction.AuctionStatus;
 import server.models.items.Item;
+import server.models.users.User;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -24,7 +27,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             // Giả sử Item đã được lưu trước và có ID
             pstmt.setInt(1, room.getItem().getItemId());
-            pstmt.setBigDecimal(2,room.getStartPrice());
+            pstmt.setBigDecimal(2, room.getStartPrice());
             pstmt.setBigDecimal(3, room.getCurrentPrice());
             // Chuyển đổi từ LocalDateTime trong Java sang Timestamp trong SQL
             pstmt.setTimestamp(4, Timestamp.valueOf(room.getStarttime()));
@@ -55,7 +58,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
             pstmt.setTimestamp(3, Timestamp.valueOf(room.getEndTime()));
 
             pstmt.setString(4, room.getStatus().name());
-            pstmt.setLong(5, room.getId());
+            pstmt.setInt(5, room.getId());
 
             pstmt.executeUpdate();
 
@@ -116,17 +119,47 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
         Timestamp startTimeTS = rs.getTimestamp("start_time");
         Timestamp endTimeTs = rs.getTimestamp("end_time");
         String statusStr = rs.getString("status");
-        int winnerId = rs.getInt("winner_id");
+        Integer winnerId = (Integer) rs.getObject("winner_id");
 
-        // Lưu ý: Để có đối tượng Item hoàn chỉnh, bạn có thể cần dùng ItemDAOimpl để lấy thông tin item từ itemId
-        // Ở đây tạm thời tạo một Item rỗng hoặc dùng DAO lấy lên
-        Item item = null;
+        ItemDAO itemDAO = new ItemDAOimpl();
+        UserDAO userDAO = new UserDAOimpl();
 
-        // Khởi tạo phòng đấu giá
-        AuctionRoom room = new AuctionRoom(id, item,startTimeTS.toLocalDateTime(),endTimeTs.toLocalDateTime());
-        room.setCurrentPrice(currentPrice);
+        Item item = itemDAO.findById(itemId);
+
+        User winner = null;
+        if (winnerId != null) {
+            winner = userDAO.findById(winnerId);
+        }
+
+        AuctionRoom room = new AuctionRoom(
+                id,
+                item,
+                winner,
+                startTimeTS.toLocalDateTime(),
+                endTimeTs.toLocalDateTime(),
+                currentPrice
+        );
+
         room.setStatus(AuctionStatus.valueOf(statusStr));
 
         return room;
+    }
+    @Override
+    public AuctionRoom findById(int id) throws Exception {
+        String sql = "SELECT * FROM auctions WHERE auction_id = ?";
+
+        try (Connection conn = DBConnection.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToAuctionRoom(rs);
+                }
+            }
+        }
+
+        return null;
     }
 }

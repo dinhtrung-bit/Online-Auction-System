@@ -1,8 +1,10 @@
 package server.models.items;
 
+import java.math.BigDecimal;
+
 public class ItemFactory {
     // SỬA: Đổi CategoryInfo -> categoryInfo (quy tắc camelCase)
-    public static Item createItem(String categoryInfo, int itemId, String name, double startingPrice, String description) {
+    public static Item createItem(String categoryInfo, int itemId, String name, BigDecimal startingPrice, String description) {
         // Kiểm tra null hoặc chuỗi rỗng để tránh NullPointerException khi gọi .toUpperCase()
         if (categoryInfo == null || categoryInfo.trim().isEmpty()) {
             throw new IllegalArgumentException("Danh mục sản phẩm không được để trống!");
@@ -12,7 +14,6 @@ public class ItemFactory {
             case "ART":
                 return new Art(itemId, name, startingPrice, description);
 
-            case "ELECTRONIC":
             case "ELECTRONICS": //  Thêm case này dự phòng trường hợp Client gõ nhầm có thêm chữ 'S'
                 return new Electronics(itemId, name, startingPrice, description);
 

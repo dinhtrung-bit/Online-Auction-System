@@ -5,10 +5,7 @@ import server.dao.interfaces.UserDAO;
 import server.models.users.User;
 import server.models.users.UserFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,6 +75,7 @@ public class UserDAOimpl implements UserDAO {
 
         return null;
     }
+
         @Override
         public List<User> findAll () throws Exception {
             List<User> userList = new ArrayList<>();// 1. Tạo danh sách rỗng để chứa kết quả trả về
@@ -98,4 +96,30 @@ public class UserDAOimpl implements UserDAO {
             }
             return userList;
         }
+    private User mapResultSetToUser(ResultSet rs) throws SQLException {
+        return UserFactory.createUser(
+                rs.getString("role"),
+                rs.getInt("user_id"),
+                rs.getString("username")
+        );
     }
+    @Override
+    public User findById(int id) throws Exception {
+        String sql = "SELECT * FROM users WHERE user_id = ?";
+
+        try (Connection conn = DBConnection.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
+                }
+            }
+        }
+
+        return null;
+    }
+    }
+

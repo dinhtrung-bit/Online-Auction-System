@@ -5,9 +5,11 @@ import server.dao.interfaces.ItemDAO;
 import server.models.items.Item;
 import server.models.items.ItemFactory;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,11 +23,11 @@ public class ItemDAOimpl implements ItemDAO {
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-          // pstmt.setInt(1, item.getseller().getUserId());
+            // pstmt.setInt(1, item.getseller().getUserId());
             pstmt.setString(1, item.getName());
-           pstmt.setString(2, item.getDescription());
-            pstmt.setString(3,item.getCategoryInfo());
-            pstmt.setBigDecimal(4,item.getStartingPrice());
+            pstmt.setString(2, item.getDescription());
+            pstmt.setString(3, item.getCategoryInfo());
+            pstmt.setBigDecimal(4, item.getStartingPrice());
             pstmt.executeUpdate();
         }
     }
@@ -33,15 +35,15 @@ public class ItemDAOimpl implements ItemDAO {
     @Override
     public void update(Item item) throws Exception {
         // Cập nhật thông tin sản phẩm dựa trên item_id
-        String sql = "UPDATE items SET name = ?, description = ?, category = ? WHERE item_id = ?";
+        String sql = "UPDATE items SET name = ?, description = ?, category = ?,startingPrice=? WHERE item_id = ?";
 
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, item.getName());
-           pstmt.setString(2, item.getDescription());
+            pstmt.setString(2, item.getDescription());
             pstmt.setString(3, item.getCategoryInfo());
-            pstmt.setInt(4, item.getItemId());// Điều kiện WHERE
-
+            pstmt.setBigDecimal(4, item.getStartingPrice());
+            pstmt.setInt(5, item.getItemId());// Điều kiện WHERE
             pstmt.executeUpdate();
         }
     }
@@ -73,15 +75,17 @@ public class ItemDAOimpl implements ItemDAO {
                     int itemId = rs.getInt("item_id");
                     String name = rs.getString("name");
                     String description = rs.getString("description");
-                    String CategoryInfo=rs.getString("CategoryInfo");
-                    double startingPrice=rs.getDouble("startingPrice");
-                    Item item=ItemFactory.createItem(CategoryInfo,itemId,name,startingPrice,description);
+                    String CategoryInfo = rs.getString("CategoryInfo");
+                    BigDecimal startingPrice = rs.getBigDecimal("startingPrice");
+
+                    Item item = ItemFactory.createItem(CategoryInfo, itemId, name, startingPrice, description);
                     itemlist.add(item);
                 }
             }
         }
         return itemlist;
     }
+
     @Override
     public List<Item> findAll() throws Exception {
         List<Item> itemList = new ArrayList<>();
@@ -92,10 +96,10 @@ public class ItemDAOimpl implements ItemDAO {
             while (rs.next()) {
                 int itemId = rs.getInt("item_id");
                 String name = rs.getString("name");
-                double startingPrice = rs.getDouble("startingPrice");
                 String description = rs.getString("description");
                 String category = rs.getString("CategoryInfo");
-                Item item = ItemFactory.createItem(category,itemId, name, startingPrice,description);
+                BigDecimal startingPrice = rs.getBigDecimal("startingPrice");
+                Item item = ItemFactory.createItem(category, itemId, name, startingPrice, description);
 
                 if (item != null) {
                     itemList.add(item);
@@ -103,5 +107,39 @@ public class ItemDAOimpl implements ItemDAO {
             }
         }
         return itemList;
+    }
+    private Item mapResultSetToItem(ResultSet rs) throws SQLException {
+        int itemId = rs.getInt("item_id");
+        String name = rs.getString("name");
+        String description = rs.getString("description");
+        String categoryInfo = rs.getString("CategoryInfo");
+        BigDecimal startingPrice = rs.getBigDecimal("startingPrice");
+
+        return ItemFactory.createItem(
+                categoryInfo,
+                itemId,
+                name,
+                startingPrice,
+                description
+
+        );
+    }
+
+    @Override
+    public Item findById(int id) throws Exception {
+        String sql = "SELECT * FROM items WHERE item_id = ?";
+
+        try (Connection conn = DBConnection.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToItem(rs);
+                }
+            }
+        }
+        return null;
     }
 }

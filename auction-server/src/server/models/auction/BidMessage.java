@@ -10,14 +10,15 @@ public class BidMessage implements Serializable {
 
     // Thuộc tính cực kỳ quan trọng để Client và Server hiểu cùng một phiên bản class
     private static final long serialVersionUID = 1L;
-
+private int transactionId;
     private int bidderId;
     private int auctionRoomId;
     private BigDecimal bidAmount;
     private LocalDateTime timestamp;
 
     // Constructor đầy đủ tham số khi người dùng bấm nút "Đặt giá"
-    public BidMessage(int bidderId, int auctionRoomId, BigDecimal bidAmount) {
+    public BidMessage(int transactionId,int bidderId, int auctionRoomId, BigDecimal bidAmount) {
+        this.transactionId=transactionId;
         this.bidderId = bidderId;
         this.auctionRoomId = auctionRoomId;
         this.bidAmount = bidAmount;
@@ -29,7 +30,8 @@ public class BidMessage implements Serializable {
     }
 
     // ================= GETTER VÀ SETTER =================
-
+public int gettransactionId(){return transactionId;}
+    public void settransactionId(int transactionId){this.transactionId=transactionId;}
     public int getBidderId() {
         return bidderId;
     }

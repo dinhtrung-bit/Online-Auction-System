@@ -144,12 +144,29 @@ public class BidMessageDAOImpl implements BidMessageDAO {
         bidMessage.setBidderId(rs.getInt("bidder_id"));
         bidMessage.setAuctionRoomId(rs.getInt("auction_id"));
         bidMessage.setBidAmount(rs.getBigDecimal("bid_amount"));
-
         Timestamp timestamp = rs.getTimestamp("bid_time");
         if (timestamp != null) {
             bidMessage.setTimestamp(timestamp.toLocalDateTime());
         }
 
         return bidMessage;
+    }
+    @Override
+    public BidMessage findById(int id) throws Exception {
+        String sql = "SELECT * FROM bid_message WHERE transaction_id = ?";
+
+        try (Connection conn = DBConnection.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToBidMessage(rs);
+                }
+            }
+        }
+
+        return null;
     }
 }

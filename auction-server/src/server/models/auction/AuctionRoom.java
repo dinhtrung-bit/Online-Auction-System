@@ -16,6 +16,8 @@ public class AuctionRoom implements Serializable {
 
     private int id;
     private Item item;
+    private int itemID;
+    private int userID;
     private BigDecimal startPrice;
     private BigDecimal currentPrice;
     private User currentWinner;
@@ -25,11 +27,14 @@ public class AuctionRoom implements Serializable {
     private LocalDateTime endTime;
     private AuctionStatus status;
 
-    public AuctionRoom(int id, Item item,LocalDateTime starttime, LocalDateTime endTime) {
+    public AuctionRoom(int id, Item item,User currentWinner,LocalDateTime starttime, LocalDateTime endTime,BigDecimal currentPrice) {
         this.id = id;
-        this.item = item;
+        this.item=item;
+        this.itemID = item.getItemId();
+        this.currentWinner = currentWinner;
+        this.userID = currentWinner == null ? null : currentWinner.getUserId();
         this.startPrice = item.getStartingPrice();
-        this.currentPrice=item.getCurrenthightestPrice();
+        this.currentPrice=currentPrice;
         this.bidHistory = new ArrayList<>();
         this.starttime=starttime;
         this.endTime = endTime;

@@ -1,8 +1,10 @@
 package server.models.items;
 
+import java.math.BigDecimal;
+
 public class Electronics extends Item {
 
-    public Electronics(int itemId, String name, double startingPrice,String description) {
+    public Electronics(int itemId, String name, BigDecimal startingPrice, String description) {
         super(itemId, name, startingPrice,description);
     }
 

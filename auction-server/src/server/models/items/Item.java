@@ -7,13 +7,12 @@ public abstract class Item implements Serializable {
     protected int itemId;
     protected String name;
     protected BigDecimal startingPrice;
-    protected BigDecimal currenthightestprice;
+   // protected BigDecimal currenthightestprice;
     protected String description;
-    public Item(int itemId, String name, BigDecimal startingPrice,BigDecimal currenthightestprice,String description) {
+    public Item(int itemId, String name, BigDecimal startingPrice,String description) {
         this.itemId = itemId;
         this.name = name;
         this.startingPrice = startingPrice;
-        this.currenthightestprice=currenthightestprice;
         this.description=description;
       //  this.seller=seller;
     }
@@ -30,7 +29,7 @@ public abstract class Item implements Serializable {
     public void setStartingPrice(BigDecimal startingPrice) {
         this.startingPrice = startingPrice;
     }
-    public void setCurrenthightestPrice(BigDecimal currenthightestprice){this.currenthightestprice=currenthightestprice;}
+   // public void setCurrenthightestPrice(BigDecimal currenthightestprice){this.currenthightestprice=currenthightestprice;}
     public void setDescription(String description){this.description=description;}
 
     public int getItemId() {
@@ -44,7 +43,7 @@ public abstract class Item implements Serializable {
     public BigDecimal getStartingPrice() {
         return startingPrice;
     }
-    public BigDecimal getCurrenthightestPrice(){return currenthightestprice; }
+    //public BigDecimal getCurrenthightestPrice(){return currenthightestprice; }
 
     public abstract String getCategoryInfo(); // Trả về thông tin đặc thù từng loại đồ
     public String getDescription(){
