@@ -1,4 +1,7 @@
+// Đường dẫn: auction-server/src/server/models/auction/AuctionRoom.java
 package server.models.auction;
+
+import server.exceptions.InvalidBidException;
 import server.models.items.Item;
 import server.models.users.Bidder;
 import server.models.users.User;
@@ -8,118 +11,161 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
-// implements Serializable để chuẩn bị cho việc gửi dữ liệu qua Socket
 public class AuctionRoom implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int id;
     private Item item;
     private int itemID;
-    private int userID;
     private BigDecimal startPrice;
     private BigDecimal currentPrice;
     private User currentWinner;
-    private List<BidMessage> bidHistory;
-    private LocalDateTime starttime;
 
+    private List<BidMessage> bidHistory;
+    // THÊM MỚI 3.2.1: Danh sách những người đăng ký Auto-bid trong phòng này
+    private List<AutoBidConfig> autoBidders;
+
+    private LocalDateTime starttime;
     private LocalDateTime endTime;
     private AuctionStatus status;
 
     public AuctionRoom(int id, Item item, LocalDateTime starttime, LocalDateTime endTime) {
         this.id = id;
-        this.item=item;
+        this.item = item;
         this.itemID = item.getItemId();
-        this.currentWinner = currentWinner;
-        this.userID = currentWinner == null ? 0 : currentWinner.getUserId();
         this.startPrice = item.getStartingPrice();
-        this.currentPrice=currentPrice;
         this.bidHistory = new ArrayList<>();
-        this.starttime=starttime;
+        this.autoBidders = new ArrayList<>(); // Khởi tạo danh sách auto-bid
+        this.starttime = starttime;
         this.endTime = endTime;
-        this.status = AuctionStatus.RUNNING; // Mặc định khi tạo là đang chạy
+
+        if (LocalDateTime.now().isBefore(starttime)) {
+            this.status = AuctionStatus.OPEN;
+        } else {
+            this.status = AuctionStatus.RUNNING;
+        }
     }
 
-    // Kiểm tra xem thời gian phiên đấu giá đã kết thúc chưa
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(endTime);
     }
 
-    // Nghiệp vụ đặt giá: Đã thêm 'synchronized' để xử lý an toàn khi nhiều người đặt cùng lúc
-    public synchronized void placeBid(Bidder bidder, BigDecimal amount) throws Exception {
+    // ================== LOGIC TẠO AUTO-BID (3.2.1) ==================
+    public synchronized void registerAutoBid(Bidder bidder, BigDecimal maxBid, BigDecimal increment) throws InvalidBidException {
+        if (this.status != AuctionStatus.RUNNING) {
+            throw new InvalidBidException("Không thể cài đặt Auto-bid do phòng chưa mở hoặc đã đóng!");
+        }
+        if (bidder.getBalance().compareTo(maxBid) < 0) {
+            throw new InvalidBidException("Số dư của bạn không đủ để thiết lập mức Max Bid này!");
+        }
 
-        // 1. Kiểm tra trạng thái và thời gian
+        this.autoBidders.add(new AutoBidConfig(bidder, maxBid, increment));
+        System.out.println(">>> [Hệ thống] " + bidder.getUsername() + " đã cài đặt Auto-Bid (Max: " + maxBid + ", Bước giá: " + increment + ")");
+
+        // Kích hoạt quét thử xem có thể nhảy giá ngay lập tức không
+        processAutoBids();
+    }
+
+    // ================== LOGIC ĐẶT GIÁ THỦ CÔNG (3.1.3 & 3.1.5) ==================
+    // VÁ LỖI 3.1.5: Sử dụng throws InvalidBidException thay vì Exception thường
+    public synchronized void placeBid(Bidder bidder, BigDecimal amount) throws InvalidBidException {
+
         if (this.status != AuctionStatus.RUNNING || isExpired()) {
             this.status = AuctionStatus.FINISHED;
-            throw new Exception("Lỗi: Phiên đấu giá này đã kết thúc hoặc chưa mở!");
+            throw new InvalidBidException("Lỗi: Phiên đấu giá đã kết thúc hoặc chưa mở!");
         }
 
-        // 2. Kiểm tra giá đặt (phải lớn hơn giá hiện tại)
-        /*if (amount <= this.currentPrice) {
-            throw new Exception("Lỗi: Giá đặt (" + amount + ") phải cao hơn giá hiện tại (" + this.currentPrice + ")!");
+        BigDecimal priceToBeat = (this.currentPrice != null) ? this.currentPrice : this.startPrice;
+        if (amount.compareTo(priceToBeat) <= 0) {
+            throw new InvalidBidException("Lỗi: Giá đặt (" + amount + ") phải cao hơn mức giá hiện tại (" + priceToBeat + ")!");
         }
 
-        // 3. Kiểm tra số dư tài khoản của người dùng
-        if (bidder.getBalance() < amount) {
-            throw new Exception("Lỗi: Số dư tài khoản của bạn không đủ để đặt mức giá này!");
-        }*/
-        // 2. Kiểm tra giá đặt phải lớn hơn giá hiện tại
-        if (amount.compareTo(this.startPrice) <= 0) {
-            throw new Exception("Lỗi: Giá đặt (" + amount +
-                    ") phải cao hơn giá hiện tại (" + this.startPrice + ")");
-        }
-
-// 3. Kiểm tra số dư tài khoản
         if (bidder.getBalance().compareTo(amount) < 0) {
-            throw new Exception("Lỗi: Số dư tài khoản của bạn không đủ để đặt mức giá này!");
+            throw new InvalidBidException("Lỗi: Số dư tài khoản không đủ để đặt mức giá này!");
         }
 
-        // 4. Cập nhật dữ liệu người dẫn đầu
+        // Cập nhật người dẫn đầu
         this.currentPrice = amount;
         this.currentWinner = bidder;
+        System.out.println(">>> [Manual Bid] " + bidder.getUsername() + " đặt giá thủ công: " + amount);
 
-        // 5. Lưu vào lịch sử đấu giá
-        // Chuyển userId từ int (trong User.java) sang Long (trong BidMessage.java)
-        //Long bidderIdLong =(long) bidder.getUserId();
-        //BidMessage bidEntry = new BidMessage(bidderIdLong, this.id, amount);
-        //this.bidHistory.add(bidEntry);
+        // Kích hoạt thuật toán Anti-sniping
+        triggerAntiSniping();
 
-        System.out.println(">>> [Cập nhật] " + bidder.getUsername() + " đã vươn lên dẫn đầu với mức giá: " + amount);
+        // THÊM MỚI 3.2.1: Sau khi có người đặt thủ công, đánh thức các Auto-bidder
+        processAutoBids();
+    }
 
-        // 6. Logic nâng cao lấy điểm cộng: Gia hạn phiên đấu giá (Anti-sniping Algorithm)
-        // Nếu có người đặt giá trong 30 giây cuối, tự động cộng thêm 60 giây
-        long secondsLeft = Duration.between(LocalDateTime.now(), this.endTime).getSeconds();
-        if (secondsLeft > 0 && secondsLeft <= 30) {
-            this.endTime = this.endTime.plusSeconds(60);
-            System.out.println(">>> [Anti-sniping] Có người đặt giá phút chót! Phiên đấu giá được gia hạn thêm 60 giây.");
+    // ================== THUẬT TOÁN ĐẤU TRƯỜNG AUTO-BID (3.2.1) ==================
+    private void processAutoBids() {
+        if (autoBidders.isEmpty()) return;
+
+        // Ưu tiên người đăng ký Auto-bid trước (ai đến trước phục vụ trước)
+        autoBidders.sort(Comparator.comparing(AutoBidConfig::getRegisterTime));
+
+        boolean newBidPlaced = true;
+
+        // Vòng lặp Battle: Cho các Auto-bidder nâng giá chéo nhau đến khi chạm kịch kim (MaxBid)
+        while (newBidPlaced) {
+            newBidPlaced = false;
+
+            for (AutoBidConfig config : autoBidders) {
+                // Bỏ qua nếu người này đang là người dẫn đầu (không tự đấu giá với chính mình)
+                if (currentWinner != null && config.getBidder().getUserId() == currentWinner.getUserId()) {
+                    continue;
+                }
+
+                BigDecimal priceToBeat = (this.currentPrice != null) ? this.currentPrice : this.startPrice;
+                BigDecimal nextBid = priceToBeat.add(config.getIncrement()); // Cộng thêm bước giá
+
+                // Điều kiện để Auto-bid thành công:
+                // 1. Giá tiếp theo không vượt quá MaxBid của họ
+                // 2. Họ có đủ tiền trong tài khoản
+                if (nextBid.compareTo(config.getMaxBid()) <= 0 &&
+                        config.getBidder().getBalance().compareTo(nextBid) >= 0) {
+
+                    this.currentPrice = nextBid;
+                    this.currentWinner = config.getBidder();
+                    System.out.println("    [Auto-Bid] " + config.getBidder().getUsername() + " tự động nâng giá lên: " + nextBid);
+
+                    triggerAntiSniping(); // Tự động trả giá cũng kích hoạt chống sniping
+
+                    newBidPlaced = true;
+                    break; // Ngắt vòng For để quay lại vòng While, cho phép người khác "phản đòn"
+                }
+            }
         }
     }
 
-    // ================= GETTER VÀ SETTER =================
+    // Tách riêng logic Anti-Sniping cho sạch code
+    private void triggerAntiSniping() {
+        long secondsLeft = Duration.between(LocalDateTime.now(), this.endTime).getSeconds();
+        if (secondsLeft > 0 && secondsLeft <= 30) {
+            this.endTime = this.endTime.plusSeconds(60);
+            System.out.println(">>> [Anti-sniping] Có biến động giá phút chót! Phiên đấu giá gia hạn thêm 60 giây.");
+        }
+    }
 
+    // ================= GETTER VÀ SETTER (GIỮ NGUYÊN) =================
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
-
     public Item getItem() { return item; }
     public void setItem(Item item) { this.item = item; }
-    public BigDecimal getStartPrice(){return startPrice;}
-    public void setStartPrice(BigDecimal startprice){this.startPrice=startprice;}
-
+    public BigDecimal getStartPrice() { return startPrice; }
+    public void setStartPrice(BigDecimal startprice) { this.startPrice = startprice; }
     public BigDecimal getCurrentPrice() { return currentPrice; }
     public void setCurrentPrice(BigDecimal currentPrice) { this.currentPrice = currentPrice; }
-
     public User getCurrentWinner() { return currentWinner; }
     public void setCurrentWinner(User currentWinner) { this.currentWinner = currentWinner; }
-
     public List<BidMessage> getBidHistory() { return bidHistory; }
     public void setBidHistory(List<BidMessage> bidHistory) { this.bidHistory = bidHistory; }
-    public LocalDateTime getStarttime(){return starttime;}
-    public void setStarttime(LocalDateTime startime){this.starttime=startime;}
-
+    public LocalDateTime getStarttime() { return starttime; }
+    public void setStarttime(LocalDateTime startime) { this.starttime = startime; }
     public LocalDateTime getEndTime() { return endTime; }
     public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
-
     public AuctionStatus getStatus() { return status; }
     public void setStatus(AuctionStatus status) { this.status = status; }
 }

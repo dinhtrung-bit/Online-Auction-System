@@ -115,30 +115,44 @@ public class AuctionService {
     // ================= QUẢN LÝ TRẠNG THÁI TỰ ĐỘNG =================
 
     /**
-     * Hàm này được Server gọi mỗi giây để kiểm tra xem phòng nào hết giờ thì đóng.
+     * VÁ LỖI 3.1.4: Hàm này được Server gọi mỗi giây để quét toàn bộ trạng thái phòng
      */
     public void autoUpdateStatuses() {
+        LocalDateTime now = LocalDateTime.now();
         activeRooms.values().forEach(room -> {
-            // Nếu phòng đang chạy và đã hết thời gian
-            if (room.getStatus() == AuctionStatus.RUNNING && room.isExpired()) {
-                // 1. Cập nhật trạng thái trên RAM
+
+            // 1. Chuyển trạng thái từ OPEN -> RUNNING (Đến giờ mở cửa)
+            if (room.getStatus() == AuctionStatus.OPEN && !now.isBefore(room.getStarttime())) {
+                room.setStatus(AuctionStatus.RUNNING);
+                System.out.println(">>> [Hệ thống] Phiên đấu giá ID: " + room.getId() + " đã bắt đầu (RUNNING).");
+                updateRoomInDB(room);
+            }
+
+            // 2. Chuyển trạng thái từ RUNNING -> FINISHED (Hết giờ đấu giá)
+            else if (room.getStatus() == AuctionStatus.RUNNING && room.isExpired()) {
                 room.setStatus(AuctionStatus.FINISHED);
-                System.out.println(">>> [Hệ thống] Đã đóng phiên đấu giá ID: " + room.getId());
+                System.out.println(">>> [Hệ thống] Đóng phiên đấu giá ID: " + room.getId() + " (FINISHED).");
 
-                // 2. Cập nhật trạng thái FINISHED vào DB để người dùng khác thấy kết quả
-                try {
-                    // Khởi tạo DAO (Giả định bạn đã code file AuctionRoomDAOImpl)
-                    AuctionRoomDAO roomDAO = new AuctionRoomDAOImpl(); // Hoặc dùng Dependency Injection nếu có
-
-                    // Gọi hàm update từ GenericDAO để lưu đối tượng room mới xuống CSDL
-                    roomDAO.update(room);
-
-                    System.out.println(">>> [Database] Đã lưu trạng thái FINISHED cho phòng ID: " + room.getId() + " thành công!");
-                } catch (Exception e) {
-                    System.err.println(">>> [Lỗi Database] Không thể cập nhật trạng thái phòng ID " + room.getId() + ": " + e.getMessage());
+                // Log người chiến thắng
+                if (room.getCurrentWinner() != null) {
+                    System.out.println("    -> Người chiến thắng: " + room.getCurrentWinner().getUsername() + " với giá " + room.getCurrentPrice());
+                    // Lưu ý: Logic chuyển từ FINISHED -> PAID sẽ nằm ở một hàm thanh toán riêng biệt sau này
+                } else {
+                    System.out.println("    -> Không có ai tham gia đặt giá.");
                 }
+                updateRoomInDB(room);
             }
         });
+    }
+
+    // Hàm phụ trợ giúp code gọn gàng, tránh lặp lại try-catch
+    private void updateRoomInDB(AuctionRoom room) {
+        try {
+            AuctionRoomDAO roomDAO = new AuctionRoomDAOImpl();
+            roomDAO.update(room);
+        } catch (Exception e) {
+            System.err.println(">>> [Lỗi Database] Không thể cập nhật phòng ID " + room.getId() + ": " + e.getMessage());
+        }
     }
 
     // Lấy danh sách cho Client hiển thị lên JavaFX
