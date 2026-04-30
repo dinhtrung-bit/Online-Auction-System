@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.Duration;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -25,12 +26,15 @@ public class AuctionRoom implements Serializable {
     private User currentWinner;
 
     private List<BidMessage> bidHistory;
-    // THÊM MỚI 3.2.1: Danh sách những người đăng ký Auto-bid trong phòng này
     private List<AutoBidConfig> autoBidders;
 
     private LocalDateTime starttime;
     private LocalDateTime endTime;
     private AuctionStatus status;
+
+    // FIX CASE 4: Chống lạm dụng gia hạn vô tận (Anti-sniping limit)
+    private int extensionCount = 0;
+    private static final int MAX_EXTENSIONS = 5;
 
     public AuctionRoom(int id, Item item, LocalDateTime starttime, LocalDateTime endTime) {
         this.id = id;
@@ -38,7 +42,7 @@ public class AuctionRoom implements Serializable {
         this.itemID = item.getItemId();
         this.startPrice = item.getStartingPrice();
         this.bidHistory = new ArrayList<>();
-        this.autoBidders = new ArrayList<>(); // Khởi tạo danh sách auto-bid
+        this.autoBidders = new ArrayList<>();
         this.starttime = starttime;
         this.endTime = endTime;
 
@@ -53,103 +57,135 @@ public class AuctionRoom implements Serializable {
         return LocalDateTime.now().isAfter(endTime);
     }
 
-    // ================== LOGIC TẠO AUTO-BID (3.2.1) ==================
-    public synchronized void registerAutoBid(Bidder bidder, BigDecimal maxBid, BigDecimal increment) throws InvalidBidException {
-        if (this.status != AuctionStatus.RUNNING) {
-            throw new InvalidBidException("Không thể cài đặt Auto-bid do phòng chưa mở hoặc đã đóng!");
-        }
-        if (bidder.getBalance().compareTo(maxBid) < 0) {
-            throw new InvalidBidException("Số dư của bạn không đủ để thiết lập mức Max Bid này!");
-        }
-
-        this.autoBidders.add(new AutoBidConfig(bidder, maxBid, increment));
-        System.out.println(">>> [Hệ thống] " + bidder.getUsername() + " đã cài đặt Auto-Bid (Max: " + maxBid + ", Bước giá: " + increment + ")");
-
-        // Kích hoạt quét thử xem có thể nhảy giá ngay lập tức không
-        processAutoBids();
-    }
-
-    // ================== LOGIC ĐẶT GIÁ THỦ CÔNG (3.1.3 & 3.1.5) ==================
-    // VÁ LỖI 3.1.5: Sử dụng throws InvalidBidException thay vì Exception thường
+    // =========================================================================
+    // 1. LOGIC ĐẶT GIÁ THỦ CÔNG (Bảo mật Timing & Server-side check)
+    // =========================================================================
     public synchronized void placeBid(Bidder bidder, BigDecimal amount) throws InvalidBidException {
+        // FIX CASE 9: Lấy thời gian chuẩn của Server tại khoảnh khắc nhận request để đối chiếu
+        LocalDateTime serverNow = LocalDateTime.now();
 
-        if (this.status != AuctionStatus.RUNNING || isExpired()) {
+        if (this.status != AuctionStatus.RUNNING || serverNow.isAfter(this.endTime)) {
             this.status = AuctionStatus.FINISHED;
-            throw new InvalidBidException("Lỗi: Phiên đấu giá đã kết thúc hoặc chưa mở!");
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+            throw new InvalidBidException("Từ chối: Phiên đấu giá đã kết thúc! (Server Time: " + serverNow.format(fmt) + ")");
         }
 
         BigDecimal priceToBeat = (this.currentPrice != null) ? this.currentPrice : this.startPrice;
         if (amount.compareTo(priceToBeat) <= 0) {
-            throw new InvalidBidException("Lỗi: Giá đặt (" + amount + ") phải cao hơn mức giá hiện tại (" + priceToBeat + ")!");
+            throw new InvalidBidException("Từ chối: Giá đặt phải lớn hơn " + priceToBeat);
         }
 
         if (bidder.getBalance().compareTo(amount) < 0) {
-            throw new InvalidBidException("Lỗi: Số dư tài khoản không đủ để đặt mức giá này!");
+            throw new InvalidBidException("Từ chối: Tài khoản không đủ số dư!");
         }
 
-        // Cập nhật người dẫn đầu
-        this.currentPrice = amount;
-        this.currentWinner = bidder;
-        System.out.println(">>> [Manual Bid] " + bidder.getUsername() + " đặt giá thủ công: " + amount);
+        // Chốt giá thủ công
+        applyNewWinner(bidder, amount, "Manual Bid");
 
-        // Kích hoạt thuật toán Anti-sniping
-        triggerAntiSniping();
-
-        // THÊM MỚI 3.2.1: Sau khi có người đặt thủ công, đánh thức các Auto-bidder
+        // Đánh thức hệ thống Đấu trường Auto-Bid
         processAutoBids();
     }
 
-    // ================== THUẬT TOÁN ĐẤU TRƯỜNG AUTO-BID (3.2.1) ==================
+    // =========================================================================
+    // 2. LOGIC ĐĂNG KÝ AUTO-BID
+    // =========================================================================
+    public synchronized void registerAutoBid(Bidder bidder, BigDecimal maxBid, BigDecimal increment) throws InvalidBidException {
+        if (this.status != AuctionStatus.RUNNING || isExpired()) {
+            throw new InvalidBidException("Không thể thiết lập Auto-bid lúc này!");
+        }
+        if (bidder.getBalance().compareTo(maxBid) < 0) {
+            throw new InvalidBidException("Số dư không đủ để bảo lãnh mức Max Bid này!");
+        }
+
+        this.autoBidders.add(new AutoBidConfig(bidder, maxBid, increment));
+        System.out.println(">>> [Auto-Bid] " + bidder.getUsername() + " kích hoạt: Max=" + maxBid + ", Bước=" + increment);
+
+        // Ngay khi đăng ký, quét xem có thể đè giá ngay lập tức không
+        processAutoBids();
+    }
+
+    // =========================================================================
+    // 3. THUẬT TOÁN ĐẤU TRƯỜNG AUTO-BID (Fix Case 6, 7, 8)
+    // =========================================================================
     private void processAutoBids() {
         if (autoBidders.isEmpty()) return;
 
-        // Ưu tiên người đăng ký Auto-bid trước (ai đến trước phục vụ trước)
+        // Ưu tiên theo thời gian đăng ký (Tie-breaker cho Case 7)
         autoBidders.sort(Comparator.comparing(AutoBidConfig::getRegisterTime));
 
-        boolean newBidPlaced = true;
-
-        // Vòng lặp Battle: Cho các Auto-bidder nâng giá chéo nhau đến khi chạm kịch kim (MaxBid)
-        while (newBidPlaced) {
+        boolean newBidPlaced;
+        do {
             newBidPlaced = false;
 
             for (AutoBidConfig config : autoBidders) {
-                // Bỏ qua nếu người này đang là người dẫn đầu (không tự đấu giá với chính mình)
-                if (currentWinner != null && config.getBidder().getUserId() == currentWinner.getUserId()) {
+                // Bỏ qua nếu đang là top 1
+                if (currentWinner != null && currentWinner.getUserId() == config.getBidder().getUserId()) {
                     continue;
                 }
 
                 BigDecimal priceToBeat = (this.currentPrice != null) ? this.currentPrice : this.startPrice;
-                BigDecimal nextBid = priceToBeat.add(config.getIncrement()); // Cộng thêm bước giá
+                BigDecimal nextNormalBid = priceToBeat.add(config.getIncrement());
 
-                // Điều kiện để Auto-bid thành công:
-                // 1. Giá tiếp theo không vượt quá MaxBid của họ
-                // 2. Họ có đủ tiền trong tài khoản
-                if (nextBid.compareTo(config.getMaxBid()) <= 0 &&
-                        config.getBidder().getBalance().compareTo(nextBid) >= 0) {
-
-                    this.currentPrice = nextBid;
-                    this.currentWinner = config.getBidder();
-                    System.out.println("    [Auto-Bid] " + config.getBidder().getUsername() + " tự động nâng giá lên: " + nextBid);
-
-                    triggerAntiSniping(); // Tự động trả giá cũng kích hoạt chống sniping
-
+                // Kịch bản A: Nâng giá bình thường theo đúng increment
+                if (nextNormalBid.compareTo(config.getMaxBid()) <= 0 && config.getBidder().getBalance().compareTo(nextNormalBid) >= 0) {
+                    applyNewWinner(config.getBidder(), nextNormalBid, "Auto-Bid Step");
                     newBidPlaced = true;
-                    break; // Ngắt vòng For để quay lại vòng While, cho phép người khác "phản đòn"
+                    break; // Phá vòng lặp for, bắt đầu lại do-while để người khác phản đòn
                 }
+
+                // FIX CASE 6 & 7 (Kịch bản B: Đánh Tất Tay - ALL IN)
+                // Xảy ra khi bước giá tiếp theo vượt quá MaxBid, NHƯNG MaxBid vẫn có thể lật kèo
+                else {
+                    boolean canWinWithMax = config.getMaxBid().compareTo(priceToBeat) > 0;
+                    boolean canStealTieBreaker = (config.getMaxBid().compareTo(priceToBeat) == 0) && isOlderThanCurrentWinner(config);
+
+                    if ((canWinWithMax || canStealTieBreaker) && config.getBidder().getBalance().compareTo(config.getMaxBid()) >= 0) {
+                        applyNewWinner(config.getBidder(), config.getMaxBid(), "Auto-Bid ALL-IN");
+                        newBidPlaced = true;
+                        break;
+                    }
+                }
+            }
+        } while (newBidPlaced);
+    }
+
+    // =========================================================================
+    // CÁC HÀM PHỤ TRỢ (HELPERS)
+    // =========================================================================
+
+    private void applyNewWinner(Bidder bidder, BigDecimal amount, String logType) {
+        this.currentPrice = amount;
+        this.currentWinner = bidder;
+        System.out.println("    [" + logType + "] " + bidder.getUsername() + " vươn lên với giá: " + amount);
+        triggerAntiSniping();
+    }
+
+    // FIX CASE 4: Giới hạn Anti-Sniping
+    private void triggerAntiSniping() {
+        long secondsLeft = Duration.between(LocalDateTime.now(), this.endTime).getSeconds();
+        if (secondsLeft > 0 && secondsLeft <= 30) {
+            if (extensionCount < MAX_EXTENSIONS) {
+                this.endTime = this.endTime.plusSeconds(60);
+                extensionCount++;
+                System.out.println(">>> [Anti-sniping] Gia hạn lần " + extensionCount + "/" + MAX_EXTENSIONS + " thêm 60 giây.");
+            } else {
+                System.out.println(">>> [Anti-sniping] Bỏ qua gia hạn (Đã chạm ngưỡng tối đa " + MAX_EXTENSIONS + " lần).");
             }
         }
     }
 
-    // Tách riêng logic Anti-Sniping cho sạch code
-    private void triggerAntiSniping() {
-        long secondsLeft = Duration.between(LocalDateTime.now(), this.endTime).getSeconds();
-        if (secondsLeft > 0 && secondsLeft <= 30) {
-            this.endTime = this.endTime.plusSeconds(60);
-            System.out.println(">>> [Anti-sniping] Có biến động giá phút chót! Phiên đấu giá gia hạn thêm 60 giây.");
+    // Hàm Tie-breaker: Kiểm tra xem người này có đăng ký Auto-bid trước người đang dẫn đầu không
+    private boolean isOlderThanCurrentWinner(AutoBidConfig challenger) {
+        if (currentWinner == null) return true;
+        for (AutoBidConfig config : autoBidders) {
+            if (config.getBidder().getUserId() == currentWinner.getUserId()) {
+                return challenger.getRegisterTime().isBefore(config.getRegisterTime());
+            }
         }
+        return false;
     }
 
-    // ================= GETTER VÀ SETTER (GIỮ NGUYÊN) =================
+    // ================= GETTER VÀ SETTER =================
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public Item getItem() { return item; }
