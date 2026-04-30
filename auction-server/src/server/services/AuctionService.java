@@ -6,6 +6,7 @@ import server.dao.interfaces.AuctionRoomDAO;
 import server.dao.interfaces.ItemDAO;
 import server.models.auction.AuctionRoom;
 import server.models.auction.AuctionStatus;
+import server.models.auction.BidMessage;
 import server.models.items.Item;
 import server.models.users.Bidder;
 
@@ -81,34 +82,42 @@ public class AuctionService {
 
     // ================= NGHIỆP VỤ CHO BIDDER (ĐẶT GIÁ) =================
 
-    /**
-     * Xử lý cú click "Đặt giá" từ Client gửi lên.
-     */
+    // ================= NGHIỆP VỤ CHO BIDDER (ĐẶT GIÁ) =================
     public String handleBidRequest(Long roomId, Bidder bidder, double amount) {
         AuctionRoom room = activeRooms.get(roomId);
-
         if (room == null) return "LỖI: Không tìm thấy phòng đấu giá!";
 
-        try {
-            // Gọi logic lõi trong Model (đã có Anti-sniping và kiểm tra số dư)
-            room.placeBid(bidder, BigDecimal.valueOf(amount));
+        // VÁ LỖI CONCURRENCY (Case 17): Lock theo cấp độ phòng (Granularity Lock)
+        // Chỉ những người đặt giá CÙNG MỘT PHÒNG mới bị lock.
+        synchronized (room) {
+            try {
+                // 1. Cập nhật logic trên RAM (Đã an toàn nhờ block synchronized)
+                room.placeBid(bidder, BigDecimal.valueOf(amount));
 
-            // Ghi lại lịch sử đặt giá vào Database
-            saveBidToDatabase(roomId, bidder, amount);
+                // 2. Lưu trạng thái Phòng xuống Database (Kích hoạt Atomic Update vừa viết)
+                AuctionRoomDAO roomDAO = new AuctionRoomDAOImpl();
+                roomDAO.update(room);
 
-            return "SUCCESS";
-        } catch (Exception e) {
-            return e.getMessage(); // Trả về lỗi: "Giá quá thấp", "Hết thời gian", v.v.
+                // 3. Ghi lại lịch sử BidMessage
+                saveBidToDatabase(roomId, bidder, amount);
+
+                return "SUCCESS";
+            } catch (Exception e) {
+                return e.getMessage(); // Bắt lỗi ném ra từ Atomic Update hoặc InvalidBidException
+            }
         }
     }
 
     private void saveBidToDatabase(Long roomId, Bidder bidder, double amount) {
         try {
-            // Gọi BidMessageDAO để insert record mới
-            // BidMessageDAO bidDAO = new BidMessageDAOImpl();
-            // bidDAO.insert(new BidMessage(Long.parseLong(bidder.getUserId()), roomId, amount));
+            // Đã mở comment và chuẩn hóa kiểu dữ liệu ID
+            server.dao.interfaces.BidMessageDAO bidDAO = new server.dao.impl.BidMessageDAOImpl();
+
+            // Khởi tạo BidMessage (transactionId=0 để DB tự Auto Increment)
+            BidMessage bid = new BidMessage(0, bidder.getUserId(), roomId.intValue(), BigDecimal.valueOf(amount));
+            bidDAO.insert(bid);
         } catch (Exception e) {
-            System.err.println("Lỗi ghi lịch sử Bid: " + e.getMessage());
+            System.err.println("Lỗi ghi lịch sử Bid vào DB: " + e.getMessage());
         }
     }
 

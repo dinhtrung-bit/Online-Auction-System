@@ -41,27 +41,34 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
 
     @Override
     public void update(AuctionRoom room) throws Exception {
-        // Thêm start_time và end_time vào câu lệnh SQL
-        String sql = "UPDATE auctions SET current_highest_price = ?, winner_id = ?, end_time = ?, status = ? WHERE auction_id = ?";
+        // VÁ LỖI CONCURRENCY (Case 1 & 2): Atomic Update SQL
+        // Thêm điều kiện: (current_highest_price < ? OR current_highest_price IS NULL)
+        String sql = "UPDATE auctions SET current_highest_price = ?, winner_id = ?, end_time = ?, status = ? " +
+                "WHERE auction_id = ? AND (current_highest_price < ? OR current_highest_price IS NULL)";
 
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setBigDecimal(1, room.getCurrentPrice());
 
-            // Winner tạm thời
             if (room.getCurrentWinner() != null) {
                 pstmt.setInt(2, room.getCurrentWinner().getUserId());
             } else {
                 pstmt.setNull(2, java.sql.Types.INTEGER);
             }
-            pstmt.setTimestamp(3, Timestamp.valueOf(room.getEndTime()));
-
+            pstmt.setTimestamp(3, java.sql.Timestamp.valueOf(room.getEndTime()));
             pstmt.setString(4, room.getStatus().name());
+
             pstmt.setInt(5, room.getId());
+            // Truyền giá mới vào dấu ? cuối cùng để Database tự kiểm tra chéo
+            pstmt.setBigDecimal(6, room.getCurrentPrice());
 
-            pstmt.executeUpdate();
+            int rowsAffected = pstmt.executeUpdate();
 
+            // Nếu rowsAffected == 0, nghĩa là lệnh UPDATE bị từ chối do có người khác vừa nhanh tay hơn lưu giá cao hơn vào DB
+            if (rowsAffected == 0) {
+                throw new Exception("Xung đột dữ liệu (Lost Update): Đã có người khác đặt giá cao hơn trong tích tắc!");
+            }
         }
     }
 
