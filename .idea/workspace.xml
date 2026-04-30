@@ -5,9 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/test/java/AuctionRoomTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/Codesk.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/dao/impl/AuctionRoomDAOImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/impl/AuctionRoomDAOImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/auction/AuctionRoom.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/auction/AuctionRoom.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/services/AuctionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/services/AuctionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/test/java/testItem.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/test/java/testItem.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,12 +44,12 @@
     &quot;assignee&quot;: &quot;dinhtrung-bit&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/dinhtrung-bit/Online-Auction-System.git&quot;,
-    &quot;accountId&quot;: &quot;6f023320-f90c-4313-abd6-df2c9856db41&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/dinhtrung-bit/Online-Auction-System.git",
+    "accountId": "7c940023-821b-44d8-9571-c9ae9abbb95d"
   }
-}</component>
+}]]></component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/auction-server/src/main/java/com/auctions/server/network/ClientHandler.java" root0="FORCE_HIGHLIGHTING" />
   </component>
@@ -66,43 +71,45 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.ClientApp.executor&quot;: &quot;Run&quot;,
-    &quot;Application.ClientMain.executor&quot;: &quot;Run&quot;,
-    &quot;Application.ServerRocket.executor&quot;: &quot;Run&quot;,
-    &quot;Application.TestDB.executor&quot;: &quot;Run&quot;,
-    &quot;Application.client.networks.ClientMain.executor&quot;: &quot;Run&quot;,
-    &quot;Application.server.networks.ServerRocket.executor&quot;: &quot;Run&quot;,
-    &quot;Application.testItem.executor&quot;: &quot;Run&quot;,
-    &quot;Application.testUser.executor&quot;: &quot;Run&quot;,
-    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
-    &quot;Maven.auction-client [org.openjfx:javafx-maven-plugin:0.0.8:run].executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/all/java/Online-Auction-System&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.excludes&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.ClientApp.executor": "Run",
+    "Application.ClientMain.executor": "Run",
+    "Application.ServerRocket.executor": "Run",
+    "Application.TestDB.executor": "Run",
+    "Application.client.networks.ClientMain.executor": "Run",
+    "Application.server.networks.ServerRocket.executor": "Run",
+    "Application.testItem.executor": "Run",
+    "Application.testUser.executor": "Run",
+    "DefaultHtmlFileTemplate": "HTML File",
+    "JUnit.AuctionRoomTest.executor": "Run",
+    "JUnit.AuctionRoomTest.testAntiSnipingExtension.executor": "Run",
+    "Maven.auction-client [org.openjfx:javafx-maven-plugin:0.0.8:run].executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/all/java/Online-Auction-System",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "reference.projectsettings.compiler.excludes",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\views" />
@@ -112,7 +119,7 @@
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\resources\views" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.ClientApp">
+  <component name="RunManager" selected="JUnit.AuctionRoomTest">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="auction-client" />
       <option name="ENV_FILES" value="" />
@@ -182,19 +189,6 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="TestDB" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="server.DAO.TestDB" />
-      <module name="1" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="server.DAO.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="server.networks.ServerRocket" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="server.networks.ServerRocket" />
       <module name="online-auction" />
@@ -221,44 +215,39 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="testUser" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="server.DAO.testUser" />
-      <module name="1" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="server.DAO.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
+    <configuration name="AuctionRoomTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="online-auction" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="AuctionRoomTest" />
+      <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="JetRunConfigurationType">
-      <module name="auction-client" />
+    <configuration name="AuctionRoomTest.testAntiSnipingExtension" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="online-auction" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="AuctionRoomTest" />
+      <option name="METHOD_NAME" value="testAntiSnipingExtension" />
+      <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
-    </configuration>
-    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
-      <module name="auction-client" />
-      <option name="filePath" />
-      <method v="2" />
     </configuration>
     <list>
       <item itemvalue="Application.ClientApp" />
       <item itemvalue="Application.testItem" />
-      <item itemvalue="Application.TestDB" />
-      <item itemvalue="Application.testUser" />
       <item itemvalue="Application.server.networks.ServerRocket" />
+      <item itemvalue="JUnit.AuctionRoomTest" />
+      <item itemvalue="JUnit.AuctionRoomTest.testAntiSnipingExtension" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.AuctionRoomTest" />
+        <item itemvalue="JUnit.AuctionRoomTest.testAntiSnipingExtension" />
         <item itemvalue="Application.ClientApp" />
         <item itemvalue="Application.server.networks.ServerRocket" />
         <item itemvalue="Application.testItem" />
-        <item itemvalue="Application.testUser" />
-        <item itemvalue="Application.TestDB" />
       </list>
     </recent_temporary>
   </component>
@@ -290,6 +279,7 @@
       <workItem from="1777347498674" duration="108000" />
       <workItem from="1777353521514" duration="572000" />
       <workItem from="1777354228729" duration="60000" />
+      <workItem from="1777527390068" duration="3325000" />
     </task>
     <servers />
   </component>

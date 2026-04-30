@@ -9,6 +9,7 @@ import server.models.auction.AuctionStatus;
 import server.models.items.Item;
 import server.models.users.Bidder;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -90,7 +91,7 @@ public class AuctionService {
 
         try {
             // Gọi logic lõi trong Model (đã có Anti-sniping và kiểm tra số dư)
-            room.placeBid(bidder, amount);
+            room.placeBid(bidder, BigDecimal.valueOf(amount));
 
             // Ghi lại lịch sử đặt giá vào Database
             saveBidToDatabase(roomId, bidder, amount);

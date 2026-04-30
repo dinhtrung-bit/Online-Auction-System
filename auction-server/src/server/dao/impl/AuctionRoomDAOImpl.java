@@ -134,10 +134,8 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
         AuctionRoom room = new AuctionRoom(
                 id,
                 item,
-                winner,
                 startTimeTS.toLocalDateTime(),
-                endTimeTs.toLocalDateTime(),
-                currentPrice
+                endTimeTs.toLocalDateTime()
         );
 
         room.setStatus(AuctionStatus.valueOf(statusStr));
