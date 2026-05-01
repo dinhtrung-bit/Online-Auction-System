@@ -18,28 +18,25 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * ClientHandler xử lý yêu cầu từ Client cho hệ thống AuctionVN.
+ */
 public class ClientHandler implements Runnable {
 
-    // OBSERVER PATTERN: Danh sách an toàn đa luồng quản lý các Client đang bật app
     private static final List<ClientHandler> activeClients = new CopyOnWriteArrayList<>();
-
     private Socket clientSocket;
     private Gson gson;
     private UserDAO userDAO;
     private PrintWriter out;
-
-    // VÁ LỖI 3.1.1: Lưu trữ trạng thái đăng nhập của Client này để phân quyền
     private User loggedInUser = null;
 
     public ClientHandler(Socket socket) {
         this.clientSocket = socket;
         this.gson = new Gson();
         this.userDAO = new UserDAOimpl();
-        // Vừa kết nối là đưa ngay vào danh sách quản lý
         activeClients.add(this);
     }
 
-    // OBSERVER PATTERN: Hàm phát thanh tin nhắn tới toàn bộ người dùng
     private static void broadcast(String jsonMessage) {
         for (ClientHandler client : activeClients) {
             try {
@@ -47,7 +44,7 @@ public class ClientHandler implements Runnable {
                     client.out.println(jsonMessage);
                 }
             } catch (Exception e) {
-                System.err.println("Lỗi gửi tin tới 1 client: " + e.getMessage());
+                System.err.println("Lỗi broadcast: " + e.getMessage());
             }
         }
     }
@@ -55,159 +52,122 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try {
-            System.out.println("Đang xử lý kết nối từ: " + clientSocket.getInetAddress());
+            System.out.println(">>> Đã kết nối với: " + clientSocket.getInetAddress());
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             out = new PrintWriter(clientSocket.getOutputStream(), true);
             String inputLine;
 
             while ((inputLine = in.readLine()) != null) {
-                System.out.println(">>> Server nhận yêu cầu: " + inputLine);
                 MessageDTO request = gson.fromJson(inputLine, MessageDTO.class);
                 MessageDTO response = new MessageDTO();
 
-                // ================= XỬ LÝ ĐĂNG NHẬP =================
+                // ================= 1. XỬ LÝ ĐĂNG NHẬP =================
                 if ("LOGIN".equals(request.getAction())) {
                     String[] credentials = request.getPayload().split(":");
-                    if (credentials.length == 2) {
-                        String username = credentials[0];
-                        String password = credentials[1];
-                        User user = userDAO.findByUsername(username);
 
-                        if (user != null && password.equals(user.getPasswordHash())) {
-                            // GHI NHỚ NGƯỜI DÙNG: Lưu thông tin để phân quyền cho các request sau
-                            this.loggedInUser = user;
+                    if (credentials.length == 3) {
+                        String selectedRole = credentials[0];
+                        String username = credentials[1];
+                        String password = credentials[2]; // Lấy nguyên bản mật khẩu, không dùng .trim()
 
-                            response.setAction("LOGIN_SUCCESS");
-                            response.setPayload(gson.toJson(user));
-                            System.out.println("[Thành công] User đăng nhập: " + username + " (Vai trò: " + user.getRole() + ")");
-                        } else {
+                        try {
+                            User user = userDAO.findByUsername(username);
+
+                            if (user != null) {
+                                // ====== THÊM 2 DÒNG NÀY VÀO ĐỂ DEBUG ======
+                                System.out.println("-> Pass Client gửi lên : [" + password + "] (Độ dài: " + password.length() + ")");
+                                System.out.println("-> Pass trong Database : [" + user.getPasswordHash() + "] (Độ dài: " + user.getPasswordHash().length() + ")");
+                                // ==========================================
+
+                                // So sánh trực tiếp: Nếu nhập thừa dấu cách sẽ trả về false ngay
+                                boolean isPassCorrect = password.equals(user.getPasswordHash());
+                                boolean isRoleCorrect = user.getRole().equalsIgnoreCase(selectedRole);
+
+                                if (isPassCorrect && isRoleCorrect) {
+                                    this.loggedInUser = user;
+                                    response.setAction("LOGIN_SUCCESS");
+                                    response.setPayload(gson.toJson(user));
+                                    System.out.println("[OK] Đăng nhập: " + username);
+                                } else {
+                                    response.setAction("LOGIN_FAILED");
+                                    // Chỉ hiện thông báo ngắn gọn
+                                    response.setPayload(!isPassCorrect ? "Sai mật khẩu!" : "Sai vai trò!");
+                                }
+                            } else {
+                                response.setAction("LOGIN_FAILED");
+                                response.setPayload("Tên đăng nhập không tồn tại!");
+                            }
+                        } catch (Exception e) {
                             response.setAction("LOGIN_FAILED");
-                            response.setPayload("Sai tên đăng nhập hoặc mật khẩu!");
+                            response.setPayload("Lỗi kết nối cơ sở dữ liệu!");
                         }
-                    } else {
-                        response.setAction("LOGIN_FAILED");
-                        response.setPayload("Sai định dạng dữ liệu đăng nhập!");
                     }
                 }
 
-                // ================= XỬ LÝ ĐĂNG KÝ =================
+                // ================= 2. XỬ LÝ ĐĂNG KÝ =================
                 else if ("REGISTER".equals(request.getAction())) {
                     String[] data = request.getPayload().split(":");
                     if (data.length == 3) {
                         try {
-                            // data[0]: username, data[1]: password, data[2]: role
                             User newUser = UserFactory.createUser(data[2], 0, data[0]);
-                            newUser.setPasswordHash(data[1]); // Cập nhật mật khẩu
+                            newUser.setPasswordHash(data[1]);
                             userDAO.insert(newUser);
-
                             response.setAction("REGISTER_SUCCESS");
-                            response.setPayload("Đăng ký tài khoản thành công!");
+                            response.setPayload("Đăng ký thành công!");
                         } catch (Exception ex) {
                             response.setAction("REGISTER_FAILED");
-                            response.setPayload("Tên đăng nhập đã tồn tại hoặc lỗi hệ thống.");
+                            response.setPayload("Tài khoản đã tồn tại.");
                         }
                     }
                 }
 
-                // ================= XỬ LÝ TẠO PHIÊN ĐẤU GIÁ =================
-                else if ("CREATE_AUCTION".equals(request.getAction())) {
-                    // PHÂN QUYỀN (RBAC): Chỉ người bán mới được tạo phiên
-                    if (this.loggedInUser == null) {
-                        response.setAction("CREATE_AUCTION_FAILED");
-                        response.setPayload("Lỗi bảo mật: Bạn chưa đăng nhập!");
-                    } else if (!"SELLER".equals(this.loggedInUser.getRole())) {
-                        response.setAction("CREATE_AUCTION_FAILED");
-                        response.setPayload("Lỗi bảo mật: Chỉ có người bán (SELLER) mới có quyền tạo phiên đấu giá!");
-                    } else {
-                        try {
-                            Item newItem = gson.fromJson(request.getPayload(), Item.class);
-                            // Mặc định tạo phiên đấu giá kéo dài 24 giờ
-                            LocalDateTime endTime = LocalDateTime.now().plusHours(24);
-                            AuctionService.getInstance().createNewAuction(newItem, endTime);
-
-                            response.setAction("CREATE_AUCTION_SUCCESS");
-                            response.setPayload("Tạo phiên đấu giá thành công!");
-                        } catch (Exception e) {
-                            response.setAction("CREATE_AUCTION_FAILED");
-                            response.setPayload("Lỗi hệ thống khi tạo phiên: " + e.getMessage());
-                        }
-                    }
-                }
-
-                // ================= XỬ LÝ ĐẶT GIÁ (BIDDING) =================
+                // ================= 3. XỬ LÝ ĐẶT GIÁ =================
                 else if ("BID".equals(request.getAction())) {
-                    // Yêu cầu phải đăng nhập mới được bid
-                    if (this.loggedInUser == null) {
-                        response.setAction("BID_FAILED");
-                        response.setPayload("Lỗi: Bạn cần đăng nhập để tham gia đấu giá!");
-                    } else {
+                    if (this.loggedInUser != null) {
                         String[] data = request.getPayload().split(":");
                         if (data.length == 3) {
                             try {
                                 Long roomId = Long.parseLong(data[0]);
-                                String username = data[1];
+                                String userBid = data[1];
                                 double amount = Double.parseDouble(data[2]);
 
-                                User user = userDAO.findByUsername(username);
+                                User user = userDAO.findByUsername(userBid);
                                 if (user != null) {
                                     Bidder bidder = new Bidder(user.getUserId(), user.getUsername(), user.getPasswordHash(), user.getEmail(), user.getAccountBalance());
-
-                                    // Gọi luồng xử lý lõi
                                     String result = AuctionService.getInstance().handleBidRequest(roomId, bidder, amount);
 
                                     if ("SUCCESS".equals(result)) {
-                                        // 1. Trả lời riêng cho người đặt giá thành công
                                         response.setAction("BID_SUCCESS");
                                         response.setPayload("Đặt giá thành công!");
                                         out.println(gson.toJson(response));
 
-                                        System.out.println("[Thành công] " + username + " đặt " + amount + " cho phòng " + roomId);
-
-                                        // 2. OBSERVER: Phát thanh thông báo giá mới cho toàn bộ Client
                                         MessageDTO updateMsg = new MessageDTO();
                                         updateMsg.setAction("UPDATE_PRICE");
-                                        updateMsg.setPayload(roomId + ":" + amount + ":" + username);
+                                        updateMsg.setPayload(roomId + ":" + amount + ":" + userBid);
                                         broadcast(gson.toJson(updateMsg));
-
-                                        continue; // Bỏ qua lệnh out.println ở cuối vòng lặp vì đã gửi rồi
+                                        continue;
                                     } else {
                                         response.setAction("BID_FAILED");
                                         response.setPayload(result);
                                     }
-                                } else {
-                                    response.setAction("BID_FAILED");
-                                    response.setPayload("Không tìm thấy thông tin người dùng.");
                                 }
                             } catch (Exception e) {
                                 response.setAction("BID_FAILED");
-                                response.setPayload("Dữ liệu đặt giá không hợp lệ.");
+                                response.setPayload("Lỗi dữ liệu.");
                             }
                         }
                     }
                 }
 
-                // ================= XỬ LÝ LỆNH KHÔNG HỢP LỆ =================
-                else {
-                    response.setAction("ERROR");
-                    response.setPayload("Hành động không được hệ thống hỗ trợ.");
-                }
-
-                // Gửi response ngược lại Client cho các trường hợp chung
-                String jsonResponse = gson.toJson(response);
-                out.println(jsonResponse);
+                out.println(gson.toJson(response));
             }
         } catch (Exception e) {
-            System.out.println(">>> Client ngắt kết nối: " + clientSocket.getInetAddress());
+            System.err.println("Client ngắt kết nối.");
         } finally {
-            // RẤT QUAN TRỌNG: Gỡ bỏ Client khỏi danh sách phát thanh khi họ tắt App
             activeClients.remove(this);
             try {
-                if (clientSocket != null && !clientSocket.isClosed()) {
-                    clientSocket.close();
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+                if (clientSocket != null) clientSocket.close();
+            } catch (Exception ex) { }
         }
     }
 }
