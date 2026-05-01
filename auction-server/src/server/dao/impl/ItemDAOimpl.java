@@ -89,7 +89,7 @@ public class ItemDAOimpl implements ItemDAO {
     @Override
     public List<Item> findAll() throws Exception {
         List<Item> itemList = new ArrayList<>();
-        String sql = "SELECT item_id, name, startingPrice, description, categoryinfo FROM items";
+        String sql = "SELECT item_id, name, startingPrice, description, CategoryInfo FROM items";
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
