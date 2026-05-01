@@ -6,7 +6,7 @@ import server.models.auction.AutoBidConfig;
 import java.util.List;
 
 public interface AutoBidDAO extends GenericDAO {
-    boolean insertAutoBid(int auctionId, AutoBidConfig config);
     List<AutoBidConfig> getAutoBidsByAuctionId(int auctionId);
-
+    AutoBidConfig findByUserIdAndAuctionId(int userId, int auctionId) throws Exception;
+    void deleteByAuctionId(int auctionId) throws Exception;
 }

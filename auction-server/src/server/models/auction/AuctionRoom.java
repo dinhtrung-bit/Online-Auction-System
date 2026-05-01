@@ -35,6 +35,8 @@ public class AuctionRoom implements Serializable {
     // FIX CASE 4: Chống lạm dụng gia hạn vô tận (Anti-sniping limit)
     private int extensionCount = 0;
     private static final int MAX_EXTENSIONS = 5;
+    public AuctionRoom() {
+    }
 
     public AuctionRoom(int id, Item item, LocalDateTime starttime, LocalDateTime endTime) {
         this.id = id;
@@ -97,7 +99,7 @@ public class AuctionRoom implements Serializable {
             throw new InvalidBidException("Số dư không đủ để bảo lãnh mức Max Bid này!");
         }
 
-        this.autoBidders.add(new AutoBidConfig(bidder, maxBid, increment));
+        this.autoBidders.add(new AutoBidConfig());
         System.out.println(">>> [Auto-Bid] " + bidder.getUsername() + " kích hoạt: Max=" + maxBid + ", Bước=" + increment);
 
         // Ngay khi đăng ký, quét xem có thể đè giá ngay lập tức không
