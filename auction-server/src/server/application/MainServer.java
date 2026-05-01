@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MainServer {
     public static void main(String[] args) {
-        int port = 1234;
+        int port = 8080;
 
         // 1. Khởi tạo luồng chạy ngầm để quét và đóng các phiên đấu giá hết hạn
         startBackgroundAuctionQuitter();
