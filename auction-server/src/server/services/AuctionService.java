@@ -2,8 +2,10 @@ package server.services;
 
 import server.dao.impl.AuctionRoomDAOImpl;
 import server.dao.impl.ItemDAOimpl;
+import server.dao.impl.BidMessageDAOImpl;
 import server.dao.interfaces.AuctionRoomDAO;
 import server.dao.interfaces.ItemDAO;
+import server.dao.interfaces.BidMessageDAO;
 import server.models.auction.AuctionRoom;
 import server.models.auction.AuctionStatus;
 import server.models.auction.BidMessage;
@@ -15,20 +17,23 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CompletableFuture;
 
 /**
- * AuctionManager: "Bộ não" trung tâm điều phối toàn bộ hệ thống.
- * Kết nối trực tiếp giữa Socket (Mạng) và DAO (Database).
+ * AuctionService: Đã tối ưu hóa cho đấu giá đồng thời và hiệu suất cao.
  */
 public class AuctionService {
     private static AuctionService instance;
 
-    // Quản lý các phòng đang hoạt động trong RAM để xử lý thời gian thực nhanh hơn
+    // 1. TỐI ƯU DAO: Khai báo final và dùng chung để tránh tạo mới Object liên tục
+    private final AuctionRoomDAO roomDAO = new AuctionRoomDAOImpl();
+    private final ItemDAO itemDAO = new ItemDAOimpl();
+    private final BidMessageDAO bidDAO = new BidMessageDAOImpl();
+
     private ConcurrentHashMap<Long, AuctionRoom> activeRooms;
 
     private AuctionService() {
         activeRooms = new ConcurrentHashMap<>();
-        // Khi Server bật lên, ta nên load các phòng từ DB vào RAM
         loadRoomsFromDatabase();
     }
 
@@ -39,132 +44,106 @@ public class AuctionService {
         return instance;
     }
 
-    // ================= QUẢN LÝ DỮ LIỆU & PERSISTENCE =================
-
     private void loadRoomsFromDatabase() {
         try {
-            // Sau này bạn cài đặt AuctionRoomDAOImpl, hãy gọi findAll() ở đây
-            // List<AuctionRoom> rooms = new AuctionRoomDAOImpl().findAll();
-            // rooms.forEach(r -> activeRooms.put(r.getId(), r));
+            // Logic nạp dữ liệu từ DB (Bạn có thể bỏ comment khi DAO đã sẵn sàng)
+            // List<AuctionRoom> rooms = roomDAO.findAll();
+            // rooms.forEach(r -> activeRooms.put((long)r.getId(), r));
             System.out.println(">>> [Manager] Đã nạp dữ liệu từ Database vào RAM.");
         } catch (Exception e) {
             System.err.println("Lỗi nạp dữ liệu: " + e.getMessage());
         }
     }
 
-    // ================= NGHIỆP VỤ CHO SELLER (ĐĂNG TIN) =================
-
-    /**
-     * Khi Seller đăng sản phẩm, ta tạo Item và AuctionRoom tương ứng.
-     */
     public void createNewAuction(Item item, LocalDateTime endTime) {
-        // 1. Tạo ID ảo hoặc lấy từ Database (Ở đây giả định lấy currentTime làm ID)
         Long roomId = System.currentTimeMillis();
-
-        // ĐÃ SỬA LỖI Ở ĐÂY: Ép kiểu roomId.intValue() và thêm LocalDateTime.now() cho starttime
         AuctionRoom newRoom = new AuctionRoom(roomId.intValue(), item, LocalDateTime.now(), endTime);
-
-        // 2. Lưu vào RAM để quản lý
         activeRooms.put(roomId, newRoom);
 
-        // 3. Lưu xuống Database (Phần của P2)
-        try {
-            // Lưu Item trước
-            ItemDAO itemDAO = new ItemDAOimpl();
-            itemDAO.insert(item);
-
-            // Sau đó lưu Room (AuctionRoomDAO)
-            System.out.println(">>> [Manager] Đã tạo phiên đấu giá mới cho: " + item.getName());
-        } catch (Exception e) {
-            System.err.println("Lỗi lưu DB: " + e.getMessage());
-        }
-    }
-
-    // ================= NGHIỆP VỤ CHO BIDDER (ĐẶT GIÁ) =================
-
-    // ================= NGHIỆP VỤ CHO BIDDER (ĐẶT GIÁ) =================
-    public String handleBidRequest(Long roomId, Bidder bidder, double amount) {
-        AuctionRoom room = activeRooms.get(roomId);
-        if (room == null) return "LỖI: Không tìm thấy phòng đấu giá!";
-
-        // VÁ LỖI CONCURRENCY (Case 17): Lock theo cấp độ phòng (Granularity Lock)
-        // Chỉ những người đặt giá CÙNG MỘT PHÒNG mới bị lock.
-        synchronized (room) {
+        // Chạy bất đồng bộ để không làm treo luồng chính khi lưu DB
+        CompletableFuture.runAsync(() -> {
             try {
-                // 1. Cập nhật logic trên RAM (Đã an toàn nhờ block synchronized)
-                room.placeBid(bidder, BigDecimal.valueOf(amount));
-
-                // 2. Lưu trạng thái Phòng xuống Database (Kích hoạt Atomic Update vừa viết)
-                AuctionRoomDAO roomDAO = new AuctionRoomDAOImpl();
-                roomDAO.update(room);
-
-                // 3. Ghi lại lịch sử BidMessage
-                saveBidToDatabase(roomId, bidder, amount);
-
-                return "SUCCESS";
+                itemDAO.insert(item);
+                // roomDAO.insert(newRoom); // Thêm nếu DAO có hàm insert room
+                System.out.println(">>> [Manager] Đã lưu phiên đấu giá mới vào DB.");
             } catch (Exception e) {
-                return e.getMessage(); // Bắt lỗi ném ra từ Atomic Update hoặc InvalidBidException
-            }
-        }
-    }
-
-    private void saveBidToDatabase(Long roomId, Bidder bidder, double amount) {
-        try {
-            // Đã mở comment và chuẩn hóa kiểu dữ liệu ID
-            server.dao.interfaces.BidMessageDAO bidDAO = new server.dao.impl.BidMessageDAOImpl();
-
-            // Khởi tạo BidMessage (transactionId=0 để DB tự Auto Increment)
-            BidMessage bid = new BidMessage(0, bidder.getUserId(), roomId.intValue(), BigDecimal.valueOf(amount));
-            bidDAO.insert(bid);
-        } catch (Exception e) {
-            System.err.println("Lỗi ghi lịch sử Bid vào DB: " + e.getMessage());
-        }
-    }
-
-    // ================= QUẢN LÝ TRẠNG THÁI TỰ ĐỘNG =================
-
-    /**
-     * VÁ LỖI 3.1.4: Hàm này được Server gọi mỗi giây để quét toàn bộ trạng thái phòng
-     */
-    public void autoUpdateStatuses() {
-        LocalDateTime now = LocalDateTime.now();
-        activeRooms.values().forEach(room -> {
-
-            // 1. Chuyển trạng thái từ OPEN -> RUNNING (Đến giờ mở cửa)
-            if (room.getStatus() == AuctionStatus.OPEN && !now.isBefore(room.getStarttime())) {
-                room.setStatus(AuctionStatus.RUNNING);
-                System.out.println(">>> [Hệ thống] Phiên đấu giá ID: " + room.getId() + " đã bắt đầu (RUNNING).");
-                updateRoomInDB(room);
-            }
-
-            // 2. Chuyển trạng thái từ RUNNING -> FINISHED (Hết giờ đấu giá)
-            else if (room.getStatus() == AuctionStatus.RUNNING && room.isExpired()) {
-                room.setStatus(AuctionStatus.FINISHED);
-                System.out.println(">>> [Hệ thống] Đóng phiên đấu giá ID: " + room.getId() + " (FINISHED).");
-
-                // Log người chiến thắng
-                if (room.getCurrentWinner() != null) {
-                    System.out.println("    -> Người chiến thắng: " + room.getCurrentWinner().getUsername() + " với giá " + room.getCurrentPrice());
-                    // Lưu ý: Logic chuyển từ FINISHED -> PAID sẽ nằm ở một hàm thanh toán riêng biệt sau này
-                } else {
-                    System.out.println("    -> Không có ai tham gia đặt giá.");
-                }
-                updateRoomInDB(room);
+                System.err.println("Lỗi lưu DB: " + e.getMessage());
             }
         });
     }
 
-    // Hàm phụ trợ giúp code gọn gàng, tránh lặp lại try-catch
-    private void updateRoomInDB(AuctionRoom room) {
-        try {
-            AuctionRoomDAO roomDAO = new AuctionRoomDAOImpl();
-            roomDAO.update(room);
-        } catch (Exception e) {
-            System.err.println(">>> [Lỗi Database] Không thể cập nhật phòng ID " + room.getId() + ": " + e.getMessage());
+    // ================= TỐI ƯU ĐẶT GIÁ ĐỒNG THỜI =================
+    public String handleBidRequest(Long roomId, Bidder bidder, double amount) {
+        AuctionRoom room = activeRooms.get(roomId);
+        if (room == null) return "LỖI: Không tìm thấy phòng đấu giá!";
+
+        BigDecimal bidAmount = BigDecimal.valueOf(amount);
+
+        // BƯỚC 1: Lock theo phòng để xử lý nhanh trên RAM (Critical Section cực ngắn)
+        synchronized (room) {
+            try {
+                // Kiểm tra logic đặt giá (Ví dụ: giá mới > giá cũ)
+                room.placeBid(bidder, bidAmount);
+            } catch (Exception e) {
+                return e.getMessage(); // Trả về lỗi ngay lập tức nếu giá không hợp lệ
+            }
         }
+
+        // BƯỚC 2: Sau khi RAM đã cập nhật, việc lưu DB thực hiện ở luồng riêng (Async)
+        // Giúp giải phóng lock ngay lập tức cho người tiếp theo vào đặt giá
+        CompletableFuture.runAsync(() -> {
+            try {
+                // Lưu trạng thái phòng
+                roomDAO.update(room);
+
+                // Ghi lịch sử bid
+                BidMessage bid = new BidMessage(0, bidder.getUserId(), roomId.intValue(), bidAmount);
+                bidDAO.insert(bid);
+
+                System.out.println(">>> [DB Success] Phòng " + roomId + ": " + bidder.getUsername() + " bid " + amount);
+            } catch (Exception e) {
+                System.err.println(">>> [DB Error] Lỗi lưu lịch sử đặt giá: " + e.getMessage());
+            }
+        });
+
+        return "SUCCESS";
     }
 
-    // Lấy danh sách cho Client hiển thị lên JavaFX
+    // ================= TỐI ƯU QUÉT TRẠNG THÁI =================
+    public void autoUpdateStatuses() {
+        LocalDateTime now = LocalDateTime.now();
+
+        activeRooms.values().forEach(room -> {
+            // Tối ưu: Chỉ kiểm tra những phòng chưa kết thúc
+            if (room.getStatus() != AuctionStatus.FINISHED) {
+
+                // 1. OPEN -> RUNNING
+                if (room.getStatus() == AuctionStatus.OPEN && !now.isBefore(room.getStarttime())) {
+                    room.setStatus(AuctionStatus.RUNNING);
+                    updateRoomInDB(room);
+                    System.out.println(">>> [Hệ thống] Room " + room.getId() + " START.");
+                }
+
+                // 2. RUNNING -> FINISHED
+                else if (room.getStatus() == AuctionStatus.RUNNING && room.isExpired()) {
+                    room.setStatus(AuctionStatus.FINISHED);
+                    updateRoomInDB(room);
+                    System.out.println(">>> [Hệ thống] Room " + room.getId() + " END.");
+                }
+            }
+        });
+    }
+
+    private void updateRoomInDB(AuctionRoom room) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                roomDAO.update(room);
+            } catch (Exception e) {
+                System.err.println(">>> [Lỗi DB] Update status thất bại: " + e.getMessage());
+            }
+        });
+    }
+
     public List<AuctionRoom> getActiveRooms() {
         return new ArrayList<>(activeRooms.values());
     }
