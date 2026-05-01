@@ -13,7 +13,7 @@ public class UserDAOimpl implements UserDAO {
 
     @Override
     public void insert(User user) throws Exception {
-        // và đưa PreparedStatement biên dịch trước để tôis ưu và đảm bảo bảo mật cho câu lệnh
+        // Sử dụng PreparedStatement để tối ưu và đảm bảo bảo mật SQL Injection
         String sql = "INSERT INTO users(username, password_hash, role) VALUES (?, ?, ?)";
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -22,7 +22,7 @@ public class UserDAOimpl implements UserDAO {
             pstmt.setString(2, user.getPasswordHash());
             pstmt.setString(3, user.getRole());
 
-            pstmt.executeUpdate();//thực thi câu lệnh sql trả về 1 int tượng trưng cho số hàng được tác động
+            pstmt.executeUpdate(); // Thực thi câu lệnh
         }
     }
 
@@ -64,45 +64,48 @@ public class UserDAOimpl implements UserDAO {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     int userId = rs.getInt("user_id");
-                    String uname= rs.getString("username");
-                    String passwordHash = rs.getString("password_hash");
+                    String uname = rs.getString("username");
+                    String passwordHash = rs.getString("password_hash"); // Lấy mật khẩu từ DB
                     String role = rs.getString("role");
 
-                    return UserFactory.createUser(role, userId, uname);
+                    // 1. Khởi tạo đối tượng qua Factory
+                    User user = UserFactory.createUser(role, userId, uname);
+
+                    // 2. CẬP NHẬT MẬT KHẨU (Bước quan trọng bị thiếu trước đó)
+                    if (user != null) {
+                        user.setPasswordHash(passwordHash);
+                    }
+
+                    return user;
                 }
             }
         }
-
         return null;
     }
 
-        @Override
-        public List<User> findAll () throws Exception {
-            List<User> userList = new ArrayList<>();// 1. Tạo danh sách rỗng để chứa kết quả trả về
-            String sql = "SELECT user_id, username, role FROM users";//câu lệnh sql lấy toàn bộ người dùng in ra để mn xem
-            try (Connection conn = DBConnection.getInstance().getConnection();
-                 PreparedStatement pstmt = conn.prepareStatement(sql);
-                 ResultSet rs = pstmt.executeQuery()) {//trả về String thực thi truy vấn
-                while (rs.next()) {
-                    // Lấy dữ liệu từ các cột tương ứng trong bảng 'users'
-                    int userId = rs.getInt("user_id");
-                    String username = rs.getString("username");
-                    String role = rs.getString("role");
-                    User user = UserFactory.createUser(role, userId, username);
-                    if (user != null) {
-                        userList.add(user);
-                    }
+    @Override
+    public List<User> findAll() throws Exception {
+        List<User> userList = new ArrayList<>();
+        String sql = "SELECT user_id, username, password_hash, role FROM users";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                int userId = rs.getInt("user_id");
+                String username = rs.getString("username");
+                String passwordHash = rs.getString("password_hash");
+                String role = rs.getString("role");
+
+                User user = UserFactory.createUser(role, userId, username);
+                if (user != null) {
+                    user.setPasswordHash(passwordHash); // Nạp pass để tránh lỗi hiển thị/xử lý
+                    userList.add(user);
                 }
             }
-            return userList;
         }
-    private User mapResultSetToUser(ResultSet rs) throws SQLException {
-        return UserFactory.createUser(
-                rs.getString("role"),
-                rs.getInt("user_id"),
-                rs.getString("username")
-        );
+        return userList;
     }
+
     @Override
     public User findById(int id) throws Exception {
         String sql = "SELECT * FROM users WHERE user_id = ?";
@@ -118,8 +121,20 @@ public class UserDAOimpl implements UserDAO {
                 }
             }
         }
-
         return null;
     }
-    }
 
+    // Hàm hỗ trợ map dữ liệu từ ResultSet sang đối tượng User
+    private User mapResultSetToUser(ResultSet rs) throws SQLException {
+        String role = rs.getString("role");
+        int userId = rs.getInt("user_id");
+        String username = rs.getString("username");
+        String passwordHash = rs.getString("password_hash");
+
+        User user = UserFactory.createUser(role, userId, username);
+        if (user != null) {
+            user.setPasswordHash(passwordHash);
+        }
+        return user;
+    }
+}
