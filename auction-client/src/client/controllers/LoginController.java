@@ -1,5 +1,6 @@
 package client.controllers;
 
+import client.models.UserSession;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -13,7 +14,8 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-
+import com.google.gson.Gson;
+import com.google.gson.Gson;
 public class LoginController {
 
 
@@ -25,6 +27,7 @@ public class LoginController {
 
 
     private String selectedRole = "Bidder";
+    private Gson gson = new Gson();
 
 
     private final String IDLE_STYLE = "-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 5; -fx-background-radius: 5; -fx-text-fill: black;";
@@ -64,55 +67,53 @@ public class LoginController {
         String username = txtUsername.getText().trim();
         String password = txtPassword.getText().trim();
 
-        boolean isValid = false;
+        // 1. Kết nối tới Server
+        client.networks.ClientMain.connectToServer();
 
+        // 2. Tạo gói tin gửi lên Server (Role:Username:Password)
+        String payload = selectedRole + ":" + username + ":" + password;
+        client.networks.MessageDTO req = new client.networks.MessageDTO("LOGIN", payload);
 
-        if (selectedRole.equals("Admin") && username.equals("admin") && password.equals("admin123")) {
-            isValid = true;
-        } else if (selectedRole.equals("Seller") && username.equals("seller1") && password.equals("seller123")) {
-            isValid = true;
-        } else if (selectedRole.equals("Bidder") && username.equals("bidder1") && password.equals("bidder123")) {
-            isValid = true;
-        }
+        // Gửi qua mạng
+        client.networks.ClientMain.send(gson.toJson(req));
 
-        if (isValid) {
+        try {
+            // 3. Chờ Server trả lời
+            String responseJson = client.networks.ClientMain.receive();
+            if (responseJson != null) {
+                client.networks.MessageDTO res = gson.fromJson(responseJson, client.networks.MessageDTO.class);
 
-            try {
+                // 4. Nếu Server báo đúng thì mới cho qua
+                if ("LOGIN_SUCCESS".equals(res.getAction())) {
+                    client.models.UserSession.username = username;
+                    client.models.UserSession.role = selectedRole;
 
+                    String fxmlPath = "";
+                    if (selectedRole.equals("Bidder")) {
+                        fxmlPath = "/client/views/auction-list.fxml";
+                    } else if (selectedRole.equals("Seller")) {
+                        fxmlPath = "/client/views/seller-dashboard.fxml";
+                    } else if (selectedRole.equals("Admin")) {
+                        fxmlPath = "/client/views/admin-dashboard.fxml";
+                    }
 
-                String fxmlPath = "";
-                if (selectedRole.equals("Bidder")) {
-                    fxmlPath = "/client/views/auction-list.fxml";
-                } else if (selectedRole.equals("Seller")) {
-                    fxmlPath = "/client/views/seller-dashboard.fxml";
-                } else if (selectedRole.equals("Admin")) {
-                    fxmlPath = "/client/views/admin-dashboard.fxml";
-                }
-
-                Parent root = FXMLLoader.load(getClass().getResource(fxmlPath));
-
-
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-
-
-
-                stage.getScene().setRoot(root);
-
-
-                if (!stage.isMaximized()) {
+                    Parent root = FXMLLoader.load(getClass().getResource(fxmlPath));
+                    Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                    stage.getScene().setRoot(root);
                     stage.setMaximized(true);
+
+                } else {
+                    // Server báo sai
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Lỗi đăng nhập");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Sai thông tin: " + res.getPayload());
+                    alert.showAndWait();
                 }
-
-                stage.show();
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-        } else {
-
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Lỗi đăng nhập");
-            alert.setHeaderText(null);
-            alert.setContentText("Sai tài khoản, mật khẩu hoặc vai trò. Vui lòng kiểm tra lại thông tin Demo!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Lỗi mất kết nối với Server!");
             alert.showAndWait();
         }
     }

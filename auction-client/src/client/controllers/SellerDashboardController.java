@@ -14,6 +14,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+import com.google.gson.Gson;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -36,14 +37,31 @@ public class SellerDashboardController implements Initializable {
         colWinner.setCellValueFactory(new PropertyValueFactory<>("currentWinner"));
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        // Tạo dữ liệu giả lập (Demo)
-        ObservableList<AuctionViewModel> list = FXCollections.observableArrayList(
-                new AuctionViewModel(1, "Samsung QLED 4K 55\"", 18200000, "bidder1", "Đang diễn ra"),
-                new AuctionViewModel(2, "Honda City RS 2024", 480000000, "bidder3", "Kết thúc"),
-                new AuctionViewModel(3, "Macbook Pro M3 Max", 85000000, "Chưa có", "Sắp mở")
-        );
+        // Gửi yêu cầu lấy danh sách Phiên đấu giá lên Server
+        client.networks.MessageDTO req = new client.networks.MessageDTO("GET_ALL_AUCTIONS", "");
+        client.networks.ClientMain.send(new Gson().toJson(req));
 
-        tableItems.setItems(list);
+        try {
+            // Chờ nhận danh sách từ Server
+            String resJson = client.networks.ClientMain.receive();
+            if (resJson != null) {
+                client.networks.MessageDTO res = new Gson().fromJson(resJson, client.networks.MessageDTO.class);
+
+                // Giả sử Server trả về Action tên là "AUCTION_LIST"
+                if ("AUCTION_LIST".equals(res.getAction())) {
+
+                    // Ép kiểu chuỗi JSON thành List<AuctionViewModel>
+                    java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<java.util.ArrayList<AuctionViewModel>>(){}.getType();
+                    java.util.List<AuctionViewModel> serverList = new Gson().fromJson(res.getPayload(), listType);
+
+                    // Đưa dữ liệu thật vào bảng
+                    ObservableList<AuctionViewModel> list = FXCollections.observableArrayList(serverList);
+                    tableItems.setItems(list);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -51,12 +69,10 @@ public class SellerDashboardController implements Initializable {
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/client/views/login.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            Scene scene = new Scene(root, 1200, 700);
 
-            // Tắt Fullscreen khi quay lại màn Login
-            stage.setMaximized(false);
-            stage.setScene(scene);
-            stage.show();
+            // Giữ nguyên khung màn hình to, chỉ thay ruột về trang Login
+            stage.getScene().setRoot(root);
+
         } catch (Exception e) {
             e.printStackTrace();
         }

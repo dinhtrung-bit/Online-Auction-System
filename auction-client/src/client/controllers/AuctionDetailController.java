@@ -36,7 +36,7 @@ public class AuctionDetailController implements Initializable {
 
     //cần sửa 2 biến này để đăng nhập thật
     private Long currentRoomId = 1L;
-    private String myUsername = "nguoidung1";
+    private String myUsername = client.models.UserSession.username;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -47,6 +47,11 @@ public class AuctionDetailController implements Initializable {
 
 
         startListeningFromServer();
+    }
+    public void setRoomId(Long id) {
+        this.currentRoomId = id;
+        System.out.println("Đã nhận ID phòng: " + currentRoomId);
+        // Sau khi nhận ID, bạn có thể gọi hàm load dữ liệu chi tiết của món hàng này từ Server ở đây
     }
 
     private void startTimer() {

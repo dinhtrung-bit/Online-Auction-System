@@ -14,6 +14,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+import com.google.gson.Gson;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -34,15 +35,29 @@ public class AdminDashboardController implements Initializable {
         colRole.setCellValueFactory(new PropertyValueFactory<>("role"));
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        // Dữ liệu người dùng mẫu
-        ObservableList<UserViewModel> list = FXCollections.observableArrayList(
-                new UserViewModel(101, "admin_toan", "Admin", "Hoạt động"),
-                new UserViewModel(102, "seller_vip", "Seller", "Hoạt động"),
-                new UserViewModel(103, "bidder_007", "Bidder", "Hoạt động"),
-                new UserViewModel(104, "spammer_xyz", "Bidder", "Bị khóa")
-        );
+        // Gửi yêu cầu lấy danh sách User lên Server
+        client.networks.MessageDTO req = new client.networks.MessageDTO("GET_ALL_USERS", "");
+        client.networks.ClientMain.send(new Gson().toJson(req));
 
-        tableUsers.setItems(list);
+        try {
+            // Chờ nhận danh sách từ Server
+            String resJson = client.networks.ClientMain.receive();
+            if (resJson != null) {
+                client.networks.MessageDTO res = new Gson().fromJson(resJson, client.networks.MessageDTO.class);
+
+                if ("USER_LIST".equals(res.getAction())) {
+                    // Ép kiểu chuỗi JSON thành List<UserViewModel>
+                    java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<java.util.ArrayList<UserViewModel>>(){}.getType();
+                    java.util.List<UserViewModel> serverList = new Gson().fromJson(res.getPayload(), listType);
+
+                    // Đưa dữ liệu thật vào bảng
+                    ObservableList<UserViewModel> list = FXCollections.observableArrayList(serverList);
+                    tableUsers.setItems(list);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -50,11 +65,10 @@ public class AdminDashboardController implements Initializable {
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/client/views/login.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            Scene scene = new Scene(root, 1200, 700);
 
-            stage.setMaximized(false);
-            stage.setScene(scene);
-            stage.show();
+            // Giữ nguyên khung màn hình to, chỉ thay ruột về trang Login
+            stage.getScene().setRoot(root);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
