@@ -6,7 +6,7 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class mainServer {
+public class TestServer {
     public static void main(String[] args) throws IOException {
         ServerSocket server = new ServerSocket(8080);
         System.out.println("Server is running on port 8080...");
