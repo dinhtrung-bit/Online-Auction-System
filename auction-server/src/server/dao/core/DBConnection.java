@@ -6,7 +6,7 @@
 
     public class DBConnection {
         private static DBConnection instance;
-        private Connection connection;
+        private static Connection connection;
         private static final String URL = "jdbc:mysql://localhost:3306/daugia";
         private static final String USER = "root";
         private static final String PASSWORD = "";
@@ -33,7 +33,7 @@
             return instance;
         }
 
-        public Connection getConnection() {
+        public static Connection getConnection() {
             return connection;
         }
     }
