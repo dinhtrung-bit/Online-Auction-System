@@ -29,35 +29,28 @@ public class AdminDashboardController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Gắn các cột với thuộc tính trong UserViewModel
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colUsername.setCellValueFactory(new PropertyValueFactory<>("username"));
         colRole.setCellValueFactory(new PropertyValueFactory<>("role"));
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        // Gửi yêu cầu lấy danh sách User lên Server
-        client.networks.MessageDTO req = new client.networks.MessageDTO("GET_ALL_USERS", "");
-        client.networks.ClientMain.send(new Gson().toJson(req));
+        // Đăng ký listener — khi nhận USER_LIST thì đổ vào bảng
+        client.networks.ClientMain.registerListener("USER_LIST", payload -> {
+            java.lang.reflect.Type listType =
+                    new com.google.gson.reflect.TypeToken<java.util.ArrayList<UserViewModel>>(){}.getType();
+            java.util.List<UserViewModel> serverList =
+                    new com.google.gson.Gson().fromJson(payload, listType);
+            javafx.application.Platform.runLater(() -> {
+                ObservableList<UserViewModel> list =
+                        FXCollections.observableArrayList(serverList);
+                tableUsers.setItems(list);
+            });
+        });
 
-        try {
-            // Chờ nhận danh sách từ Server
-            String resJson = client.networks.ClientMain.receive();
-            if (resJson != null) {
-                client.networks.MessageDTO res = new Gson().fromJson(resJson, client.networks.MessageDTO.class);
-
-                if ("USER_LIST".equals(res.getAction())) {
-                    // Ép kiểu chuỗi JSON thành List<UserViewModel>
-                    java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<java.util.ArrayList<UserViewModel>>(){}.getType();
-                    java.util.List<UserViewModel> serverList = new Gson().fromJson(res.getPayload(), listType);
-
-                    // Đưa dữ liệu thật vào bảng
-                    ObservableList<UserViewModel> list = FXCollections.observableArrayList(serverList);
-                    tableUsers.setItems(list);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // Gửi request
+        client.networks.MessageDTO req =
+                new client.networks.MessageDTO("GET_ALL_USERS", "");
+        client.networks.ClientMain.send(new com.google.gson.Gson().toJson(req));
     }
 
     @FXML

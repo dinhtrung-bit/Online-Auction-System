@@ -25,26 +25,43 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
 
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            // Giả sử Item đã được lưu trước và có ID
             pstmt.setInt(1, room.getItem().getItemId());
             pstmt.setBigDecimal(2, room.getStartPrice());
             pstmt.setBigDecimal(3, room.getCurrentPrice());
-            // Chuyển đổi từ LocalDateTime trong Java sang Timestamp trong SQL
             pstmt.setTimestamp(4, Timestamp.valueOf(room.getStarttime()));
             pstmt.setTimestamp(5, Timestamp.valueOf(room.getEndTime()));
             pstmt.setString(6, room.getStatus().name());
-            pstmt.setInt(7, room.getCurrentWinner().getUserId());
+
+            if (room.getCurrentWinner() != null) {
+                pstmt.setInt(7, room.getCurrentWinner().getUserId());
+            } else {
+                pstmt.setNull(7, java.sql.Types.INTEGER);
+            }
 
             pstmt.executeUpdate();
         }
     }
 
+    // Hàm update 1 tham số bắt buộc từ GenericDAO
+    // (Dùng cho các trường hợp không cần lock, ví dụ cập nhật trạng thái)
     @Override
     public void update(AuctionRoom room) throws Exception {
-        // VÁ LỖI CONCURRENCY (Case 1 & 2): Atomic Update SQL
-        // Thêm điều kiện: (current_highest_price < ? OR current_highest_price IS NULL)
-        String sql = "UPDATE auctions SET current_highest_price = ?, winner_id = ?, end_time = ?, status = ? " +
-                "WHERE auction_id = ? AND (current_highest_price < ? OR current_highest_price IS NULL)";
+        // Gọi lại hàm update 2 tham số với oldPrice chính là currentPrice hiện tại
+        this.update(room, room.getCurrentPrice());
+    }
+
+    // Hàm update 2 tham số chuyên dụng hỗ trợ Optimistic Lock khi đặt giá
+    @Override
+    public void update(AuctionRoom room, BigDecimal oldPrice) throws Exception {
+        // Tách câu lệnh SQL: Nếu chưa có ai đặt (oldPrice = null) thì phải check IS NULL
+        String sql;
+        if (oldPrice == null) {
+            sql = "UPDATE auctions SET current_highest_price = ?, winner_id = ?, end_time = ?, status = ? " +
+                    "WHERE auction_id = ? AND current_highest_price IS NULL";
+        } else {
+            sql = "UPDATE auctions SET current_highest_price = ?, winner_id = ?, end_time = ?, status = ? " +
+                    "WHERE auction_id = ? AND current_highest_price = ?";
+        }
 
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -60,12 +77,15 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
             pstmt.setString(4, room.getStatus().name());
 
             pstmt.setInt(5, room.getId());
-            // Truyền giá mới vào dấu ? cuối cùng để Database tự kiểm tra chéo
-            pstmt.setBigDecimal(6, room.getCurrentPrice());
+
+            // Nếu có giá cũ thì truyền vào tham số thứ 6 cho điều kiện WHERE = ?
+            if (oldPrice != null) {
+                pstmt.setBigDecimal(6, oldPrice);
+            }
 
             int rowsAffected = pstmt.executeUpdate();
 
-            // Nếu rowsAffected == 0, nghĩa là lệnh UPDATE bị từ chối do có người khác vừa nhanh tay hơn lưu giá cao hơn vào DB
+            // Cơ chế Optimistic Lock chuẩn mực: 0 rows affected nghĩa là sai giá trị version/oldPrice
             if (rowsAffected == 0) {
                 throw new Exception("Xung đột dữ liệu (Lost Update): Đã có người khác đặt giá cao hơn trong tích tắc!");
             }
@@ -118,9 +138,9 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
         return rooms;
     }
 
-    // Hàm hỗ trợ map dữ liệu từ DB sang Object (Giúp tránh lặp code)
     private AuctionRoom mapResultSetToAuctionRoom(ResultSet rs) throws Exception {
-        int id = rs.getInt("aution_id");
+        // Đã sửa 'aution_id' thành 'auction_id'
+        int id = rs.getInt("auction_id");
         int itemId = rs.getInt("item_id");
         BigDecimal currentPrice = rs.getBigDecimal("current_highest_price");
         Timestamp startTimeTS = rs.getTimestamp("start_time");
@@ -149,6 +169,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
 
         return room;
     }
+
     @Override
     public AuctionRoom findById(int id) throws Exception {
         String sql = "SELECT * FROM auctions WHERE auction_id = ?";

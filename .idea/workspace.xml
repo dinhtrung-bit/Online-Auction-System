@@ -4,7 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="" />
+    <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/AdminDashboardController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/AdminDashboardController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/AuctionDetailController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/AuctionDetailController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/AuctionListController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/AuctionListController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/LoginController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/SellerDashboardController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/SellerDashboardController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/networks/ClientMain.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/networks/ClientMain.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/dao/impl/AuctionRoomDAOImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/impl/AuctionRoomDAOImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/dao/interfaces/AuctionRoomDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/interfaces/AuctionRoomDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/networks/ClientHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/networks/ClientHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/services/AuctionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/services/AuctionService.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -111,69 +123,26 @@
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\resources\views" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.ClientApp">
-    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
-      <module name="auction-client" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="Tox" factoryName="Tox">
-      <module name="auction-client" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="RUN_TOOL" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="tests" factoryName="Doctests">
-      <module name="auction-client" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_SCRIPT" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Application.MainServer">
     <configuration name="ClientApp" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="client.ClientApp" />
       <module name="auction-client" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="client.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MainServer" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="server.application.MainServer" />
+      <module name="online-auction" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="server.application.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -205,16 +174,6 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="AuctionRoomTest.testAntiSnipingExtension" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="online-auction" />
-      <option name="PACKAGE_NAME" value="" />
-      <option name="MAIN_CLASS_NAME" value="AuctionRoomTest" />
-      <option name="METHOD_NAME" value="testAntiSnipingExtension" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="test.java in online-auction" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="online-auction" />
       <extension name="coverage">
@@ -239,19 +198,19 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Application.MainServer" />
       <item itemvalue="Application.ClientApp" />
       <item itemvalue="JUnit.AuctionRoomTest (1)" />
       <item itemvalue="JUnit.test.java in online-auction" />
       <item itemvalue="JUnit.AuctionRoomTest" />
-      <item itemvalue="JUnit.AuctionRoomTest.testAntiSnipingExtension" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.MainServer" />
         <item itemvalue="Application.ClientApp" />
         <item itemvalue="JUnit.AuctionRoomTest (1)" />
         <item itemvalue="JUnit.test.java in online-auction" />
         <item itemvalue="JUnit.AuctionRoomTest" />
-        <item itemvalue="JUnit.AuctionRoomTest.testAntiSnipingExtension" />
       </list>
     </recent_temporary>
   </component>

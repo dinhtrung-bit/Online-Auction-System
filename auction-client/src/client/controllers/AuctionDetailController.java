@@ -24,26 +24,71 @@ public class AuctionDetailController implements Initializable {
     @FXML private TextField txtBidAmount;
     @FXML private Label lblTimer;
     @FXML private Label lblCurrentPrice;
-    @FXML private Button btnPlaceBid; // Cần thêm @FXML này và gán trong Scene Builder
+    @FXML private Button btnPlaceBid;
 
     private String currentRoomId;
     private String myUsername;
-    private volatile boolean isRunning = true;
-    private int remainingSeconds = 0;
+    private volatile int remainingSeconds = 0;
     private Timer timer;
-    private Gson gson = new Gson();
+    private final Gson gson = new Gson();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         this.myUsername = client.models.UserSession.username;
-        ClientMain.connectToServer();
-        startListeningFromServer();
+
+        // Đăng ký listener cho dữ liệu khởi tạo phòng
+        ClientMain.registerListener("AUCTION_DETAIL_DATA", payload -> {
+            // payload: "price:secondsLeft:status"
+            String[] data = payload.split(":");
+            if (data.length < 3) return;
+            Platform.runLater(() -> {
+                lblCurrentPrice.setText(formatPrice(data[0]) + " đ");
+                remainingSeconds = Integer.parseInt(data[1]);
+                boolean canBid = "RUNNING".equalsIgnoreCase(data[2]);
+                if (btnPlaceBid != null) btnPlaceBid.setDisable(!canBid);
+                startTimer();
+            });
+        });
+
+        // Đăng ký listener realtime khi có bid mới từ bất kỳ client nào
+        ClientMain.registerListener("UPDATE_PRICE", payload -> {
+            // payload: "roomId:price:username"
+            String[] data = payload.split(":");
+            if (data.length < 3) return;
+            if (!data[0].equals(currentRoomId)) return; // Không phải phòng này
+            Platform.runLater(() -> {
+                lblCurrentPrice.setText(formatPrice(data[1]) + " đ");
+                historyList.getItems().add(0, data[2] + " đặt " + formatPrice(data[1]) + " đ");
+            });
+        });
+
+        // Đăng ký listener khi Server thông báo phiên kết thúc
+        ClientMain.registerListener("AUCTION_FINISHED", payload -> {
+            if (!payload.equals(currentRoomId)) return;
+            Platform.runLater(() -> {
+                remainingSeconds = 0;
+                lblTimer.setText("ĐÃ KẾT THÚC");
+                if (btnPlaceBid != null) btnPlaceBid.setDisable(true);
+                historyList.getItems().add(0, "⏹ Phiên đấu giá đã kết thúc");
+                if (timer != null) timer.cancel();
+            });
+        });
+
+        // Đăng ký listener khi Server gia hạn thời gian (anti-sniping)
+        ClientMain.registerListener("UPDATE_TIMER", payload -> {
+            // payload: "roomId:newSecondsLeft"
+            String[] data = payload.split(":");
+            if (data.length < 2 || !data[0].equals(currentRoomId)) return;
+            Platform.runLater(() -> {
+                remainingSeconds = Integer.parseInt(data[1]);
+                historyList.getItems().add(0, "⏱ Phiên được gia hạn thêm!");
+            });
+        });
     }
 
-    // Hàm nhận ID từ AuctionList và yêu cầu dữ liệu thật từ Server
+    /** Được gọi từ AuctionListController sau khi load FXML xong */
     public void setRoomId(String id) {
         this.currentRoomId = id;
-        // Gửi yêu cầu lấy thông tin chi tiết và thời gian còn lại từ DB
         MessageDTO req = new MessageDTO("GET_AUCTION_DETAIL", id);
         ClientMain.send(gson.toJson(req));
     }
@@ -63,54 +108,20 @@ public class AuctionDetailController implements Initializable {
                         lblTimer.setText(String.format("%02d:%02d:%02d", h, m, s));
                     } else {
                         lblTimer.setText("ĐÃ KẾT THÚC");
-                        btnPlaceBid.setDisable(true); // Tự động khóa nút khi hết giờ
+                        if (btnPlaceBid != null) btnPlaceBid.setDisable(true);
+                        timer.cancel();
                     }
                 });
             }
-        }, 0, 1000);
-    }
-
-    private void startListeningFromServer() {
-        new Thread(() -> {
-            try {
-                while (isRunning) {
-                    String json = ClientMain.receive();
-                    if (json == null) continue;
-                    MessageDTO msg = gson.fromJson(json, MessageDTO.class);
-
-                    // Nhận dữ liệu khởi tạo phòng (Thời gian, Giá hiện tại)
-                    if ("AUCTION_DETAIL_DATA".equals(msg.getAction())) {
-                        // Giả sử payload: "giá:thời_gian_giây:trạng_thái"
-                        String[] data = msg.getPayload().split(":");
-                        Platform.runLater(() -> {
-                            lblCurrentPrice.setText(data[0] + " đ");
-                            this.remainingSeconds = Integer.parseInt(data[1]);
-                            boolean isOpen = "OPENING".equals(data[2]);
-                            btnPlaceBid.setDisable(!isOpen); // Seller chưa mở thì Bidder không ấn được
-                            startTimer();
-                        });
-                    }
-
-                    // Cập nhật giá Real-time khi người khác đặt
-                    else if ("UPDATE_PRICE".equals(msg.getAction())) {
-                        String[] data = msg.getPayload().split(":");
-                        if (data[0].equals(currentRoomId)) {
-                            Platform.runLater(() -> {
-                                lblCurrentPrice.setText(data[1] + " đ");
-                                historyList.getItems().add(0, data[2] + " đã đặt " + data[1] + " đ");
-                            });
-                        }
-                    }
-                }
-            } catch (Exception e) { e.printStackTrace(); }
-        }).start();
+        }, 1000, 1000);
     }
 
     @FXML
     void handlePlaceBid() {
         String amount = txtBidAmount.getText().trim();
         if (!amount.isEmpty() && currentRoomId != null) {
-            MessageDTO req = new MessageDTO("BID", currentRoomId + ":" + myUsername + ":" + amount);
+            MessageDTO req = new MessageDTO("BID",
+                    currentRoomId + ":" + myUsername + ":" + amount);
             ClientMain.send(gson.toJson(req));
             txtBidAmount.clear();
         }
@@ -118,12 +129,29 @@ public class AuctionDetailController implements Initializable {
 
     @FXML
     void handleBackToList(ActionEvent event) {
-        isRunning = false;
+        // Dọn dẹp: huỷ timer + unregister các listener của màn hình này
         if (timer != null) timer.cancel();
+        ClientMain.unregisterListener("AUCTION_DETAIL_DATA");
+        ClientMain.unregisterListener("UPDATE_PRICE");
+        ClientMain.unregisterListener("AUCTION_FINISHED");
+        ClientMain.unregisterListener("UPDATE_TIMER");
+
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/client/views/auction-list.fxml"));
+            Parent root = FXMLLoader.load(
+                    getClass().getResource("/client/views/auction-list.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.getScene().setRoot(root);
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String formatPrice(String raw) {
+        try {
+            long val = (long) Double.parseDouble(raw);
+            return String.format("%,d", val).replace(',', '.');
+        } catch (Exception e) {
+            return raw;
+        }
     }
 }

@@ -4,13 +4,21 @@ import com.google.gson.Gson;
 import server.networks.dto.MessageDTO;
 import server.dao.impl.UserDAOimpl;
 import server.dao.interfaces.UserDAO;
+import server.models.auction.AuctionRoom;
+import server.models.auction.AuctionStatus;
+import server.models.users.Bidder; // Đã thêm import Bidder
 import server.models.users.User;
 import server.models.users.UserFactory;
+import server.services.AuctionService;
+
 import java.io.*;
+import java.math.BigDecimal;
 import java.net.Socket;
-import java.util.Map;
-import java.util.HashMap;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 public class ClientHandler implements Runnable {
     private static final CopyOnWriteArrayList<ClientHandler> activeClients = new CopyOnWriteArrayList<>();
@@ -29,10 +37,13 @@ public class ClientHandler implements Runnable {
     }
 
     private void initProcessors() {
-        processors.put("LOGIN", this::handleLogin);
-        processors.put("REGISTER", this::handleRegister);
-        processors.put("BID", this::handleBid);
-        processors.put("GET_AUCTION_DETAIL", this::handleGetDetail);
+        processors.put("LOGIN",                   this::handleLogin);
+        processors.put("REGISTER",                this::handleRegister);
+        processors.put("BID",                     this::handleBid);
+        processors.put("GET_AUCTION_DETAIL",      this::handleGetDetail);
+        processors.put("GET_AVAILABLE_AUCTIONS",  this::handleGetAvailableAuctions);
+        processors.put("GET_ALL_AUCTIONS",        this::handleGetAllAuctions);
+        processors.put("GET_ALL_USERS",           this::handleGetAllUsers);
     }
 
     @Override
@@ -94,11 +105,87 @@ public class ClientHandler implements Runnable {
     }
 
     private MessageDTO handleGetDetail(MessageDTO request) {
-        // Logic lấy dữ liệu thật: Giá hiện tại | Thời gian còn lại (s) | Trạng thái
-        // Thành có thể gọi AuctionDAO tại đây bọc trong try-catch tương tự
-        String roomId = request.getPayload();
-        String realTimeData = "18200000:3600:OPENING";
-        return new MessageDTO("AUCTION_DETAIL_DATA", realTimeData);
+        try {
+            long roomId = Long.parseLong(request.getPayload().trim());
+            AuctionRoom room = AuctionService.getInstance().getActiveRooms()
+                    .stream().filter(r -> r.getId() == roomId).findFirst().orElse(null);
+
+            if (room == null) return new MessageDTO("ERROR", "Không tìm thấy phòng: " + roomId);
+
+            long secondsLeft = Math.max(0,
+                    Duration.between(LocalDateTime.now(), room.getEndTime()).getSeconds());
+            String price = room.getCurrentPrice() != null
+                    ? room.getCurrentPrice().toPlainString()
+                    : room.getItem().getStartingPrice().toPlainString();
+            String status = room.getStatus().name();
+
+            return new MessageDTO("AUCTION_DETAIL_DATA", price + ":" + secondsLeft + ":" + status);
+        } catch (Exception e) {
+            return new MessageDTO("ERROR", "Lỗi lấy chi tiết: " + e.getMessage());
+        }
+    }
+
+    // Trả danh sách phòng đang OPEN hoặc RUNNING — dành cho Bidder xem
+    private MessageDTO handleGetAvailableAuctions(MessageDTO request) {
+        try {
+            List<Map<String, Object>> result = AuctionService.getInstance().getActiveRooms()
+                    .stream()
+                    .filter(r -> r.getStatus() == AuctionStatus.OPEN
+                            || r.getStatus() == AuctionStatus.RUNNING)
+                    .map(this::roomToMap)
+                    .collect(Collectors.toList());
+            return new MessageDTO("AUCTION_LIST", gson.toJson(result));
+        } catch (Exception e) {
+            return new MessageDTO("ERROR", "Lỗi lấy danh sách: " + e.getMessage());
+        }
+    }
+
+    // Trả toàn bộ phòng — dành cho Seller/Admin xem
+    private MessageDTO handleGetAllAuctions(MessageDTO request) {
+        try {
+            List<Map<String, Object>> result = AuctionService.getInstance().getActiveRooms()
+                    .stream()
+                    .map(this::roomToMap)
+                    .collect(Collectors.toList());
+            return new MessageDTO("AUCTION_LIST", gson.toJson(result));
+        } catch (Exception e) {
+            return new MessageDTO("ERROR", "Lỗi lấy danh sách: " + e.getMessage());
+        }
+    }
+
+    // Trả danh sách user — chỉ Admin mới được gọi
+    private MessageDTO handleGetAllUsers(MessageDTO request) {
+        if (loggedInUser == null || !loggedInUser.getRole().equalsIgnoreCase("ADMIN")) {
+            return new MessageDTO("ERROR", "Không có quyền truy cập!");
+        }
+        try {
+            List<User> users = userDAO.findAll();
+            List<Map<String, Object>> result = users.stream().map(u -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("id",       u.getUserId());
+                m.put("username", u.getUsername());
+                m.put("role",     u.getRole());
+                m.put("status",   "ACTIVE");
+                return m;
+            }).collect(Collectors.toList());
+            return new MessageDTO("USER_LIST", gson.toJson(result));
+        } catch (Exception e) {
+            return new MessageDTO("ERROR", "Lỗi lấy danh sách user: " + e.getMessage());
+        }
+    }
+
+    // Helper: chuyển AuctionRoom thành Map để Gson serialize gọn gàng
+    private Map<String, Object> roomToMap(AuctionRoom room) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id",           room.getId());
+        m.put("itemName",     room.getItem() != null ? room.getItem().getName() : "N/A");
+        m.put("currentPrice", room.getCurrentPrice() != null
+                ? room.getCurrentPrice().doubleValue()
+                : (room.getItem() != null ? room.getItem().getStartingPrice().doubleValue() : 0));
+        m.put("currentWinner", room.getCurrentWinner() != null
+                ? room.getCurrentWinner().getUsername() : "Chưa có");
+        m.put("status",       room.getStatus().name());
+        return m;
     }
 
     private MessageDTO handleBid(MessageDTO request) {
@@ -107,16 +194,33 @@ public class ClientHandler implements Runnable {
         try {
             String[] data = request.getPayload().split(":");
             String roomId = data[0];
-            String amount = data[2];
             String userBid = data[1];
+            String amount = data[2];
 
-            // Gửi cập nhật cho tất cả mọi người
-            MessageDTO updateMsg = new MessageDTO("UPDATE_PRICE", roomId + ":" + amount + ":" + userBid);
-            broadcast(gson.toJson(updateMsg));
+            // 1. Kiểm tra đối tượng gửi request có phải Bidder không
+            if (!(this.loggedInUser instanceof Bidder)) {
+                return new MessageDTO("BID_FAILED", "Chỉ người dùng Bidder mới được phép đặt giá!");
+            }
 
-            return new MessageDTO("BID_SUCCESS", "Đặt giá thành công");
+            // 2. Gọi AuctionService để xác thực logic, cập nhật giá và lưu database
+            String result = AuctionService.getInstance().handleBidRequest(
+                    Long.parseLong(roomId),
+                    (Bidder) this.loggedInUser,
+                    Double.parseDouble(amount)
+            );
+
+            // 3. Chỉ broadcast giá mới nếu AuctionService xử lý hợp lệ
+            if ("SUCCESS".equals(result)) {
+                MessageDTO updateMsg = new MessageDTO("UPDATE_PRICE", roomId + ":" + amount + ":" + userBid);
+                broadcast(gson.toJson(updateMsg));
+
+                return new MessageDTO("BID_SUCCESS", "Đặt giá thành công");
+            } else {
+                // Trả về lý do lỗi từ AuctionService (ví dụ: giá thấp hơn giá hiện tại)
+                return new MessageDTO("BID_FAILED", result);
+            }
         } catch (Exception e) {
-            return new MessageDTO("BID_FAILED", "Lỗi đặt giá");
+            return new MessageDTO("BID_FAILED", "Lỗi xử lý đặt giá: " + e.getMessage());
         }
     }
 
