@@ -35,7 +35,7 @@ public class ItemDAOimpl implements ItemDAO {
     @Override
     public void update(Item item) throws Exception {
         // Cập nhật thông tin sản phẩm dựa trên item_id
-        String sql = "UPDATE items SET name = ?, description = ?, category = ?,startingPrice=? WHERE item_id = ?";
+        String sql = "UPDATE items SET name = ?, description = ?, CategoryInfo = ?, startingPrice = ? WHERE item_id = ?";
 
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
