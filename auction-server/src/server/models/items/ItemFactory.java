@@ -3,26 +3,38 @@ package server.models.items;
 import java.math.BigDecimal;
 
 public class ItemFactory {
-    // SỬA: Đổi CategoryInfo -> categoryInfo (quy tắc camelCase)
+
     public static Item createItem(String categoryInfo, int itemId, String name, BigDecimal startingPrice, String description) {
-        // Kiểm tra null hoặc chuỗi rỗng để tránh NullPointerException khi gọi .toUpperCase()
         if (categoryInfo == null || categoryInfo.trim().isEmpty()) {
             throw new IllegalArgumentException("Danh mục sản phẩm không được để trống!");
         }
 
-        switch (categoryInfo.toUpperCase()) {
-            case "ART":
+        ItemCategory category;
+        try {
+            String normalizedCategory = categoryInfo.trim().toUpperCase();
+            // Dự phòng trường hợp Client gửi thiếu chữ 'S'
+            if (normalizedCategory.equals("ELECTRONIC")) {
+                normalizedCategory = "ELECTRONICS";
+            }
+            // Chuyển đổi String thành Enum
+            category = ItemCategory.valueOf(normalizedCategory);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Loại sản phẩm không hợp lệ: " + categoryInfo);
+        }
+
+        // Switch trực tiếp trên Enum
+        switch (category) {
+            case ART:
                 return new Art(itemId, name, startingPrice, description);
 
-            case "ELECTRONICS": //  Thêm case này dự phòng trường hợp Client gõ nhầm có thêm chữ 'S'
+            case ELECTRONICS:
                 return new Electronics(itemId, name, startingPrice, description);
 
-            case "VEHICLE":
-                // SỬA: Đã đồng bộ thứ tự tham số chuẩn như các Class khác
+            case VEHICLE:
                 return new Vehicle(itemId, name, startingPrice, description);
 
             default:
-                throw new IllegalArgumentException("Loại sản phẩm không hợp lệ: " + categoryInfo);
+                throw new IllegalArgumentException("Danh mục chưa được hỗ trợ: " + category);
         }
     }
 }

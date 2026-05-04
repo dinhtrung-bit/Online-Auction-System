@@ -1,6 +1,9 @@
 package server.models.auction;
 
-// Enum định nghĩa trạng thái chuyên nghiệp của phiên đấu giá
 public enum AuctionStatus {
-    OPEN, RUNNING, FINISHED, CANCELED
+    OPEN,       // Sắp diễn ra
+    RUNNING,    // Đang đấu giá
+    FINISHED,   // Đã kết thúc thời gian (chờ thanh toán)
+    PAID,       // Đã thanh toán thành công
+    CANCELED    // Bị hủy (do không có người bid hoặc thanh toán lỗi)
 }

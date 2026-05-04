@@ -3,14 +3,17 @@ package server.services;
 import server.dao.impl.AuctionRoomDAOImpl;
 import server.dao.impl.ItemDAOimpl;
 import server.dao.impl.BidMessageDAOImpl;
+import server.dao.impl.UserDAOimpl;
 import server.dao.interfaces.AuctionRoomDAO;
 import server.dao.interfaces.ItemDAO;
 import server.dao.interfaces.BidMessageDAO;
+import server.dao.interfaces.UserDAO;
 import server.models.auction.AuctionRoom;
 import server.models.auction.AuctionStatus;
 import server.models.auction.BidMessage;
 import server.models.items.Item;
 import server.models.users.Bidder;
+import server.models.users.User;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,6 +28,7 @@ public class AuctionService {
     private final AuctionRoomDAO roomDAO = new AuctionRoomDAOImpl();
     private final ItemDAO itemDAO = new ItemDAOimpl();
     private final BidMessageDAO bidDAO = new BidMessageDAOImpl();
+    private final UserDAO userDAO = new UserDAOimpl(); // MỚI: Thêm DAO để cập nhật tiền user
 
     private ConcurrentHashMap<Long, AuctionRoom> activeRooms;
 
@@ -50,9 +54,10 @@ public class AuctionService {
         }
     }
 
-    public void createNewAuction(Item item, LocalDateTime endTime) {
+    // MỚI: Cập nhật hàm này để nhận thêm sellerID
+    public void createNewAuction(int sellerID, Item item, LocalDateTime endTime) {
         Long roomId = System.currentTimeMillis();
-        AuctionRoom newRoom = new AuctionRoom(roomId.intValue(), item, LocalDateTime.now(), endTime);
+        AuctionRoom newRoom = new AuctionRoom(roomId.intValue(), sellerID, item, LocalDateTime.now(), endTime);
         activeRooms.put(roomId, newRoom);
 
         CompletableFuture.runAsync(() -> {
@@ -65,28 +70,25 @@ public class AuctionService {
         });
     }
 
-    // ================= TỐI ƯU ĐẶT GIÁ ĐỒNG THỜI =================
     public String handleBidRequest(Long roomId, Bidder bidder, double amount) {
         AuctionRoom room = activeRooms.get(roomId);
         if (room == null) return "LỖI: Không tìm thấy phòng đấu giá!";
 
         BigDecimal bidAmount = BigDecimal.valueOf(amount);
-        BigDecimal oldPrice; // Khai báo biến giữ giá cũ
+        BigDecimal oldPrice;
 
-        // BƯỚC 1: Lock theo phòng và CHỤP GIÁ CŨ
         synchronized (room) {
             try {
-                oldPrice = room.getCurrentPrice(); // Chụp lại giá cũ trước khi thay đổi
+                oldPrice = room.getCurrentPrice();
                 room.placeBid(bidder, bidAmount);
             } catch (Exception e) {
                 return e.getMessage();
             }
         }
 
-        // BƯỚC 2: Truyền giá cũ xuống DAO để Database kiểm tra Optimistic Lock
         CompletableFuture.runAsync(() -> {
             try {
-                roomDAO.update(room, oldPrice); // Truyền oldPrice vào đây
+                roomDAO.update(room, oldPrice);
 
                 BidMessage bid = new BidMessage(0, bidder.getUserId(), roomId.intValue(), bidAmount);
                 bidDAO.insert(bid);
@@ -100,12 +102,11 @@ public class AuctionService {
         return "SUCCESS";
     }
 
-    // ================= TỐI ƯU QUÉT TRẠNG THÁI =================
     public void autoUpdateStatuses() {
         LocalDateTime now = LocalDateTime.now();
 
         activeRooms.values().forEach(room -> {
-            if (room.getStatus() != AuctionStatus.FINISHED) {
+            if (room.getStatus() != AuctionStatus.FINISHED && room.getStatus() != AuctionStatus.PAID && room.getStatus() != AuctionStatus.CANCELED) {
                 if (room.getStatus() == AuctionStatus.OPEN && !now.isBefore(room.getStarttime())) {
                     room.setStatus(AuctionStatus.RUNNING);
                     updateRoomInDB(room);
@@ -113,15 +114,52 @@ public class AuctionService {
                 }
                 else if (room.getStatus() == AuctionStatus.RUNNING && room.isExpired()) {
                     room.setStatus(AuctionStatus.FINISHED);
+                    // Ngay khi kết thúc, hệ thống sẽ thực hiện kết toán tiền ngay lập tức
+                    processAuctionSettlement(room);
                     updateRoomInDB(room);
-                    System.out.println(">>> [Hệ thống] Room " + room.getId() + " END.");
                 }
             }
         });
     }
 
+    // MỚI: Xử lý trừ tiền và cộng tiền tự động
+    private void processAuctionSettlement(AuctionRoom room) {
+        User winner = room.getCurrentWinner();
+        BigDecimal finalPrice = room.getCurrentPrice();
+
+        // Không có ai đặt giá
+        if (winner == null || finalPrice == null) {
+            room.setStatus(AuctionStatus.CANCELED);
+            System.out.println(">>> [Hệ thống] Room " + room.getId() + " CANCELED (Không có người mua).");
+            return;
+        }
+
+        try {
+            User seller = userDAO.findById(room.getSellerID());
+
+            // Kiểm tra số dư người thắng
+            if (winner.getAccountBalance().compareTo(finalPrice) >= 0) {
+                // Trừ tiền người thắng và cộng cho người bán
+                winner.updateBalance(finalPrice.negate());
+                seller.updateBalance(finalPrice);
+
+                // Lưu lại Database
+                userDAO.update(winner);
+                userDAO.update(seller);
+
+                room.setStatus(AuctionStatus.PAID);
+                System.out.println(">>> [Thanh toán] Room " + room.getId() + " SUCCESS: " + winner.getUsername() + " đã trả " + finalPrice);
+            } else {
+                room.setStatus(AuctionStatus.CANCELED);
+                System.out.println(">>> [Thanh toán] Room " + room.getId() + " FAILED: Người thắng không đủ số dư.");
+            }
+        } catch (Exception e) {
+            room.setStatus(AuctionStatus.CANCELED);
+            System.err.println(">>> [Lỗi] Kết toán thất bại: " + e.getMessage());
+        }
+    }
+
     private void updateRoomInDB(AuctionRoom room) {
-        // Với hàm update Status tự động, giá tiền không thay đổi nên oldPrice bằng currentPrice
         BigDecimal currentPrice = room.getCurrentPrice();
         CompletableFuture.runAsync(() -> {
             try {

@@ -5,9 +5,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/auction-server/src/server/models/items/ItemCategory.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/server/models/users/UserRole.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/test/java/AuctionServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auction-server/src/test/java/ValidationTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/server/dao/core/DBConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/core/DBConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-server/src/server/dao/impl/ItemDAOimpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/impl/ItemDAOimpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/AuctionDetailController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/AuctionDetailController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/SellerDashboardController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/SellerDashboardController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/views/seller-dashboard.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/views/seller-dashboard.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/dao/impl/AuctionRoomDAOImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/impl/AuctionRoomDAOImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/exceptions/Validation.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/exceptions/Validation.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/auction/AuctionRoom.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/auction/AuctionRoom.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/auction/AuctionStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/auction/AuctionStatus.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/items/ItemFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/items/ItemFactory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/users/UserFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/users/UserFactory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/services/AuctionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/services/AuctionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/test/java/AuctionRoomTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/test/java/AuctionRoomTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/test/java/testUser.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/test/java/UserTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,8 +34,8 @@
         <option value="HTML File" />
         <option value="module-info" />
         <option value="package-info" />
-        <option value="Class" />
         <option value="FxmlFile" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -82,6 +96,19 @@
     "DefaultHtmlFileTemplate": "HTML File",
     "JUnit.AuctionRoomTest.executor": "Run",
     "JUnit.AuctionRoomTest.testAntiSnipingExtension.executor": "Run",
+    "JUnit.AuctionRoomTest.testAntiSnipingMaxLimit.executor": "Run",
+    "JUnit.AuctionRoomTest.testAutoBidAllIn.executor": "Run",
+    "JUnit.AuctionRoomTest.testAutoBidNormalStep.executor": "Run",
+    "JUnit.AuctionRoomTest.testAutoBid_TieBreaker.executor": "Run",
+    "JUnit.AuctionRoomTest.testAutoBid_Versus_AutoBid.executor": "Run",
+    "JUnit.AuctionServiceTest.executor": "Run",
+    "JUnit.AuctionServiceTest.testAutoUpdateStatuses (1).executor": "Run",
+    "JUnit.AuctionServiceTest.testAutoUpdateStatuses.executor": "Run",
+    "JUnit.UserTest (1).executor": "Run",
+    "JUnit.UserTest.executor": "Run",
+    "JUnit.UserTest.testUpdateBalanceInsufficientFunds.executor": "Run",
+    "JUnit.ValidationTest.executor": "Run",
+    "JUnit.ValidationTest.testValidateEmail.executor": "Run",
     "Maven.auction-client [org.openjfx:javafx-maven-plugin:0.0.8:run].executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.MCP Project settings loaded": "true",
@@ -117,47 +144,8 @@
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\resources\views" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Launcher">
-    <configuration name="ClientApp" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="client.ClientApp" />
-      <module name="auction-client" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="client.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Launcher" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="client.Launcher" />
-      <module name="auction-client" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="client.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="MainServer" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="server.application.MainServer" />
-      <module name="online-auction" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="server.application.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="AuctionRoomTest (1)" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="JUnit.AuctionRoomTest.testAutoBid_TieBreaker (1)">
+    <configuration name="AuctionRoomTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="online-auction" />
       <extension name="coverage">
         <pattern>
@@ -172,7 +160,7 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="test.java in online-auction" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="AuctionRoomTest.testAutoBidNormalStep" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="online-auction" />
       <extension name="coverage">
         <pattern>
@@ -181,7 +169,51 @@
         </pattern>
       </extension>
       <option name="PACKAGE_NAME" value="test.java" />
-      <option name="TEST_OBJECT" value="package" />
+      <option name="MAIN_CLASS_NAME" value="test.java.AuctionRoomTest" />
+      <option name="METHOD_NAME" value="testAutoBidNormalStep" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AuctionRoomTest.testAutoBid_TieBreaker (1)" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="online-auction" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="AuctionRoomTest" />
+      <option name="METHOD_NAME" value="testAutoBid_TieBreaker" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AuctionRoomTest.testAutoBid_TieBreaker" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="online-auction" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="test.java.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="test.java" />
+      <option name="MAIN_CLASS_NAME" value="test.java.AuctionRoomTest" />
+      <option name="METHOD_NAME" value="testAutoBid_TieBreaker" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AuctionRoomTest.testAutoBid_Versus_AutoBid" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="online-auction" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="test.java.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="test.java" />
+      <option name="MAIN_CLASS_NAME" value="test.java.AuctionRoomTest" />
+      <option name="METHOD_NAME" value="testAutoBid_Versus_AutoBid" />
+      <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -196,19 +228,19 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Application.Launcher" />
-      <item itemvalue="Application.MainServer" />
-      <item itemvalue="Application.ClientApp" />
-      <item itemvalue="JUnit.AuctionRoomTest (1)" />
-      <item itemvalue="JUnit.test.java in online-auction" />
+      <item itemvalue="JUnit.AuctionRoomTest" />
+      <item itemvalue="JUnit.AuctionRoomTest.testAutoBidNormalStep" />
+      <item itemvalue="JUnit.AuctionRoomTest.testAutoBid_TieBreaker" />
+      <item itemvalue="JUnit.AuctionRoomTest.testAutoBid_TieBreaker (1)" />
+      <item itemvalue="JUnit.AuctionRoomTest.testAutoBid_Versus_AutoBid" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.Launcher" />
-        <item itemvalue="Application.MainServer" />
-        <item itemvalue="Application.ClientApp" />
-        <item itemvalue="JUnit.AuctionRoomTest (1)" />
-        <item itemvalue="JUnit.test.java in online-auction" />
+        <item itemvalue="JUnit.AuctionRoomTest.testAutoBid_TieBreaker (1)" />
+        <item itemvalue="JUnit.AuctionRoomTest.testAutoBid_TieBreaker" />
+        <item itemvalue="JUnit.AuctionRoomTest.testAutoBid_Versus_AutoBid" />
+        <item itemvalue="JUnit.AuctionRoomTest" />
+        <item itemvalue="JUnit.AuctionRoomTest.testAutoBidNormalStep" />
       </list>
     </recent_temporary>
   </component>

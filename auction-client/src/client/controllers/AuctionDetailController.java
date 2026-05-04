@@ -38,7 +38,6 @@ public class AuctionDetailController implements Initializable {
 
         // Đăng ký listener cho dữ liệu khởi tạo phòng
         ClientMain.registerListener("AUCTION_DETAIL_DATA", payload -> {
-            // payload: "price:secondsLeft:status"
             String[] data = payload.split(":");
             if (data.length < 3) return;
             Platform.runLater(() -> {
@@ -50,12 +49,11 @@ public class AuctionDetailController implements Initializable {
             });
         });
 
-        // Đăng ký listener realtime khi có bid mới từ bất kỳ client nào
+        // Đăng ký listener realtime khi có bid mới
         ClientMain.registerListener("UPDATE_PRICE", payload -> {
-            // payload: "roomId:price:username"
             String[] data = payload.split(":");
             if (data.length < 3) return;
-            if (!data[0].equals(currentRoomId)) return; // Không phải phòng này
+            if (!data[0].equals(currentRoomId)) return;
             Platform.runLater(() -> {
                 lblCurrentPrice.setText(formatPrice(data[1]) + " đ");
                 historyList.getItems().add(0, data[2] + " đặt " + formatPrice(data[1]) + " đ");
@@ -76,7 +74,6 @@ public class AuctionDetailController implements Initializable {
 
         // Đăng ký listener khi Server gia hạn thời gian (anti-sniping)
         ClientMain.registerListener("UPDATE_TIMER", payload -> {
-            // payload: "roomId:newSecondsLeft"
             String[] data = payload.split(":");
             if (data.length < 2 || !data[0].equals(currentRoomId)) return;
             Platform.runLater(() -> {
@@ -84,9 +81,25 @@ public class AuctionDetailController implements Initializable {
                 historyList.getItems().add(0, "⏱ Phiên được gia hạn thêm!");
             });
         });
+
+        // MỚI THÊM: Lắng nghe phản hồi lỗi đặt giá từ Server
+        ClientMain.registerListener("BID_FAILED", payload -> {
+            Platform.runLater(() -> {
+                showAlert(Alert.AlertType.WARNING, "Đặt giá thất bại", payload);
+            });
+        });
+
+        // MỚI THÊM: Xử lý khi mất kết nối mạng / Server sập
+        ClientMain.registerListener("SERVER_DISCONNECTED", payload -> {
+            Platform.runLater(() -> {
+                if (timer != null) timer.cancel();
+                if (btnPlaceBid != null) btnPlaceBid.setDisable(true);
+                lblTimer.setText("MẤT KẾT NỐI");
+                showAlert(Alert.AlertType.ERROR, "Lỗi kết nối", "Đã mất kết nối tới máy chủ. Vui lòng thử lại sau!");
+            });
+        });
     }
 
-    /** Được gọi từ AuctionListController sau khi load FXML xong */
     public void setRoomId(String id) {
         this.currentRoomId = id;
         MessageDTO req = new MessageDTO("GET_AUCTION_DETAIL", id);
@@ -120,25 +133,28 @@ public class AuctionDetailController implements Initializable {
     void handlePlaceBid() {
         String amount = txtBidAmount.getText().trim();
         if (!amount.isEmpty() && currentRoomId != null) {
-            MessageDTO req = new MessageDTO("BID",
-                    currentRoomId + ":" + myUsername + ":" + amount);
+            MessageDTO req = new MessageDTO("BID", currentRoomId + ":" + myUsername + ":" + amount);
             ClientMain.send(gson.toJson(req));
             txtBidAmount.clear();
+        } else {
+            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng nhập số tiền hợp lệ!");
         }
     }
 
     @FXML
     void handleBackToList(ActionEvent event) {
-        // Dọn dẹp: huỷ timer + unregister các listener của màn hình này
         if (timer != null) timer.cancel();
+
+        // Unregister toàn bộ listener
         ClientMain.unregisterListener("AUCTION_DETAIL_DATA");
         ClientMain.unregisterListener("UPDATE_PRICE");
         ClientMain.unregisterListener("AUCTION_FINISHED");
         ClientMain.unregisterListener("UPDATE_TIMER");
+        ClientMain.unregisterListener("BID_FAILED");         // Mới thêm
+        ClientMain.unregisterListener("SERVER_DISCONNECTED"); // Mới thêm
 
         try {
-            Parent root = FXMLLoader.load(
-                    getClass().getResource("/client/views/auction-list.fxml"));
+            Parent root = FXMLLoader.load(getClass().getResource("/client/views/auction-list.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.getScene().setRoot(root);
         } catch (Exception e) {
@@ -153,5 +169,14 @@ public class AuctionDetailController implements Initializable {
         } catch (Exception e) {
             return raw;
         }
+    }
+
+    // MỚI THÊM: Hàm phụ trợ hiển thị Alert
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.show();
     }
 }

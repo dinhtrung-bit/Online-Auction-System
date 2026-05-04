@@ -21,7 +21,8 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
 
     @Override
     public void insert(AuctionRoom room) throws Exception {
-        String sql = "INSERT INTO auctions ( item_id,start_price, current_highest_price,start_time, end_time, status,winner_id) VALUES (?, ?, ?, ?, ?,?,?)";
+        // CẬP NHẬT: Thêm trường seller_id vào câu lệnh INSERT
+        String sql = "INSERT INTO auctions (item_id, start_price, current_highest_price, start_time, end_time, status, winner_id, seller_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -38,22 +39,20 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
                 pstmt.setNull(7, java.sql.Types.INTEGER);
             }
 
+            // CẬP NHẬT: Lưu sellerID xuống DB
+            pstmt.setInt(8, room.getSellerID());
+
             pstmt.executeUpdate();
         }
     }
 
-    // Hàm update 1 tham số bắt buộc từ GenericDAO
-    // (Dùng cho các trường hợp không cần lock, ví dụ cập nhật trạng thái)
     @Override
     public void update(AuctionRoom room) throws Exception {
-        // Gọi lại hàm update 2 tham số với oldPrice chính là currentPrice hiện tại
         this.update(room, room.getCurrentPrice());
     }
 
-    // Hàm update 2 tham số chuyên dụng hỗ trợ Optimistic Lock khi đặt giá
     @Override
     public void update(AuctionRoom room, BigDecimal oldPrice) throws Exception {
-        // Tách câu lệnh SQL: Nếu chưa có ai đặt (oldPrice = null) thì phải check IS NULL
         String sql;
         if (oldPrice == null) {
             sql = "UPDATE auctions SET current_highest_price = ?, winner_id = ?, end_time = ?, status = ? " +
@@ -78,14 +77,12 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
 
             pstmt.setInt(5, room.getId());
 
-            // Nếu có giá cũ thì truyền vào tham số thứ 6 cho điều kiện WHERE = ?
             if (oldPrice != null) {
                 pstmt.setBigDecimal(6, oldPrice);
             }
 
             int rowsAffected = pstmt.executeUpdate();
 
-            // Cơ chế Optimistic Lock chuẩn mực: 0 rows affected nghĩa là sai giá trị version/oldPrice
             if (rowsAffected == 0) {
                 throw new Exception("Xung đột dữ liệu (Lost Update): Đã có người khác đặt giá cao hơn trong tích tắc!");
             }
@@ -94,7 +91,8 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
 
     @Override
     public void delete(int id) throws Exception {
-        String sql = "DELETE FROM auctions WHERE id = ?";
+        // CẬP NHẬT: Sửa 'id' thành 'auction_id' cho khớp với tên cột trong DB
+        String sql = "DELETE FROM auctions WHERE auction_id = ?";
 
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -139,9 +137,11 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
     }
 
     private AuctionRoom mapResultSetToAuctionRoom(ResultSet rs) throws Exception {
-        // Đã sửa 'aution_id' thành 'auction_id'
         int id = rs.getInt("auction_id");
         int itemId = rs.getInt("item_id");
+        // CẬP NHẬT: Lấy thêm trường seller_id
+        int sellerId = rs.getInt("seller_id");
+
         BigDecimal currentPrice = rs.getBigDecimal("current_highest_price");
         Timestamp startTimeTS = rs.getTimestamp("start_time");
         Timestamp endTimeTs = rs.getTimestamp("end_time");
@@ -158,14 +158,24 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
             winner = userDAO.findById(winnerId);
         }
 
+        // CẬP NHẬT: Sử dụng Constructor 5 tham số (đã bao gồm sellerId)
         AuctionRoom room = new AuctionRoom(
                 id,
+                sellerId,
                 item,
                 startTimeTS.toLocalDateTime(),
                 endTimeTs.toLocalDateTime()
         );
 
         room.setStatus(AuctionStatus.valueOf(statusStr));
+
+        // CẬP NHẬT QUAN TRỌNG (FIX LỖI MẤT DỮ LIỆU): Set lại Giá hiện tại và Người thắng từ DB
+        if (currentPrice != null) {
+            room.setCurrentPrice(currentPrice);
+        }
+        if (winner != null) {
+            room.setCurrentWinner(winner);
+        }
 
         return room;
     }

@@ -1,4 +1,3 @@
-// Đường dẫn: auction-server/src/server/models/auction/AuctionRoom.java
 package server.models.auction;
 
 import server.exceptions.InvalidBidException;
@@ -9,7 +8,6 @@ import server.models.users.User;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -19,6 +17,7 @@ public class AuctionRoom implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int id;
+    private int sellerID;
     private Item item;
     private int itemID;
     private BigDecimal startPrice;
@@ -32,17 +31,21 @@ public class AuctionRoom implements Serializable {
     private LocalDateTime endTime;
     private AuctionStatus status;
 
-    // FIX CASE 4: Chống lạm dụng gia hạn vô tận (Anti-sniping limit)
     private int extensionCount = 0;
     private static final int MAX_EXTENSIONS = 5;
-    public AuctionRoom() {
-    }
 
-    public AuctionRoom(int id, Item item, LocalDateTime starttime, LocalDateTime endTime) {
+    public AuctionRoom() {}
+
+    public AuctionRoom(int id, int sellerID, Item item, LocalDateTime starttime, LocalDateTime endTime) {
         this.id = id;
+        this.sellerID = sellerID;
         this.item = item;
         this.itemID = item.getItemId();
         this.startPrice = item.getStartingPrice();
+
+        // [FIX 1] Lỗi chính: Init currentPrice bằng giá sàn ngay từ đầu để tránh lỗi Fail NullPointer.
+        this.currentPrice = this.startPrice;
+
         this.bidHistory = new ArrayList<>();
         this.autoBidders = new ArrayList<>();
         this.starttime = starttime;
@@ -59,11 +62,7 @@ public class AuctionRoom implements Serializable {
         return LocalDateTime.now().isAfter(endTime);
     }
 
-    // =========================================================================
-    // 1. LOGIC ĐẶT GIÁ THỦ CÔNG (Bảo mật Timing & Server-side check)
-    // =========================================================================
     public synchronized void placeBid(Bidder bidder, BigDecimal amount) throws InvalidBidException {
-        // FIX CASE 9: Lấy thời gian chuẩn của Server tại khoảnh khắc nhận request để đối chiếu
         LocalDateTime serverNow = LocalDateTime.now();
 
         if (this.status != AuctionStatus.RUNNING || serverNow.isAfter(this.endTime)) {
@@ -72,7 +71,7 @@ public class AuctionRoom implements Serializable {
             throw new InvalidBidException("Từ chối: Phiên đấu giá đã kết thúc! (Server Time: " + serverNow.format(fmt) + ")");
         }
 
-        BigDecimal priceToBeat = (this.currentPrice != null) ? this.currentPrice : this.startPrice;
+        BigDecimal priceToBeat = this.currentPrice; // An toàn tuyệt đối vì đã init
         if (amount.compareTo(priceToBeat) <= 0) {
             throw new InvalidBidException("Từ chối: Giá đặt phải lớn hơn " + priceToBeat);
         }
@@ -81,16 +80,10 @@ public class AuctionRoom implements Serializable {
             throw new InvalidBidException("Từ chối: Tài khoản không đủ số dư!");
         }
 
-        // Chốt giá thủ công
         applyNewWinner(bidder, amount, "Manual Bid");
-
-        // Đánh thức hệ thống Đấu trường Auto-Bid
         processAutoBids();
     }
 
-    // =========================================================================
-    // 2. LOGIC ĐĂNG KÝ AUTO-BID
-    // =========================================================================
     public synchronized void registerAutoBid(Bidder bidder, BigDecimal maxBid, BigDecimal increment) throws InvalidBidException {
         if (this.status != AuctionStatus.RUNNING || isExpired()) {
             throw new InvalidBidException("Không thể thiết lập Auto-bid lúc này!");
@@ -99,45 +92,30 @@ public class AuctionRoom implements Serializable {
             throw new InvalidBidException("Số dư không đủ để bảo lãnh mức Max Bid này!");
         }
 
-        this.autoBidders.add(new AutoBidConfig());
+        AutoBidConfig config = new AutoBidConfig(this, bidder, maxBid, increment);
+        this.autoBidders.add(config);
         System.out.println(">>> [Auto-Bid] " + bidder.getUsername() + " kích hoạt: Max=" + maxBid + ", Bước=" + increment);
-
-        // Ngay khi đăng ký, quét xem có thể đè giá ngay lập tức không
         processAutoBids();
     }
 
-    // =========================================================================
-    // 3. THUẬT TOÁN ĐẤU TRƯỜNG AUTO-BID (Fix Case 6, 7, 8)
-    // =========================================================================
     private void processAutoBids() {
         if (autoBidders.isEmpty()) return;
-
-        // Ưu tiên theo thời gian đăng ký (Tie-breaker cho Case 7)
         autoBidders.sort(Comparator.comparing(AutoBidConfig::getRegisterTime));
 
         boolean newBidPlaced;
         do {
             newBidPlaced = false;
-
             for (AutoBidConfig config : autoBidders) {
-                // Bỏ qua nếu đang là top 1
-                if (currentWinner != null && currentWinner.getUserId() == config.getBidder().getUserId()) {
-                    continue;
-                }
+                if (currentWinner != null && currentWinner.getUserId() == config.getBidder().getUserId()) continue;
 
-                BigDecimal priceToBeat = (this.currentPrice != null) ? this.currentPrice : this.startPrice;
+                BigDecimal priceToBeat = this.currentPrice;
                 BigDecimal nextNormalBid = priceToBeat.add(config.getIncrement());
 
-                // Kịch bản A: Nâng giá bình thường theo đúng increment
                 if (nextNormalBid.compareTo(config.getMaxBid()) <= 0 && config.getBidder().getBalance().compareTo(nextNormalBid) >= 0) {
                     applyNewWinner(config.getBidder(), nextNormalBid, "Auto-Bid Step");
                     newBidPlaced = true;
-                    break; // Phá vòng lặp for, bắt đầu lại do-while để người khác phản đòn
-                }
-
-                // FIX CASE 6 & 7 (Kịch bản B: Đánh Tất Tay - ALL IN)
-                // Xảy ra khi bước giá tiếp theo vượt quá MaxBid, NHƯNG MaxBid vẫn có thể lật kèo
-                else {
+                    break;
+                } else {
                     boolean canWinWithMax = config.getMaxBid().compareTo(priceToBeat) > 0;
                     boolean canStealTieBreaker = (config.getMaxBid().compareTo(priceToBeat) == 0) && isOlderThanCurrentWinner(config);
 
@@ -151,32 +129,32 @@ public class AuctionRoom implements Serializable {
         } while (newBidPlaced);
     }
 
-    // =========================================================================
-    // CÁC HÀM PHỤ TRỢ (HELPERS)
-    // =========================================================================
-
     private void applyNewWinner(Bidder bidder, BigDecimal amount, String logType) {
         this.currentPrice = amount;
         this.currentWinner = bidder;
+
+        // [FIX 3] Thiếu bidHistory: Lưu lại mọi cú bid vào List để pass test size và lưu DB sau này.
+        this.bidHistory.add(new BidMessage(0, bidder.getUserId(), this.id, amount));
+
         System.out.println("    [" + logType + "] " + bidder.getUsername() + " vươn lên với giá: " + amount);
         triggerAntiSniping();
     }
 
-    // FIX CASE 4: Giới hạn Anti-Sniping
     private void triggerAntiSniping() {
-        long secondsLeft = Duration.between(LocalDateTime.now(), this.endTime).getSeconds();
-        if (secondsLeft > 0 && secondsLeft <= 30) {
-            if (extensionCount < MAX_EXTENSIONS) {
-                this.endTime = this.endTime.plusSeconds(60);
-                extensionCount++;
-                System.out.println(">>> [Anti-sniping] Gia hạn lần " + extensionCount + "/" + MAX_EXTENSIONS + " thêm 60 giây.");
-            } else {
-                System.out.println(">>> [Anti-sniping] Bỏ qua gia hạn (Đã chạm ngưỡng tối đa " + MAX_EXTENSIONS + " lần).");
+        LocalDateTime now = LocalDateTime.now();
+        if (!now.isAfter(this.endTime)) {
+            // [FIX 4] Fail Random do sai số mili-giây: Sử dụng "plusSeconds" kết hợp "isAfter"
+            // đảm bảo chính xác tuyệt đối thay vì đếm số giây (Duration) dễ bị làm tròn xuống.
+            if (!this.endTime.isAfter(now.plusSeconds(30))) {
+                if (extensionCount < MAX_EXTENSIONS) {
+                    this.endTime = this.endTime.plusSeconds(60);
+                    extensionCount++;
+                    System.out.println(">>> [Anti-sniping] Gia hạn lần " + extensionCount + " thêm 60 giây.");
+                }
             }
         }
     }
 
-    // Hàm Tie-breaker: Kiểm tra xem người này có đăng ký Auto-bid trước người đang dẫn đầu không
     private boolean isOlderThanCurrentWinner(AutoBidConfig challenger) {
         if (currentWinner == null) return true;
         for (AutoBidConfig config : autoBidders) {
@@ -184,12 +162,16 @@ public class AuctionRoom implements Serializable {
                 return challenger.getRegisterTime().isBefore(config.getRegisterTime());
             }
         }
-        return false;
+        // [FIX 2] Sai Tie-breaker: Nếu winner hiện tại KHÔNG PHẢI là Auto-bidder (mà là 1 Manual Bidder đánh thủ công),
+        // thì Auto-bidder luôn được tính là "đăng ký trước" và sẽ chiếm quyền Tie-break.
+        return true;
     }
 
     // ================= GETTER VÀ SETTER =================
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
+    public int getSellerID() { return sellerID; }
+    public void setSellerID(int sellerID) { this.sellerID = sellerID; }
     public Item getItem() { return item; }
     public void setItem(Item item) { this.item = item; }
     public BigDecimal getStartPrice() { return startPrice; }
