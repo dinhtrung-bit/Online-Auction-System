@@ -27,7 +27,7 @@ public class AutoBidConfig implements Comparable<AutoBidConfig> {
         return id;
     }
 
-    public void setId(int id) {   // chỗ này bạn đang thiếu tham số
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -43,7 +43,7 @@ public class AutoBidConfig implements Comparable<AutoBidConfig> {
         return bidder;
     }
 
-    public void setBidder(Bidder bidder) {   // chỗ này bạn cũng đang thiếu tham số
+    public void setBidder(Bidder bidder) {
         this.bidder = bidder;
     }
 

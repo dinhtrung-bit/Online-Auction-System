@@ -18,16 +18,16 @@ public class ItemDAOimpl implements ItemDAO {
     @Override
     public void insert(Item item) throws Exception {
         // items có 4 cột cần thêm
-        String sql = "INSERT INTO items (name, description, CategoryInfo,startingPrice) VALUES ( ?, ?, ?,?)";
+        String sql = "INSERT INTO items (seller_id,name, description, CategoryInfo,startingPrice) VALUES ( ?, ?, ?,?)";
 
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // pstmt.setInt(1, item.getseller().getUserId());
-            pstmt.setString(1, item.getName());
-            pstmt.setString(2, item.getDescription());
-            pstmt.setString(3, item.getCategoryInfo());
-            pstmt.setBigDecimal(4, item.getStartingPrice());
+             pstmt.setInt(1, item.getSeller().getUserId());
+            pstmt.setString(2, item.getName());
+            pstmt.setString(3, item.getDescription());
+            pstmt.setString(4, item.getCategoryInfo());
+            pstmt.setBigDecimal(5, item.getStartingPrice());
             pstmt.executeUpdate();
         }
     }
@@ -35,15 +35,16 @@ public class ItemDAOimpl implements ItemDAO {
     @Override
     public void update(Item item) throws Exception {
         // Cập nhật thông tin sản phẩm dựa trên item_id
-        String sql = "UPDATE items SET name = ?, description = ?, CategoryInfo = ?, startingPrice = ? WHERE item_id = ?";
+        String sql = "UPDATE items SET seller_id, name = ?, description = ?, CategoryInfo = ?, startingPrice = ? WHERE item_id = ?";
 
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, item.getName());
-            pstmt.setString(2, item.getDescription());
-            pstmt.setString(3, item.getCategoryInfo());
-            pstmt.setBigDecimal(4, item.getStartingPrice());
-            pstmt.setInt(5, item.getItemId());// Điều kiện WHERE
+            pstmt.setInt(1, item.getSeller().getUserId());
+            pstmt.setString(2, item.getName());
+            pstmt.setString(3, item.getDescription());
+            pstmt.setString(4, item.getCategoryInfo());
+            pstmt.setBigDecimal(5, item.getStartingPrice());
+            pstmt.setInt(6, item.getItemId());// Điều kiện WHERE
             pstmt.executeUpdate();
         }
     }

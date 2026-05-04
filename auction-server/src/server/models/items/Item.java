@@ -1,4 +1,6 @@
 package server.models.items;
+import server.models.users.Seller;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 
@@ -6,6 +8,7 @@ public abstract class Item implements Serializable {
     //protected Seller seller;
     protected int itemId;
     protected String name;
+    protected Seller seller;
     protected BigDecimal startingPrice;
    // protected BigDecimal currenthightestprice;
     protected String description;
@@ -14,9 +17,10 @@ public abstract class Item implements Serializable {
         this.name = name;
         this.startingPrice = startingPrice;
         this.description=description;
-      //  this.seller=seller;
+        this.seller=seller;
     }
-    //public Seller getseller(){ return seller;}
+    public Seller getSeller(){ return seller;}
+    public void setSeller(Seller seller){this.seller=seller;}
 
     public void setItemId(int itemId) {
         this.itemId = itemId;
