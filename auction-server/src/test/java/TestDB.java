@@ -1,3 +1,4 @@
+package test.java;
 import server.dao.core.DBConnection;
 
 import java.sql.Connection;

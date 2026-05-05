@@ -1,3 +1,4 @@
+package test.java;
 import server.dao.interfaces.ItemDAO;
 import server.dao.impl.ItemDAOimpl;
 import server.models.items.Item;
