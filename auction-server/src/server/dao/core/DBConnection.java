@@ -1,40 +1,24 @@
-    package server.dao.core;
+package server.dao.core;
 
-    import java.sql.Connection;
-    import java.sql.DriverManager;
-    import java.sql.SQLException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
-    public class DBConnection {
-        private static DBConnection instance;
-        private static Connection connection;
-        private static final String URL = "jdbc:mysql://localhost:3306/daugia";
-        private static final String USER = "root";
-        private static final String PASSWORD = "";
+public class DBConnection {
+    private static final String URL = "jdbc:mysql://localhost:3306/daugia?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true";
+    private static final String USER = "root";
+    private static final String PASSWORD = "";
 
-        private DBConnection() {
-            try {
-                Class.forName("com.mysql.cj.jdbc.Driver");//tạo ra cầu nối giữa java và csdl
-                this.connection = DriverManager.getConnection(URL, USER, PASSWORD);
-                System.out.println("Kết nối cơ sở dữ liệu thành công");
-            }
-            catch(ClassNotFoundException | SQLException e){
-                e.printStackTrace();
-                throw new RuntimeException("Lỗi kết nối cơ sở dữ liệu");
-            }
-        }
-        public static synchronized DBConnection getInstance() {
-            try {
-                if (instance == null || instance.getConnection().isClosed()) {
-                    instance = new DBConnection();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            return instance;
-        }
-
-        public static Connection getConnection() {
-            return connection;
+    static {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            System.out.println("Kết nối cơ sở dữ liệu thành công");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("Không tìm thấy MySQL Driver!", e);
         }
     }
 
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(URL, USER, PASSWORD);
+    }
+}

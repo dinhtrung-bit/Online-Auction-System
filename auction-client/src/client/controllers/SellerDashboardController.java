@@ -83,23 +83,21 @@ public class SellerDashboardController {
             dialogStage.setTitle("Thêm Sản Phẩm Mới");
             dialogStage.initModality(Modality.APPLICATION_MODAL);
             dialogStage.setScene(new Scene(root));
-
-            // Xóa background mặc định của Stage để CSS bo góc hoạt động mượt hơn
             dialogStage.getScene().setFill(javafx.scene.paint.Color.TRANSPARENT);
-
             dialogStage.showAndWait();
 
-            // Nhận kết quả trả về từ Popup
             AddProductController controller = loader.getController();
             Item newItem = controller.getResultItem();
 
             if (newItem != null) {
-                // Đóng gói thành JSON gửi lên Server (Chờ ghép code)
                 String payloadJSON = gson.toJson(newItem);
                 MessageDTO request = new MessageDTO("ADD_ITEM", payloadJSON);
                 System.out.println("Sẵn sàng gửi Server: " + request.getAction() + " | " + request.getPayload());
 
-                // Thêm vào danh sách -> Giao diện tự động cập nhật ngay lập tức
+                // THÊM 2 DÒNG NÀY ĐỂ GỬI LÊN SERVER:
+                client.networks.ClientMain.send(gson.toJson(request));
+                System.out.println("[Client] Đã gửi ADD_ITEM lên Server!");
+
                 itemList.add(newItem);
             }
 

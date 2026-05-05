@@ -15,7 +15,7 @@ public class UserDAOimpl implements UserDAO {
     public void insert(User user) throws Exception {
         // Sử dụng PreparedStatement để tối ưu và đảm bảo bảo mật SQL Injection
         String sql = "INSERT INTO users(username, password_hash, role) VALUES (?, ?, ?)";
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, user.getUsername());
@@ -29,7 +29,7 @@ public class UserDAOimpl implements UserDAO {
     @Override
     public void update(User user) throws Exception {
         String sql = "UPDATE users SET username = ?, password_hash = ?, role = ? WHERE user_id = ?";
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, user.getUsername());
@@ -44,7 +44,7 @@ public class UserDAOimpl implements UserDAO {
     @Override
     public void delete(int id) throws Exception {
         String sql = "DELETE FROM users WHERE user_id = ?";
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, id);
@@ -55,7 +55,7 @@ public class UserDAOimpl implements UserDAO {
     @Override
     public User findByUsername(String username) throws Exception {
         String sql = "SELECT * FROM users WHERE username = ?";
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, username);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -85,7 +85,7 @@ public class UserDAOimpl implements UserDAO {
     public List<User> findAll() throws Exception {
         List<User> userList = new ArrayList<>();
         String sql = "SELECT user_id, username, password_hash, role FROM users";
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) {
@@ -108,7 +108,7 @@ public class UserDAOimpl implements UserDAO {
     public User findById(int id) throws Exception {
         String sql = "SELECT * FROM users WHERE user_id = ?";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);

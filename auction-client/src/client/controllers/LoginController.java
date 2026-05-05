@@ -57,40 +57,40 @@ public class LoginController {
         Node loginBtn = (Node) event.getSource();
         loginBtn.setDisable(true);
 
+        client.networks.ClientMain.registerListener("LOGIN_SUCCESS", payload -> {
+            client.networks.ClientMain.unregisterListener("LOGIN_SUCCESS");
+            client.networks.ClientMain.unregisterListener("LOGIN_FAILED");
+            Platform.runLater(() -> {
+                loginBtn.setDisable(false);
+                UserSession.username = username;
+                UserSession.role = selectedRole;
+                switchScene(loginBtn);
+            });
+        });
+
+        client.networks.ClientMain.registerListener("LOGIN_FAILED", payload -> {
+            client.networks.ClientMain.unregisterListener("LOGIN_SUCCESS");
+            client.networks.ClientMain.unregisterListener("LOGIN_FAILED");
+            Platform.runLater(() -> {
+                loginBtn.setDisable(false);
+                showAlert(Alert.AlertType.ERROR, "Lỗi đăng nhập", "Sai thông tin: " + payload);
+            });
+        });
+
         CompletableFuture.runAsync(() -> {
-            try {
-                client.networks.ClientMain.connectToServer();
-                String payload = selectedRole + ":" + username + ":" + password;
-                client.networks.MessageDTO req = new client.networks.MessageDTO("LOGIN", payload);
-                client.networks.ClientMain.send(gson.toJson(req));
-
-                String responseJson = client.networks.ClientMain.receive();
-
-                Platform.runLater(() -> {
-                    loginBtn.setDisable(false);
-                    if (responseJson != null) {
-                        client.networks.MessageDTO res = gson.fromJson(responseJson, client.networks.MessageDTO.class);
-                        if ("LOGIN_SUCCESS".equals(res.getAction())) {
-                            UserSession.username = username; UserSession.role = selectedRole;
-                            switchScene(loginBtn);
-                        } else {
-                            showAlert(Alert.AlertType.ERROR, "Lỗi đăng nhập", "Sai thông tin: " + res.getPayload());
-                        }
-                    }
-                });
-            } catch (Exception e) {
-                Platform.runLater(() -> {
-                    loginBtn.setDisable(false);
-                    showAlert(Alert.AlertType.ERROR, "Lỗi", "Mất kết nối Server!");
-                });
-            }
+            client.networks.ClientMain.connectToServer();
+            String payload = selectedRole + ":" + username + ":" + password;
+            client.networks.ClientMain.send(gson.toJson(
+                    new client.networks.MessageDTO("LOGIN", payload)
+            ));
         });
     }
 
     private void switchScene(Node node) {
         try {
             String fxmlPath = selectedRole.equals("Bidder") ? "/client/views/auction-list.fxml" :
-                    selectedRole.equals("Seller") ? "/client/views/seller-dashboard.fxml" : "/client/views/admin-dashboard.fxml";
+                    selectedRole.equals("Seller") ? "/client/views/seller-dashboard.fxml" :
+                            "/client/views/admin-dashboard.fxml";
             Parent root = FXMLLoader.load(getClass().getResource(fxmlPath));
             Stage stage = (Stage) node.getScene().getWindow();
             stage.getScene().setRoot(root);
@@ -99,6 +99,10 @@ public class LoginController {
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type); alert.setTitle(title); alert.setHeaderText(null); alert.setContentText(content); alert.showAndWait();
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }
