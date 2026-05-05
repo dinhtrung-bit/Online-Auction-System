@@ -25,9 +25,6 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Verify Java version
-        run: java -version
-
       - name: Build & run JUnit tests (server)
         working-directory: auction-server
         run: mvn clean verify --no-transfer-progress
@@ -40,7 +37,6 @@ jobs:
           path: auction-server/target/surefire-reports/
 
       - name: Upload server JAR
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: server-jar
@@ -69,7 +65,7 @@ jobs:
         run: mvn clean compile --no-transfer-progress
 
   # ────────────────────────────────────────────
-  # JOB 3: Summary
+  # JOB 3: Summary (chỉ chạy khi cả 2 job pass)
   # ────────────────────────────────────────────
   ci-success:
     name: ✅ CI Passed
