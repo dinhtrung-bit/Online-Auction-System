@@ -1,23 +1,89 @@
+/* =========================================
+   1. CÀI ĐẶT CHUNG (GLOBAL)
+   ========================================= */
+* {
+    /* Xóa cái viền xanh dương mặc định cực kỳ xấu của JavaFX khi click vào component */
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
 .root {
-    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-font-family: "Segoe UI", Helvetica, Arial, sans-serif;
 }
 
-/* Background chính */
 .main-bg {
-    -fx-background-color: #F8FAFC;
+    -fx-background-color: #F8FAFC; /* Nền xám nhạt hiện đại */
 }
 
-/* Sidebar bên trái */
+/* =========================================
+   2. THANH CUỘN (SCROLLBAR) - VŨ KHÍ BÍ MẬT
+   ========================================= */
+.scroll-bar:vertical, .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+.scroll-bar:vertical .thumb, .scroll-bar:horizontal .thumb {
+    -fx-background-color: #CBD5E1;
+    -fx-background-radius: 10px;
+}
+.scroll-bar:vertical .thumb:hover, .scroll-bar:horizontal .thumb:hover {
+    -fx-background-color: #94A3B8; /* Đậm hơn khi di chuột vào thanh cuộn */
+}
+
+/* =========================================
+   3. LOGIN & REGISTER (TỪ BƯỚC TRƯỚC)
+   ========================================= */
+.left-pane {
+    -fx-background-color: linear-gradient(to bottom right, #059669, #10B981);
+}
+.form-card {
+    -fx-background-color: white;
+    -fx-background-radius: 15;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 20, 0, 0, 10);
+}
+.input-field {
+    -fx-background-color: #F9FAFB;
+    -fx-border-color: #E2E8F0;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 10;
+    -fx-font-size: 14px;
+}
+.input-field:focused {
+    -fx-border-color: #10B981;
+    -fx-border-width: 2;
+    -fx-background-color: white;
+}
+.btn-primary {
+    -fx-background-color: #10B981;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+.btn-primary:hover {
+    -fx-background-color: #059669;
+}
+.hyperlink {
+    -fx-text-fill: #10B981;
+    -fx-font-weight: bold;
+    -fx-border-color: transparent;
+}
+.hyperlink:hover {
+    -fx-underline: true;
+}
+
+/* =========================================
+   4. SIDEBAR & CARD (CỦA BẠN ĐÃ LÀM TỐT)
+   ========================================= */
 .sidebar {
-    -fx-background-color: #1E293B;
+    -fx-background-color: #1E293B; /* Xanh đen sang trọng */
 }
-
-/* Nút Sidebar */
 .sidebar-btn {
     -fx-background-color: transparent;
     -fx-text-fill: #94A3B8;
     -fx-alignment: center-left;
-    -fx-padding: 12 20 12 25;
+    -fx-padding: 15 20 15 25; /* Cho nút to ra một xíu để dễ bấm */
     -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-cursor: hand;
@@ -33,129 +99,127 @@
     -fx-border-width: 0 0 0 4;
 }
 
-/* Thẻ (Card) màu trắng */
 .card {
     -fx-background-color: white;
-    -fx-background-radius: 10;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 2);
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.06), 15, 0, 0, 5);
     -fx-padding: 20;
 }
-
-/* Huy hiệu trạng thái (Badges) */
-.badge-danger {
-    -fx-background-color: #FEE2E2;
-    -fx-text-fill: #EF4444;
-    -fx-padding: 3 8 3 8;
-    -fx-background-radius: 12;
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-}
-.badge-success {
-    -fx-background-color: #DCFCE7;
-    -fx-text-fill: #22C55E;
-    -fx-padding: 3 8 3 8;
-    -fx-background-radius: 12;
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-}
-/* Màu chữ phụ */
 .text-muted {
     -fx-text-fill: #64748b;
 }
 
-/* Nút Chi tiết trong danh sách */
+/* =========================================
+   5. HUY HIỆU (BADGES) & NÚT BẤM (BUTTONS)
+   ========================================= */
+.badge-danger, .badge-live {
+    -fx-background-color: #FEF2F2;
+    -fx-text-fill: #EF4444;
+    -fx-padding: 4 10 4 10;
+    -fx-background-radius: 12;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-border-color: #FCA5A5;
+    -fx-border-radius: 12;
+}
+.badge-success, .badge-ended {
+    -fx-background-color: #F0FDF4;
+    -fx-text-fill: #22C55E;
+    -fx-padding: 4 10 4 10;
+    -fx-background-radius: 12;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-border-color: #86EFAC;
+    -fx-border-radius: 12;
+}
+
 .btn-outline {
     -fx-background-color: transparent;
-    -fx-border-color: #cbd5e1;
-    -fx-border-radius: 5;
+    -fx-border-color: #CBD5E1;
+    -fx-border-radius: 6;
     -fx-text-fill: #475569;
     -fx-cursor: hand;
+    -fx-padding: 5 15 5 15;
 }
 .btn-outline:hover {
-    -fx-background-color: #f1f5f9;
+    -fx-background-color: #F1F5F9;
 }
-
-/* Các huy hiệu trạng thái (giống video) */
-.badge-live {
-    -fx-background-color: #fef2f2;
-    -fx-text-fill: #ef4444;
-    -fx-padding: 3 8 3 8;
-    -fx-background-radius: 12;
-    -fx-font-weight: bold;
-    -fx-border-color: #fca5a5;
-    -fx-border-radius: 12;
-}
-.badge-ended {
-    -fx-background-color: #f0fdf4;
-    -fx-text-fill: #22c55e;
-    -fx-padding: 3 8 3 8;
-    -fx-background-radius: 12;
-    -fx-font-weight: bold;
-    -fx-border-color: #86efac;
-    -fx-border-radius: 12;
-}
-
-/* Ô màu xanh lá lớn hiển thị giá hiện tại trong màn Chi tiết */
-.price-box {
-    -fx-background-color: #ecfdf5;
-    -fx-border-color: #a7f3d0;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
-    -fx-padding: 20;
-    -fx-alignment: center;
-}
-/* Style cho ListView giống trong video */
-.list-view {
-    -fx-background-color: transparent;
-    -fx-border-color: #e2e8f0;
-    -fx-border-radius: 10;
-}
-
-.list-cell {
-    -fx-padding: 10;
-    -fx-border-color: transparent transparent #f1f5f9 transparent;
-}
-
-.list-cell:filled:hover {
-    -fx-background-color: #f8fafc;
-}
-
-/* Nút đặt giá */
 .button-bid {
-    -fx-background-color: #10b981;
+    -fx-background-color: linear-gradient(to right, #10B981, #059669); /* Đổ màu gradient cho nút Đấu giá */
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-background-radius: 20;
     -fx-cursor: hand;
+    -fx-padding: 10 20 10 20;
 }
-/* --- Style cho Bảng Seller (TableView) --- */
-.table-view-custom {
+.button-bid:hover {
+    -fx-effect: dropshadow(three-pass-box, rgba(16, 185, 129, 0.4), 10, 0, 0, 5); /* Phát sáng xanh khi trỏ chuột */
+}
+
+/* Ô màu xanh lá lớn hiển thị giá hiện tại */
+.price-box {
+    -fx-background-color: #ECFDF5;
+    -fx-border-color: #A7F3D0;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 20;
+    -fx-alignment: center;
+}
+
+/* =========================================
+   6. TABLE VIEW & LIST VIEW LÀM ĐẸP
+   ========================================= */
+.list-view {
     -fx-background-color: transparent;
-    -fx-border-color: #e2e8f0;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
+    -fx-border-color: #E2E8F0;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+}
+.list-cell {
+    -fx-padding: 15;
+    -fx-border-color: transparent transparent #F1F5F9 transparent;
+}
+.list-cell:filled:hover {
+    -fx-background-color: #F8FAFC;
+    -fx-cursor: hand;
+}
+.list-cell:selected {
+    -fx-background-color: #EFF6FF; /* Xanh nhạt khi chọn */
+    -fx-text-fill: #1E293B;
+}
+
+.table-view-custom {
+    -fx-background-color: white;
+    -fx-border-color: #E2E8F0;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
 }
 .table-view-custom .column-header-background {
-    -fx-background-color: #f1f5f9;
-    -fx-background-radius: 8 8 0 0;
+    -fx-background-color: #F8FAFC;
+    -fx-background-radius: 10 10 0 0;
+    -fx-border-color: transparent transparent #E2E8F0 transparent;
 }
 .table-view-custom .column-header {
     -fx-background-color: transparent;
-    -fx-padding: 10 5 10 5;
+    -fx-padding: 15 5 15 5;
 }
 .table-view-custom .column-header .label {
-    -fx-text-fill: #475569;
+    -fx-text-fill: #64748B;
     -fx-font-weight: bold;
+    -fx-font-size: 13px;
 }
 .table-view-custom .table-row-cell {
     -fx-background-color: white;
-    -fx-border-color: transparent transparent #f1f5f9 transparent;
-    -fx-cell-size: 45px; /* Chiều cao mỗi hàng */
+    -fx-border-color: transparent transparent #F1F5F9 transparent;
+    -fx-cell-size: 50px; /* Dãn hàng ra cho dễ nhìn */
 }
 .table-view-custom .table-row-cell:odd {
-    -fx-background-color: #f8fafc;
+    -fx-background-color: #FAFAFA;
+}
+.table-view-custom .table-row-cell:hover {
+    -fx-background-color: #F1F5F9;
 }
 .table-view-custom .table-row-cell:selected {
-    -fx-background-color: #e0f2fe;
-    -fx-text-fill: #0f172a;
+    -fx-background-color: #EFF6FF;
+    -fx-text-fill: #0F172A;
 }

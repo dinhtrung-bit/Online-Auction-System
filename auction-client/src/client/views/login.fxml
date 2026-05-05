@@ -4,81 +4,61 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<HBox alignment="CENTER" prefHeight="600.0" prefWidth="900.0" stylesheets="@app.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.LoginController">
+<HBox alignment="CENTER" prefHeight="650.0" prefWidth="1000.0" stylesheets="@app.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.LoginController">
 
-    <VBox alignment="CENTER" spacing="25.0" style="-fx-background-color: #10B981;" HBox.hgrow="ALWAYS">
-        <padding>
-            <Insets bottom="50.0" left="50.0" right="50.0" top="50.0" />
-        </padding>
-        <children>
-            <VBox maxWidth="400.0" spacing="25.0">
-                <children>
-                    <Label text="🏛" textFill="WHITE"><font><Font size="50.0" /></font></Label>
-                    <VBox>
-                        <Label text="AuctionVN" textFill="WHITE">
-                            <font><Font name="System Bold" size="40.0" /></font>
-                        </Label>
-                        <Label text="Nền tảng đấu giá trực tuyến" textFill="#a7f3d0">
-                            <font><Font size="16.0" /></font>
-                        </Label>
-                    </VBox>
-
-                    <VBox spacing="15.0">
-                        <Label text="✓ Đấu giá real-time không trễ" textFill="WHITE" />
-                        <Label text="✓ Auto-bid thông minh" textFill="WHITE" />
-                        <Label text="✓ Anti-sniping tự động gia hạn" textFill="WHITE" />
-                        <Label text="✓ Bảo mật &amp; minh bạch" textFill="WHITE" />
-                    </VBox>
-
-                    <VBox style="-fx-background-color: rgba(255,255,255,0.1); -fx-padding: 15; -fx-background-radius: 10;">
-                        <Label text="ℹ Tài khoản demo:" textFill="WHITE"><font><Font name="System Bold" size="12.0"/></font></Label>
-                        <Label text="- admin / admin123   (Admin)" textFill="#a7f3d0" />
-                        <Label text="- seller1 / seller123 (Seller)" textFill="#a7f3d0" />
-                        <Label text="- bidder1 / bidder123 (Bidder)" textFill="#a7f3d0" />
-                    </VBox>
-                </children>
+    <VBox alignment="CENTER" spacing="30.0" styleClass="left-pane" HBox.hgrow="ALWAYS">
+        <padding><Insets bottom="50.0" left="60.0" right="60.0" top="50.0" /></padding>
+        <VBox maxWidth="450.0" spacing="25.0">
+            <Label text="🏛" textFill="WHITE"><font><Font size="60.0" /></font></Label>
+            <VBox>
+                <Label text="AuctionVN" textFill="WHITE"><font><Font name="System Bold" size="48.0" /></font></Label>
+                <Label text="Nền tảng đấu giá trực tuyến số 1 Việt Nam" textFill="#D1FAE5"><font><Font size="18.0" /></font></Label>
             </VBox>
-        </children>
+            <VBox spacing="15.0">
+                <Label text="✨ Đấu giá thời gian thực, không độ trễ" textFill="WHITE"><font><Font size="15.0" /></font></Label>
+                <Label text="✨ Bảo mật thông tin tuyệt đối" textFill="WHITE"><font><Font size="15.0" /></font></Label>
+                <Label text="✨ Giao dịch minh bạch, rõ ràng" textFill="WHITE"><font><Font size="15.0" /></font></Label>
+            </VBox>
+        </VBox>
     </VBox>
 
-    <VBox alignment="CENTER" spacing="20.0" style="-fx-background-color: white;" HBox.hgrow="ALWAYS">
-        <padding>
-            <Insets bottom="50.0" left="50.0" right="50.0" top="50.0" />
-        </padding>
-        <children>
-            <VBox maxWidth="400.0" spacing="20.0">
-                <children>
-                    <Label text="Đăng nhập">
-                        <font><Font name="System Bold" size="28.0" /></font>
-                    </Label>
-                    <Label text="Chào mừng trở lại!" textFill="#64748b" />
+    <VBox alignment="CENTER" HBox.hgrow="ALWAYS">
+        <VBox alignment="CENTER_LEFT" maxWidth="450.0" spacing="20.0" styleClass="form-card">
+            <padding><Insets bottom="40.0" left="40.0" right="40.0" top="40.0" /></padding>
 
-                    <VBox spacing="10.0">
-                        <Label text="Vai trò của bạn">
-                            <font><Font name="System Bold" size="12.0" /></font>
-                        </Label>
-                        <HBox spacing="10.0">
-                            <Button fx:id="btnAdmin" onAction="#selectAdmin" prefWidth="100.0" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 5; -fx-background-radius: 5;" text="Admin" />
-                            <Button fx:id="btnSeller" onAction="#selectSeller" prefWidth="100.0" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 5; -fx-background-radius: 5;" text="Seller" />
-                            <Button fx:id="btnBidder" onAction="#selectBidder" prefWidth="100.0" style="-fx-background-color: #ecfdf5; -fx-text-fill: #10B981; -fx-border-color: #a7f3d0; -fx-border-radius: 5; -fx-background-radius: 5;" text="Bidder" />
-                        </HBox>
-                    </VBox>
-
-                    <VBox spacing="5.0">
-                        <Label text="Tên đăng nhập" />
-                        <TextField fx:id="txtUsername" prefHeight="40.0" promptText="username..." style="-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0; -fx-border-radius: 5;" />
-                    </VBox>
-
-                    <VBox spacing="5.0">
-                        <Label text="Mật khẩu" />
-                        <PasswordField fx:id="txtPassword" prefHeight="40.0" promptText="mật khẩu..." style="-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0; -fx-border-radius: 5;" />
-                    </VBox>
-
-                    <Button maxWidth="Infinity" onAction="#handleLogin" prefHeight="45.0" style="-fx-background-color: #10B981; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold; -fx-cursor: hand;" text="Đăng nhập ➔">
-                        <VBox.margin><Insets top="10.0" /></VBox.margin>
-                    </Button>
-                </children>
+            <VBox spacing="5.0">
+                <Label text="Đăng nhập"><font><Font name="System Bold" size="32.0" /></font></Label>
+                <Label text="Chào mừng bạn quay trở lại!" textFill="#6B7280"><font><Font size="14.0" /></font></Label>
             </VBox>
-        </children>
+
+            <VBox spacing="8.0">
+                <Label text="Bạn là ai?"><font><Font name="System Bold" size="13.0" /></font></Label>
+                <HBox spacing="10.0">
+                    <Button fx:id="btnAdmin" onAction="#selectAdmin" prefHeight="40.0" prefWidth="110.0" text="Admin" />
+                    <Button fx:id="btnSeller" onAction="#selectSeller" prefHeight="40.0" prefWidth="110.0" text="Người bán" />
+                    <Button fx:id="btnBidder" onAction="#selectBidder" prefHeight="40.0" prefWidth="110.0" text="Người mua" />
+                </HBox>
+            </VBox>
+
+            <VBox spacing="8.0">
+                <Label text="Tên đăng nhập"><font><Font name="System Bold" size="13.0" /></font></Label>
+                <TextField fx:id="txtUsername" prefHeight="45.0" promptText="Nhập username..." styleClass="input-field" />
+            </VBox>
+
+            <VBox spacing="8.0">
+                <Label text="Mật khẩu"><font><Font name="System Bold" size="13.0" /></font></Label>
+                <PasswordField fx:id="txtPassword" prefHeight="45.0" promptText="Nhập mật khẩu..." styleClass="input-field" />
+            </VBox>
+
+            <Button maxWidth="Infinity" onAction="#handleLogin" prefHeight="50.0" styleClass="btn-primary" text="ĐĂNG NHẬP">
+                <VBox.margin><Insets top="10.0" /></VBox.margin>
+            </Button>
+
+            <HBox alignment="CENTER" spacing="5.0">
+                <VBox.margin><Insets top="10.0" /></VBox.margin>
+                <Label text="Chưa có tài khoản?" textFill="#6B7280"><font><Font size="14.0" /></font></Label>
+                <Hyperlink onAction="#goToRegister" styleClass="hyperlink" text="Đăng ký ngay"><font><Font size="14.0" /></font></Hyperlink>
+            </HBox>
+        </VBox>
     </VBox>
 </HBox>

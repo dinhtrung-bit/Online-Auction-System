@@ -26,10 +26,15 @@
         <VBox spacing="20.0">
             <padding><Insets bottom="30.0" left="30.0" right="30.0" top="30.0" /></padding>
 
-            <HBox alignment="CENTER_LEFT">
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
                 <Label text="Quản lý kho hàng"><font><Font name="System Bold" size="24.0" /></font></Label>
                 <Pane HBox.hgrow="ALWAYS" />
-                <Button onAction="#showAddProductDialog" text="+ Thêm sản phẩm" style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 15; -fx-background-radius: 5;" />
+
+                <!-- NÚT XÓA SẢN PHẨM (MÀU ĐỎ) -->
+                <Button onAction="#handleDeleteProduct" text="🗑 Xóa sản phẩm" style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 15; -fx-background-radius: 5; -fx-cursor: hand;" />
+
+                <!-- NÚT THÊM SẢN PHẨM (MÀU XANH) -->
+                <Button onAction="#showAddProductDialog" text="+ Thêm sản phẩm" style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 15; -fx-background-radius: 5; -fx-cursor: hand;" />
             </HBox>
 
             <TableView fx:id="tableItems" VBox.vgrow="ALWAYS" styleClass="table-view-custom">

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<HBox alignment="CENTER" prefHeight="650.0" prefWidth="1000.0" stylesheets="@app.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.RegisterController">
+
+    <VBox alignment="CENTER" spacing="30.0" styleClass="left-pane" HBox.hgrow="ALWAYS">
+        <padding><Insets bottom="50.0" left="60.0" right="60.0" top="50.0" /></padding>
+        <VBox maxWidth="450.0" spacing="25.0">
+            <Label text="🚀" textFill="WHITE"><font><Font size="60.0" /></font></Label>
+            <VBox>
+                <Label text="Tham gia ngay!" textFill="WHITE"><font><Font name="System Bold" size="48.0" /></font></Label>
+                <Label text="Mở ra cơ hội kinh doanh tuyệt vời" textFill="#D1FAE5"><font><Font size="18.0" /></font></Label>
+            </VBox>
+        </VBox>
+    </VBox>
+
+    <VBox alignment="CENTER" HBox.hgrow="ALWAYS">
+        <VBox alignment="CENTER_LEFT" maxWidth="450.0" spacing="15.0" styleClass="form-card">
+            <padding><Insets bottom="40.0" left="40.0" right="40.0" top="40.0" /></padding>
+
+            <VBox spacing="5.0">
+                <Label text="Tạo tài khoản"><font><Font name="System Bold" size="32.0" /></font></Label>
+                <Label text="Điền thông tin của bạn vào bên dưới" textFill="#6B7280"><font><Font size="14.0" /></font></Label>
+            </VBox>
+
+            <VBox spacing="8.0">
+                <Label text="Bạn muốn trở thành?"><font><Font name="System Bold" size="13.0" /></font></Label>
+                <HBox spacing="10.0">
+                    <Button fx:id="btnSeller" onAction="#selectSeller" prefHeight="40.0" prefWidth="150.0" text="Người bán (Seller)" />
+                    <Button fx:id="btnBidder" onAction="#selectBidder" prefHeight="40.0" prefWidth="150.0" text="Người mua (Bidder)" />
+                </HBox>
+            </VBox>
+
+            <VBox spacing="8.0">
+                <Label text="Họ và tên"><font><Font name="System Bold" size="13.0" /></font></Label>
+                <TextField fx:id="txtFullName" prefHeight="45.0" promptText="Vd: Nguyễn Văn A" styleClass="input-field" />
+            </VBox>
+
+            <VBox spacing="8.0">
+                <Label text="Tên đăng nhập"><font><Font name="System Bold" size="13.0" /></font></Label>
+                <TextField fx:id="txtUsername" prefHeight="45.0" promptText="Vd: nguyenvana123" styleClass="input-field" />
+            </VBox>
+
+            <VBox spacing="8.0">
+                <Label text="Mật khẩu"><font><Font name="System Bold" size="13.0" /></font></Label>
+                <PasswordField fx:id="txtPassword" prefHeight="45.0" promptText="Ít nhất 6 ký tự..." styleClass="input-field" />
+            </VBox>
+
+            <Button maxWidth="Infinity" onAction="#handleRegister" prefHeight="50.0" styleClass="btn-primary" text="ĐĂNG KÝ TÀI KHOẢN">
+                <VBox.margin><Insets top="10.0" /></VBox.margin>
+            </Button>
+
+            <HBox alignment="CENTER" spacing="5.0">
+                <VBox.margin><Insets top="5.0" /></VBox.margin>
+                <Label text="Đã có tài khoản?" textFill="#6B7280"><font><Font size="14.0" /></font></Label>
+                <Hyperlink onAction="#goToLogin" styleClass="hyperlink" text="Đăng nhập"><font><Font size="14.0" /></font></Hyperlink>
+            </HBox>
+        </VBox>
+    </VBox>
+</HBox>

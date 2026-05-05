@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefWidth="400.0" spacing="15.0" styleClass="card, main-bg" stylesheets="@app.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.AddProductController">
+    <padding><Insets bottom="30.0" left="30.0" right="30.0" top="30.0" /></padding>
+
+    <Label text="Thêm Sản Phẩm Mới" textFill="#1e293b">
+        <font><Font name="System Bold" size="22.0" /></font>
+    </Label>
+
+    <VBox spacing="5.0">
+        <Label text="Loại sản phẩm" style="-fx-font-weight: bold;" textFill="#475569"/>
+        <ComboBox fx:id="cmbCategory" maxWidth="Infinity" styleClass="input-field" />
+    </VBox>
+
+    <VBox spacing="5.0">
+        <Label text="Mã sản phẩm (ID)" style="-fx-font-weight: bold;" textFill="#475569"/>
+        <TextField fx:id="txtId" promptText="Vd: ART001" styleClass="input-field" />
+    </VBox>
+
+    <VBox spacing="5.0">
+        <Label text="Tên sản phẩm" style="-fx-font-weight: bold;" textFill="#475569"/>
+        <TextField fx:id="txtName" promptText="Vd: Bức tranh Mona Lisa" styleClass="input-field" />
+    </VBox>
+
+    <VBox spacing="5.0">
+        <Label text="Giá khởi điểm ($)" style="-fx-font-weight: bold;" textFill="#475569"/>
+        <TextField fx:id="txtPrice" promptText="Vd: 1000" styleClass="input-field" />
+    </VBox>
+
+    <VBox fx:id="dynamicFieldContainer" spacing="5.0">
+        <Label fx:id="lblDynamic" style="-fx-font-weight: bold;" textFill="#475569" text="Thông tin thêm"/>
+        <TextField fx:id="txtDynamic" promptText="..." styleClass="input-field" />
+    </VBox>
+
+    <HBox spacing="10.0" alignment="CENTER_RIGHT">
+        <VBox.margin><Insets top="15.0" /></VBox.margin>
+        <Button onAction="#handleCancel" text="Hủy" styleClass="btn-outline" />
+        <Button onAction="#handleSave" text="Lưu Sản Phẩm" styleClass="btn-primary" style="-fx-padding: 8 20;" />
+    </HBox>
+</VBox>
