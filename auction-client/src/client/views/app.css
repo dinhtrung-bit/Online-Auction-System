@@ -166,9 +166,9 @@
     -fx-alignment: center;
 }
 
-/* =========================================
-   6. TABLE VIEW & LIST VIEW LÀM ĐẸP
-   ========================================= */
+
+
+
 .list-view {
     -fx-background-color: transparent;
     -fx-border-color: #E2E8F0;
@@ -223,3 +223,55 @@
     -fx-background-color: #EFF6FF;
     -fx-text-fill: #0F172A;
 }
+
+/* Khung tải ảnh có viền đứt đoạn, nền đổi màu khi di chuột */
+.image-upload-box {
+    -fx-border-color: #CBD5E1;
+    -fx-border-style: dashed;
+    -fx-border-width: 2;
+    -fx-border-radius: 8;
+    -fx-background-color: #F8FAFC;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-padding: 10;
+}
+.image-upload-box:hover {
+    -fx-background-color: #F1F5F9;
+    -fx-border-color: #94A3B8;
+}
+
+/* Các nút chức năng (CRUD) trên Dashboard */
+.btn-danger {
+    -fx-background-color: #FEF2F2;
+    -fx-text-fill: #EF4444;
+    -fx-border-color: #FCA5A5;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-font-weight: bold;
+    -fx-padding: 8 15;
+    -fx-cursor: hand;
+}
+.btn-danger:hover { -fx-background-color: #FEE2E2; }
+
+.btn-info {
+    -fx-background-color: #EFF6FF;
+    -fx-text-fill: #3B82F6;
+    -fx-border-color: #93C5FD;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-font-weight: bold;
+    -fx-padding: 8 15;
+    -fx-cursor: hand;
+}
+.btn-info:hover { -fx-background-color: #DBEAFE; }
+
+.btn-success {
+    -fx-background-color: #10B981;
+    -fx-text-fill: white;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-font-weight: bold;
+    -fx-padding: 8 18;
+    -fx-cursor: hand;
+}
+.btn-success:hover { -fx-background-color: #059669; }

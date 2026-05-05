@@ -17,6 +17,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.Optional;
+import javafx.event.ActionEvent;
 
 public class SellerDashboardController {
 
@@ -203,5 +204,18 @@ public class SellerDashboardController {
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+    @FXML
+    void handleEditProduct(ActionEvent event) {
+        // Lấy sản phẩm đang được chọn trong bảng
+        Item selectedItem = tableItems.getSelectionModel().getSelectedItem();
+
+        if (selectedItem == null) {
+            showAlert("Cảnh báo", "Vui lòng click chọn một sản phẩm trong bảng trước khi bấm Sửa!");
+            return;
+        }
+
+        // Tạm thời báo thành công để test giao diện (Phần logic đổ dữ liệu vào form làm sau)
+        showAlert("Thông báo", "Đã chọn sản phẩm: " + selectedItem.getName() + ". Sẵn sàng mở form sửa!");
     }
 }
