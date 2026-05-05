@@ -4,73 +4,60 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<VBox spacing="20.0" styleClass="main-bg" stylesheets="@app.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.AuctionDetailController">
-    <padding><Insets bottom="20.0" left="30.0" right="30.0" top="20.0" /></padding>
+<StackPane stylesheets="@app.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.AuctionDetailController">
+    <VBox spacing="20.0" styleClass="main-bg">
+        <padding><Insets bottom="20.0" left="30.0" right="30.0" top="20.0" /></padding>
 
-    <HBox alignment="CENTER_LEFT" spacing="20.0">
-        <Button text="⬅ Quay lại" onAction="#handleBackToList"
-                style="-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-radius: 5; -fx-cursor: hand; -fx-padding: 8 15; -fx-font-size: 14px;"/>
+        <HBox alignment="CENTER_LEFT" spacing="20.0">
+            <Button text="⬅ Quay lại" onAction="#handleBackToList" style="-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-radius: 5; -fx-cursor: hand; -fx-padding: 8 15;"/>
+            <Label text="⚡ Đấu giá trực tiếp"><font><Font name="System Bold" size="24.0" /></font></Label>
+        </HBox>
 
-        <Label text="⚡ Đấu giá trực tiếp">
-            <font>
-                <Font name="System Bold" size="24.0" />
-            </font>
-        </Label>
-    </HBox>
-
-    <HBox spacing="10.0">
-        <ToggleButton text="Samsung QLED 4K 55&quot;" selected="true" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-padding: 8 15; -fx-background-radius: 5;"/>
-        <ToggleButton text="iPhone 16 Pro Max 256GB" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-padding: 8 15; -fx-background-radius: 5;"/>
-        <ToggleButton text="MacBook Pro 14&quot; M3 Pro" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-padding: 8 15; -fx-background-radius: 5;"/>
-    </HBox>
-
-    <HBox spacing="20.0" VBox.vgrow="ALWAYS">
-        <VBox spacing="15.0" HBox.hgrow="ALWAYS" styleClass="card">
-            <HBox alignment="CENTER_LEFT" spacing="10.0">
-                <Label text="📱" textFill="#94a3b8"><font><Font size="24.0"/></font></Label>
-                <Label text="Samsung QLED 4K 55&quot;"><font><Font name="System Bold" size="20.0"/></font></Label>
-            </HBox>
-            <Label text="Tivi Samsung QLED 55 inch 100% chính hãng VN" styleClass="text-muted"/>
-            <Label text="✓ Thương hiệu: Samsung | Bảo hành: 24 tháng" textFill="#10b981"/>
-
-            <VBox styleClass="price-box">
-                <Label text="GIÁ HIỆN TẠI" styleClass="text-muted"><font><Font name="System Bold"/></font></Label>
-                <Label text="18.200.000 đ" textFill="#10b981"><font><Font name="System Bold" size="40.0"/></font></Label>
-                <Label text="👤 Người dẫn đầu: bidder1" textFill="#2563eb" style="-fx-padding: 10 0 0 0;"/>
-            </VBox>
-
-            <HBox spacing="10.0" alignment="CENTER_LEFT">
-                <Label text="⏱" textFill="#ef4444"><font><Font size="24.0"/></font></Label>
-                <Label text="00:59:20" textFill="#ef4444"><font><Font name="System Bold" size="24.0"/></font></Label>
-            </HBox>
-
-            <Label text="Lịch sử đặt giá"><font><Font name="System Bold" size="14.0"/></font></Label>
-            <ListView fx:id="historyList" VBox.vgrow="ALWAYS" style="-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0;"/>
-        </VBox>
-
-        <VBox spacing="15.0" prefWidth="350.0">
-            <VBox styleClass="card" spacing="15.0">
-                <Label text="💸 Đặt giá"><font><Font name="System Bold" size="18.0"/></font></Label>
-
-                <Label text="Mức giá tiếp theo hợp lệ: ≥ 18.300.000 đ" styleClass="text-muted"/>
-
-                <TextField fx:id="txtBidAmount" text="18300000" prefHeight="45.0" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
-
-                <HBox spacing="10.0">
-                    <Button text="+100k" styleClass="btn-outline" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                    <Button text="+500k" styleClass="btn-outline" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                    <Button text="+1Tr" styleClass="btn-outline" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+        <HBox spacing="20.0" VBox.vgrow="ALWAYS">
+            <VBox spacing="15.0" HBox.hgrow="ALWAYS" styleClass="card">
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <Label text="📱" textFill="#94a3b8"><font><Font size="24.0"/></font></Label>
+                    <Label text="Chi tiết sản phẩm đấu giá"><font><Font name="System Bold" size="20.0"/></font></Label>
                 </HBox>
 
-                <Button text="Gửi giá" onAction="#handlePlaceBid" maxWidth="Infinity" prefHeight="45.0" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5;"/>
+                <VBox styleClass="price-box">
+                    <Label text="GIÁ HIỆN TẠI" styleClass="text-muted"><font><Font name="System Bold"/></font></Label>
+                    <Label fx:id="lblCurrentPrice" text="Đang tải..." textFill="#10b981"><font><Font name="System Bold" size="40.0"/></font></Label>
+                    <Label fx:id="lblWinner" text="👤 Người dẫn đầu: Đang tải..." textFill="#2563eb" style="-fx-padding: 10 0 0 0;"/>
+                </VBox>
+
+                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                    <Label text="⏱" textFill="#ef4444"><font><Font size="24.0"/></font></Label>
+                    <Label fx:id="lblTimer" text="--:--:--" textFill="#ef4444"><font><Font name="System Bold" size="24.0"/></font></Label>
+                </HBox>
+
+                <Label text="Lịch sử đặt giá"><font><Font name="System Bold" size="14.0"/></font></Label>
+                <ListView fx:id="historyList" VBox.vgrow="ALWAYS" style="-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0;"/>
             </VBox>
 
-            <VBox styleClass="card" spacing="10.0">
-                <Label text="🤖 Auto-Bid (Tự động đặt giá)"><font><Font name="System Bold"/></font></Label>
-                <Label text="Hệ thống sẽ tự động nâng giá giúp bạn không vượt quá ngân sách." wrapText="true" styleClass="text-muted"/>
-                <TextField promptText="Nhập mức giá tối đa..." prefHeight="35.0"/>
-                <Button text="Kích hoạt" maxWidth="Infinity" styleClass="btn-outline"/>
+            <VBox spacing="15.0" prefWidth="350.0">
+                <VBox styleClass="card" spacing="15.0">
+                    <Label text="💸 Đặt giá thủ công"><font><Font name="System Bold" size="18.0"/></font></Label>
+                    <TextField fx:id="txtBidAmount" promptText="Nhập số tiền..." prefHeight="45.0" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                    <Button fx:id="btnPlaceBid" text="Gửi giá" onAction="#handlePlaceBid" maxWidth="Infinity" prefHeight="45.0" styleClass="btn-primary"/>
+                </VBox>
+
+                <VBox styleClass="card" spacing="10.0">
+                    <Label text="🤖 Auto-Bid (Tự động đặt giá)"><font><Font name="System Bold" size="16.0"/></font></Label>
+                    <Label text="Hệ thống sẽ tự động nâng giá (bước nhảy 100k) giúp bạn không vượt quá ngân sách." wrapText="true" styleClass="text-muted"/>
+                    <TextField fx:id="txtAutoBidMax" promptText="Nhập ngân sách tối đa..." prefHeight="35.0"/>
+                    <Button fx:id="btnToggleAutoBid" text="Kích hoạt" onAction="#handleToggleAutoBid" maxWidth="Infinity" styleClass="btn-outline" prefHeight="40.0"/>
+                </VBox>
             </VBox>
+        </HBox>
+    </VBox>
+
+    <VBox fx:id="overlayFinished" visible="false" alignment="CENTER" style="-fx-background-color: rgba(0, 0, 0, 0.75);">
+        <VBox alignment="CENTER" spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 40; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 20, 0, 0, 0);" maxWidth="500" maxHeight="300">
+            <Label fx:id="lblFinishIcon" text="🏆"><font><Font size="60.0"/></font></Label>
+            <Label fx:id="lblFinishTitle" text="CHÚC MỪNG CHIẾN THẮNG!"><font><Font name="System Bold" size="26.0"/></font></Label>
+            <Label fx:id="lblFinishMessage" text="Đang tải dữ liệu..." style="-fx-font-size: 16px; -fx-text-fill: #475569;" wrapText="true" alignment="CENTER"/>
+            <Button text="Quay lại danh sách" onAction="#handleBackToList" styleClass="btn-primary" style="-fx-padding: 10 30; -fx-margin: 20 0 0 0;"/>
         </VBox>
-    </HBox>
-</VBox>
+    </VBox>
+</StackPane>
