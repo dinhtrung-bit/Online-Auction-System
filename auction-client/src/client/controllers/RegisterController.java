@@ -80,9 +80,9 @@ public class RegisterController {
                 // 2. Kết nối tới Server
                 client.networks.ClientMain.connectToServer();
 
-                // 3. ĐÓNG GÓI PAYLOAD: Quan trọng nhất là thứ tự các trường
-                // Cấu trúc: Role:Username:Password:FullName
-                String payload = selectedRole + ":" + username + ":" + password + ":" + fullName;
+                // 3. ĐÓNG GÓI PAYLOAD: Đã sửa lại thứ tự các trường cho khớp với Server
+                // Cấu trúc đúng: Username:Password:Role:FullName
+                String payload = username + ":" + password + ":" + selectedRole + ":" + fullName;
                 client.networks.MessageDTO req = new client.networks.MessageDTO("REGISTER", payload);
 
                 // 4. Gửi và nhận phản hồi
