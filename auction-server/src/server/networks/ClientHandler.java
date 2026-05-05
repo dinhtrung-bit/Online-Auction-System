@@ -10,6 +10,7 @@ import server.models.users.Bidder;
 import server.models.users.User;
 import server.models.users.UserFactory;
 import server.services.AuctionService;
+import server.services.PasswordUtil;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -102,7 +103,9 @@ public class ClientHandler implements Runnable {
             // Xử lý triệt để Exception từ DAO tại đây
             User user = userDAO.findByUsername(username);
 
-            if (user != null && user.getPasswordHash().equals(password) && user.getRole().equalsIgnoreCase(role)) {
+            if (user != null
+                    && PasswordUtil.verify(password, user.getPasswordHash())
+                    && user.getRole().equalsIgnoreCase(role)) {
                 this.loggedInUser = user;
                 return new MessageDTO("LOGIN_SUCCESS", gson.toJson(user));
             }
@@ -116,7 +119,7 @@ public class ClientHandler implements Runnable {
         try {
             String[] data = request.getPayload().split(":");
             User newUser = UserFactory.createUser(data[2], 0, data[0]);
-            newUser.setPasswordHash(data[1]);
+            newUser.setPasswordHash(PasswordUtil.hash(data[1]));
 
             userDAO.insert(newUser);
             return new MessageDTO("REGISTER_SUCCESS", "Đăng ký thành công!");

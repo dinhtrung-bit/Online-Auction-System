@@ -128,7 +128,7 @@ public class UserDAOimpl implements UserDAO {
         String username = rs.getString("username");
         String passwordHash = rs.getString("password_hash");
 
-        // THÊM DÒNG NÀY
+
         BigDecimal balance = rs.getBigDecimal("balance");
         if (balance == null) balance = BigDecimal.ZERO;
 
