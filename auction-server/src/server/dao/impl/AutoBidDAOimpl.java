@@ -22,7 +22,7 @@ public class AutoBidDAOimpl implements AutoBidDAO {
                 VALUES (?, ?, ?, ?, NOW())
                 """;
 
-        Connection conn = DBConnection.getInstance().getConnection();
+        Connection conn = DBConnection.getConnection();
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setInt(1, autoBid.getAuctionId().getId());
@@ -50,7 +50,7 @@ public class AutoBidDAOimpl implements AutoBidDAO {
                 WHERE autobid_id = ?
                 """;
 
-        Connection conn = DBConnection.getInstance().getConnection();
+        Connection conn = DBConnection.getConnection();
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, autoBid.getAuctionId().getId());
@@ -67,7 +67,7 @@ public class AutoBidDAOimpl implements AutoBidDAO {
     public void delete(int id) throws Exception {
         String sql = "DELETE FROM auto_bids WHERE autobid_id = ?";
 
-        Connection conn = DBConnection.getInstance().getConnection();
+        Connection conn = DBConnection.getConnection();
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
@@ -79,7 +79,7 @@ public class AutoBidDAOimpl implements AutoBidDAO {
     public Object findById(int id) throws Exception {
         String sql = "SELECT * FROM auto_bids WHERE autobid_id = ?";
 
-        Connection conn = DBConnection.getInstance().getConnection();
+        Connection conn = DBConnection.getConnection();
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
@@ -100,7 +100,7 @@ public class AutoBidDAOimpl implements AutoBidDAO {
 
         String sql = "SELECT * FROM auto_bids";
 
-        Connection conn = DBConnection.getInstance().getConnection();
+        Connection conn = DBConnection.getConnection();
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
@@ -124,7 +124,7 @@ public class AutoBidDAOimpl implements AutoBidDAO {
                 """;
 
         try {
-            Connection conn = DBConnection.getInstance().getConnection();
+            Connection conn = DBConnection.getConnection();
 
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setInt(1, auctionId);
@@ -149,7 +149,7 @@ public class AutoBidDAOimpl implements AutoBidDAO {
                 WHERE bidder_id = ? AND auction_id = ?
                 """;
 
-        Connection conn = DBConnection.getInstance().getConnection();
+        Connection conn = DBConnection.getConnection();
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, userId);
@@ -169,7 +169,7 @@ public class AutoBidDAOimpl implements AutoBidDAO {
     public void deleteByAuctionId(int auctionId) throws Exception {
         String sql = "DELETE FROM auto_bids WHERE auction_id = ?";
 
-        Connection conn = DBConnection.getInstance().getConnection();
+        Connection conn = DBConnection.getConnection();
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, auctionId);

@@ -19,7 +19,6 @@ public class RegisterController {
     @FXML private TextField txtFullName, txtUsername;
     @FXML private PasswordField txtPassword;
 
-    // Mặc định là Bidder (Người mua)
     private String selectedRole = "Bidder";
     private Gson gson = new Gson();
 
@@ -28,21 +27,14 @@ public class RegisterController {
 
     @FXML
     public void initialize() {
-        // Thiết lập trạng thái ban đầu cho nút bấm
         updateButtonStyles();
     }
 
     @FXML
-    void selectSeller(ActionEvent event) {
-        selectedRole = "Seller";
-        updateButtonStyles();
-    }
+    void selectSeller(ActionEvent event) { selectedRole = "Seller"; updateButtonStyles(); }
 
     @FXML
-    void selectBidder(ActionEvent event) {
-        selectedRole = "Bidder";
-        updateButtonStyles();
-    }
+    void selectBidder(ActionEvent event) { selectedRole = "Bidder"; updateButtonStyles(); }
 
     private void updateButtonStyles() {
         btnSeller.setStyle(selectedRole.equals("Seller") ? ACTIVE_STYLE : IDLE_STYLE);
@@ -55,9 +47,7 @@ public class RegisterController {
             Parent root = FXMLLoader.load(getClass().getResource("/client/views/login.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.getScene().setRoot(root);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
     @FXML
@@ -66,7 +56,6 @@ public class RegisterController {
         String username = txtUsername.getText().trim();
         String password = txtPassword.getText().trim();
 
-        // 1. Kiểm tra nhập liệu
         if (fullName.isEmpty() || username.isEmpty() || password.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng điền đủ thông tin!");
             return;
@@ -75,40 +64,31 @@ public class RegisterController {
         Node registerBtn = (Node) event.getSource();
         registerBtn.setDisable(true);
 
+        client.networks.ClientMain.registerListener("REGISTER_SUCCESS", payload -> {
+            client.networks.ClientMain.unregisterListener("REGISTER_SUCCESS");
+            client.networks.ClientMain.unregisterListener("REGISTER_FAILED");
+            Platform.runLater(() -> {
+                registerBtn.setDisable(false);
+                showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đăng ký thành công! Vui lòng đăng nhập.");
+                goToLogin(event);
+            });
+        });
+
+        client.networks.ClientMain.registerListener("REGISTER_FAILED", payload -> {
+            client.networks.ClientMain.unregisterListener("REGISTER_SUCCESS");
+            client.networks.ClientMain.unregisterListener("REGISTER_FAILED");
+            Platform.runLater(() -> {
+                registerBtn.setDisable(false);
+                showAlert(Alert.AlertType.ERROR, "Lỗi đăng ký", payload);
+            });
+        });
+
         CompletableFuture.runAsync(() -> {
-            try {
-                // 2. Kết nối tới Server
-                client.networks.ClientMain.connectToServer();
-
-                // 3. ĐÓNG GÓI PAYLOAD: Đã sửa lại thứ tự các trường cho khớp với Server
-                // Cấu trúc đúng: Username:Password:Role:FullName
-                String payload = username + ":" + password + ":" + selectedRole + ":" + fullName;
-                client.networks.MessageDTO req = new client.networks.MessageDTO("REGISTER", payload);
-
-                // 4. Gửi và nhận phản hồi
-                client.networks.ClientMain.send(gson.toJson(req));
-                String responseJson = client.networks.ClientMain.receive();
-
-                Platform.runLater(() -> {
-                    registerBtn.setDisable(false);
-                    if (responseJson != null) {
-                        client.networks.MessageDTO res = gson.fromJson(responseJson, client.networks.MessageDTO.class);
-
-                        if ("REGISTER_SUCCESS".equals(res.getAction())) {
-                            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đăng ký thành công!");
-                            goToLogin(event);
-                        } else {
-                            // Hiển thị lỗi chi tiết từ Server (Ví dụ: Trùng tên đăng nhập)
-                            showAlert(Alert.AlertType.ERROR, "Lỗi đăng ký", res.getPayload());
-                        }
-                    }
-                });
-            } catch (Exception e) {
-                Platform.runLater(() -> {
-                    registerBtn.setDisable(false);
-                    showAlert(Alert.AlertType.ERROR, "Lỗi kết nối", "Không thể kết nối tới Server. Hãy chắc chắn Server đã bật!");
-                });
-            }
+            client.networks.ClientMain.connectToServer();
+            String payload = username + ":" + password + ":" + selectedRole + ":" + fullName;
+            client.networks.ClientMain.send(gson.toJson(
+                    new client.networks.MessageDTO("REGISTER", payload)
+            ));
         });
     }
 

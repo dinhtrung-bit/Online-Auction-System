@@ -17,13 +17,12 @@ public class ItemDAOimpl implements ItemDAO {
 
     @Override
     public void insert(Item item) throws Exception {
-        // items có 4 cột cần thêm
-        String sql = "INSERT INTO items (seller_id,name, description, CategoryInfo,startingPrice) VALUES ( ?, ?, ?,?)";
+        String sql = "INSERT INTO items (seller_id, name, description, CategoryInfo, startingPrice) VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-             pstmt.setInt(1, item.getSeller().getUserId());
+            pstmt.setInt(1, item.getSeller().getUserId());
             pstmt.setString(2, item.getName());
             pstmt.setString(3, item.getDescription());
             pstmt.setString(4, item.getCategoryInfo());
@@ -34,27 +33,26 @@ public class ItemDAOimpl implements ItemDAO {
 
     @Override
     public void update(Item item) throws Exception {
-        // Cập nhật thông tin sản phẩm dựa trên item_id
-        String sql = "UPDATE items SET seller_id, name = ?, description = ?, CategoryInfo = ?, startingPrice = ? WHERE item_id = ?";
+        String sql = "UPDATE items SET seller_id = ?, name = ?, description = ?, CategoryInfo = ?, startingPrice = ? WHERE item_id = ?";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
             pstmt.setInt(1, item.getSeller().getUserId());
             pstmt.setString(2, item.getName());
             pstmt.setString(3, item.getDescription());
             pstmt.setString(4, item.getCategoryInfo());
             pstmt.setBigDecimal(5, item.getStartingPrice());
-            pstmt.setInt(6, item.getItemId());// Điều kiện WHERE
+            pstmt.setInt(6, item.getItemId());
             pstmt.executeUpdate();
         }
     }
 
     @Override
     public void delete(int id) throws Exception {
-        // Xóa sản phẩm theo item_id
         String sql = "DELETE FROM items WHERE item_id = ?";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, id);
@@ -66,21 +64,14 @@ public class ItemDAOimpl implements ItemDAO {
     public List<Item> findBySellerId(int sellerId) throws Exception {
         List<Item> itemlist = new ArrayList<>();
         String sql = "SELECT * FROM items WHERE seller_id = ?";
-        try (Connection conn = DBConnection.getInstance().getConnection();
+
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
             pstmt.setInt(1, sellerId);
             try (ResultSet rs = pstmt.executeQuery()) {
-
-                // Duyệt qua từng dòng dữ liệu (từng sản phẩm) lấy được từ Database
                 while (rs.next()) {
-                    int itemId = rs.getInt("item_id");
-                    String name = rs.getString("name");
-                    String description = rs.getString("description");
-                    String CategoryInfo = rs.getString("CategoryInfo");
-                    BigDecimal startingPrice = rs.getBigDecimal("startingPrice");
-
-                    Item item = ItemFactory.createItem(CategoryInfo, itemId, name, startingPrice, description);
-                    itemlist.add(item);
+                    itemlist.add(mapResultSetToItem(rs));
                 }
             }
         }
@@ -91,24 +82,19 @@ public class ItemDAOimpl implements ItemDAO {
     public List<Item> findAll() throws Exception {
         List<Item> itemList = new ArrayList<>();
         String sql = "SELECT item_id, name, startingPrice, description, CategoryInfo FROM items";
-        try (Connection conn = DBConnection.getInstance().getConnection();
+
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
-            while (rs.next()) {
-                int itemId = rs.getInt("item_id");
-                String name = rs.getString("name");
-                String description = rs.getString("description");
-                String category = rs.getString("CategoryInfo");
-                BigDecimal startingPrice = rs.getBigDecimal("startingPrice");
-                Item item = ItemFactory.createItem(category, itemId, name, startingPrice, description);
 
-                if (item != null) {
-                    itemList.add(item);
-                }
+            while (rs.next()) {
+                Item item = mapResultSetToItem(rs);
+                if (item != null) itemList.add(item);
             }
         }
         return itemList;
     }
+
     private Item mapResultSetToItem(ResultSet rs) throws SQLException {
         int itemId = rs.getInt("item_id");
         String name = rs.getString("name");
@@ -116,29 +102,34 @@ public class ItemDAOimpl implements ItemDAO {
         String categoryInfo = rs.getString("CategoryInfo");
         BigDecimal startingPrice = rs.getBigDecimal("startingPrice");
 
-        return ItemFactory.createItem(
-                categoryInfo,
-                itemId,
-                name,
-                startingPrice,
-                description
+        return ItemFactory.createItem(categoryInfo, itemId, name, startingPrice, description);
+    }
 
-        );
+    public void insertWithSellerId(Item item, int sellerId) throws Exception {
+        String sql = "INSERT INTO items (seller_id, name, description, CategoryInfo, startingPrice) VALUES (?, ?, ?, ?, ?)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, sellerId);
+            pstmt.setString(2, item.getName());
+            pstmt.setString(3, item.getDescription());
+            pstmt.setString(4, item.getCategoryInfo());
+            pstmt.setBigDecimal(5, item.getStartingPrice());
+            pstmt.executeUpdate();
+        }
     }
 
     @Override
     public Item findById(int id) throws Exception {
         String sql = "SELECT * FROM items WHERE item_id = ?";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);
-
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToItem(rs);
-                }
+                if (rs.next()) return mapResultSetToItem(rs);
             }
         }
         return null;
