@@ -145,19 +145,34 @@ public class AuctionDetailController implements Initializable {
     void handlePlaceBid() {
         // Lọc sạch toàn bộ dấu chấm, phẩy, khoảng trắng để tránh lỗi ParseDouble
         String rawAmount = txtBidAmount.getText().replaceAll("[^\\d]", "");
+
         if (!rawAmount.isEmpty() && currentRoomId != null) {
             double amount = Double.parseDouble(rawAmount);
+
+            // 1. KIỂM TRA BẢO MẬT GIAO DIỆN: Tiền đặt phải > Giá hiện tại
             if (amount <= currentPriceVal) {
-                showAlert(Alert.AlertType.WARNING, "Lỗi giá", "Mức giá phải lớn hơn giá hiện tại!");
+                showAlert(Alert.AlertType.WARNING, "Không hợp lệ", "Giá đặt phải cao hơn giá hiện tại!");
                 return;
             }
+
+            // 2. LOGIC VÍ ĐIỆN TỬ: Kiểm tra xem ví còn đủ tiền không?
+            if (amount > client.models.UserSession.balance) {
+                showAlert(Alert.AlertType.WARNING, "Số dư không đủ",
+                        "Bạn chỉ còn " + formatPrice(String.valueOf(client.models.UserSession.balance)) +
+                                " đ trong ví. Vui lòng nạp thêm tiền để tiếp tục!");
+                return;
+            }
+
+            // 3. Nếu mọi thứ hợp lệ, mới đóng gói gửi lên Server
             MessageDTO req = new MessageDTO("BID", currentRoomId + ":" + myUsername + ":" + amount);
             ClientMain.send(gson.toJson(req));
+
+            // Xóa ô nhập sau khi gửi
             txtBidAmount.clear();
-        } else {
-            showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng nhập số tiền hợp lệ!");
         }
     }
+
+
 
     @FXML
     void handleToggleAutoBid(ActionEvent event) {

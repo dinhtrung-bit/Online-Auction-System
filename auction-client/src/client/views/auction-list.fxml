@@ -7,22 +7,27 @@
 <VBox spacing="20.0" styleClass="main-bg" stylesheets="@app.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.AuctionListController">
     <padding><Insets bottom="20.0" left="30.0" right="30.0" top="20.0" /></padding>
 
-    <HBox alignment="CENTER_LEFT" spacing="20.0">
+    <HBox alignment="CENTER_LEFT" spacing="15.0">
+
         <Label text="Danh sách đấu giá">
             <font><Font name="System Bold" size="24.0" /></font>
         </Label>
 
         <Pane HBox.hgrow="ALWAYS" />
 
+        <HBox alignment="CENTER" style="-fx-background-color: #dcfce7; -fx-background-radius: 8; -fx-padding: 8 16; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 2);">
+            <Label fx:id="lblBalance" text="💳 Số dư: Đang tải..." style="-fx-text-fill: #166534; -fx-font-weight: bold; -fx-font-size: 14px;" />
+        </HBox>
+
         <HBox style="-fx-background-color: #e2e8f0; -fx-background-radius: 8; -fx-padding: 4;" spacing="5.0">
             <ToggleButton fx:id="btnTabLive" text="🔴 Đang diễn ra" selected="true" onAction="#switchTab" style="-fx-background-color: white; -fx-background-radius: 6; -fx-padding: 8 15; -fx-font-weight: bold; -fx-cursor: hand;"/>
             <ToggleButton fx:id="btnTabWon" text="🏆 Vật phẩm đã trúng" onAction="#switchTab" style="-fx-background-color: transparent; -fx-background-radius: 6; -fx-padding: 8 15; -fx-text-fill: #475569; -fx-font-weight: bold; -fx-cursor: hand;"/>
         </HBox>
 
-        <Button text="Đăng xuất" textFill="#ef4444" styleClass="btn-outline" onAction="#handleLogout" />
+        <Button text="Đăng xuất" textFill="#ef4444" styleClass="btn-outline" onAction="#handleLogout" style="-fx-border-color: #fca5a5; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 8 15; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-color: #fef2f2;" />
     </HBox>
 
-    <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" VBox.vgrow="ALWAYS">
+    <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent;" VBox.vgrow="ALWAYS">
         <content>
             <VBox fx:id="auctionContainer" spacing="15.0">
             </VBox>

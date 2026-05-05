@@ -8,7 +8,7 @@ import server.models.users.UserFactory;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.math.BigDecimal;
 public class UserDAOimpl implements UserDAO {
 
     @Override
@@ -55,27 +55,25 @@ public class UserDAOimpl implements UserDAO {
     @Override
     public User findByUsername(String username) throws Exception {
         String sql = "SELECT * FROM users WHERE username = ?";
-
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
             pstmt.setString(1, username);
-
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     int userId = rs.getInt("user_id");
                     String uname = rs.getString("username");
-                    String passwordHash = rs.getString("password_hash"); // Lấy mật khẩu từ DB
+                    String passwordHash = rs.getString("password_hash");
                     String role = rs.getString("role");
 
-                    // 1. Khởi tạo đối tượng qua Factory
-                    User user = UserFactory.createUser(role, userId, uname);
+                    // THÊM DÒNG NÀY: Lấy số dư từ cột 'balance' trong MySQL
+                    BigDecimal balance = rs.getBigDecimal("balance");
+                    if (balance == null) balance = BigDecimal.ZERO;
 
-                    // 2. CẬP NHẬT MẬT KHẨU (Bước quan trọng bị thiếu trước đó)
+                    User user = UserFactory.createUser(role, userId, uname);
                     if (user != null) {
                         user.setPasswordHash(passwordHash);
+                        user.setAccountBalance(balance); // Nạp tiền vào bộ nhớ
                     }
-
                     return user;
                 }
             }
@@ -124,16 +122,20 @@ public class UserDAOimpl implements UserDAO {
         return null;
     }
 
-    // Hàm hỗ trợ map dữ liệu từ ResultSet sang đối tượng User
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
         String role = rs.getString("role");
         int userId = rs.getInt("user_id");
         String username = rs.getString("username");
         String passwordHash = rs.getString("password_hash");
 
+        // THÊM DÒNG NÀY
+        BigDecimal balance = rs.getBigDecimal("balance");
+        if (balance == null) balance = BigDecimal.ZERO;
+
         User user = UserFactory.createUser(role, userId, username);
         if (user != null) {
             user.setPasswordHash(passwordHash);
+            user.setAccountBalance(balance); // Nạp tiền vào bộ nhớ
         }
         return user;
     }

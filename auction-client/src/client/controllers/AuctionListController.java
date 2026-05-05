@@ -30,6 +30,9 @@ public class AuctionListController implements Initializable {
     @FXML private VBox auctionContainer;
     @FXML private ToggleButton btnTabLive, btnTabWon;
 
+    // THÊM: Label hiển thị số dư ở giao diện
+    @FXML private Label lblBalance;
+
     private ToggleGroup tabGroup;
     private List<AuctionViewModel> allAuctions = new ArrayList<>(); // Lưu cache từ Server
     private String currentTab = "LIVE";
@@ -47,13 +50,36 @@ public class AuctionListController implements Initializable {
         if(btnTabLive != null) btnTabLive.setToggleGroup(tabGroup);
         if(btnTabWon != null) btnTabWon.setToggleGroup(tabGroup);
 
+        // Đăng ký nhận danh sách đấu giá
         ClientMain.registerListener("AUCTION_LIST", payload -> {
             Type listType = new TypeToken<List<AuctionViewModel>>(){}.getType();
             allAuctions = gson.fromJson(payload, listType);
             Platform.runLater(this::applyFilterAndRender);
         });
 
+        // THÊM: Đăng ký lắng nghe tin nhắn chứa Số dư (BALANCE_DATA) từ Server
+        ClientMain.registerListener("BALANCE_DATA", payload -> {
+            Platform.runLater(() -> {
+                try {
+                    double balanceVal = Double.parseDouble(payload);
+                    // Lưu vào Session để màn hình Đặt giá (AuctionDetail) có thể dùng để kiểm tra
+                    client.models.UserSession.balance = balanceVal;
+                    // Hiển thị lên giao diện
+                    if (lblBalance != null) {
+                        lblBalance.setText("💳 Số dư: " + VND.format(balanceVal) + " đ");
+                    }
+                } catch (Exception e) {
+                    System.out.println("Lỗi hiển thị số dư: " + e.getMessage());
+                }
+            });
+        });
+
+        // Tải danh sách đấu giá
         loadAuctionsFromServer();
+
+        new Thread(() -> {
+            ClientMain.send(gson.toJson(new MessageDTO("GET_BALANCE", "")));
+        }).start();
     }
 
     @FXML
@@ -82,7 +108,7 @@ public class AuctionListController implements Initializable {
         renderAuctionCards(filtered);
     }
 
-    private void loadAuctionsFromServer() { /* Giữ nguyên của bạn */
+    private void loadAuctionsFromServer() {
         Platform.runLater(() -> {
             auctionContainer.getChildren().clear();
             auctionContainer.getChildren().add(new Label("Đang tải dữ liệu..."));
@@ -90,7 +116,7 @@ public class AuctionListController implements Initializable {
         new Thread(() -> ClientMain.send(gson.toJson(new MessageDTO("GET_AVAILABLE_AUCTIONS", "")))).start();
     }
 
-    private void renderAuctionCards(List<AuctionViewModel> list) { /* Giữ nguyên của bạn */
+    private void renderAuctionCards(List<AuctionViewModel> list) {
         auctionContainer.getChildren().clear();
         if (list == null || list.isEmpty()) {
             Label empty = new Label(currentTab.equals("WON") ? "Bạn chưa trúng đấu giá vật phẩm nào." : "Hiện không có phiên đấu giá nào đang mở.");
@@ -102,8 +128,6 @@ public class AuctionListController implements Initializable {
     }
 
     private HBox buildCard(AuctionViewModel auction) {
-        // [Toàn bộ logic buildCard của bạn giữ nguyên, KHÔNG CẦN THAY ĐỔI]
-        // Vì tiết kiệm ký tự, bạn cứ paste lại nguyên xi hàm buildCard của bạn ở đây nhé!
         Label icon = new Label(iconFor(auction.getStatus()));
         icon.setStyle("-fx-font-size: 40px; -fx-text-fill: #94a3b8;");
         Label lblName = new Label(auction.getItemName());
@@ -126,20 +150,24 @@ public class AuctionListController implements Initializable {
         return card;
     }
 
-    private VBox metaCol(String label, String value) { /* Giữ nguyên */
+    private VBox metaCol(String label, String value) {
         Label lbl = new Label(label); lbl.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 12px;");
         Label val = new Label(value); val.setStyle("-fx-font-weight: bold;"); return new VBox(2, lbl, val);
     }
-    private String iconFor(String status) { /* Giữ nguyên */ return status == null ? "📦" : switch (status.toUpperCase()) { case "RUNNING" -> "🔴"; case "FINISHED" -> "✅"; case "CANCELED" -> "❌"; default -> "🕐"; }; }
-    private String badgeTextFor(String status) { /* Giữ nguyên */ return status == null ? "" : switch (status.toUpperCase()) { case "OPEN" -> "🕐 Sắp diễn ra"; case "RUNNING" -> "● Đang diễn ra"; case "FINISHED" -> "✓ Kết thúc"; case "CANCELED" -> "✗ Đã hủy"; default -> status; }; }
-    private String badgeStyleFor(String status) { /* Giữ nguyên */ String base = "-fx-padding: 2 8; -fx-background-radius: 4; -fx-font-size: 11px; -fx-font-weight: bold;"; return status == null ? base : switch (status.toUpperCase()) { case "RUNNING" -> base + "-fx-background-color: #dcfce7; -fx-text-fill: #166534;"; case "FINISHED" -> base + "-fx-background-color: #f1f5f9; -fx-text-fill: #64748b;"; case "CANCELED" -> base + "-fx-background-color: #fee2e2; -fx-text-fill: #991b1b;"; default -> base + "-fx-background-color: #fef9c3; -fx-text-fill: #854d0e;"; }; }
 
-    @FXML void viewDetail(ActionEvent event) { /* Giữ nguyên của bạn */
+    private String iconFor(String status) { return status == null ? "📦" : switch (status.toUpperCase()) { case "RUNNING" -> "🔴"; case "FINISHED" -> "✅"; case "CANCELED" -> "❌"; default -> "🕐"; }; }
+
+    private String badgeTextFor(String status) { return status == null ? "" : switch (status.toUpperCase()) { case "OPEN" -> "🕐 Sắp diễn ra"; case "RUNNING" -> "● Đang diễn ra"; case "FINISHED" -> "✓ Kết thúc"; case "CANCELED" -> "✗ Đã hủy"; default -> status; }; }
+
+    private String badgeStyleFor(String status) { String base = "-fx-padding: 2 8; -fx-background-radius: 4; -fx-font-size: 11px; -fx-font-weight: bold;"; return status == null ? base : switch (status.toUpperCase()) { case "RUNNING" -> base + "-fx-background-color: #dcfce7; -fx-text-fill: #166534;"; case "FINISHED" -> base + "-fx-background-color: #f1f5f9; -fx-text-fill: #64748b;"; case "CANCELED" -> base + "-fx-background-color: #fee2e2; -fx-text-fill: #991b1b;"; default -> base + "-fx-background-color: #fef9c3; -fx-text-fill: #854d0e;"; }; }
+
+    @FXML void viewDetail(ActionEvent event) {
         Button btn = (Button) event.getSource(); String auctionId = btn.getUserData() != null ? btn.getUserData().toString() : btn.getId();
-        try { ClientMain.unregisterListener("AUCTION_LIST"); FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/auction-detail.fxml")); Parent root = loader.load();
+        try { ClientMain.unregisterListener("AUCTION_LIST"); ClientMain.unregisterListener("BALANCE_DATA"); FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/auction-detail.fxml")); Parent root = loader.load();
             AuctionDetailController dc = loader.getController(); dc.setRoomId(auctionId); Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow(); stage.getScene().setRoot(root); } catch (Exception e) { e.printStackTrace(); }
     }
-    @FXML void handleLogout(ActionEvent event) { /* Giữ nguyên của bạn */
-        ClientMain.unregisterListener("AUCTION_LIST"); try { Parent root = FXMLLoader.load(getClass().getResource("/client/views/login.fxml")); Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow(); stage.getScene().setRoot(root); } catch (Exception e) { e.printStackTrace(); }
+
+    @FXML void handleLogout(ActionEvent event) {
+        ClientMain.unregisterListener("AUCTION_LIST"); ClientMain.unregisterListener("BALANCE_DATA"); try { Parent root = FXMLLoader.load(getClass().getResource("/client/views/login.fxml")); Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow(); stage.getScene().setRoot(root); } catch (Exception e) { e.printStackTrace(); }
     }
 }

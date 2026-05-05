@@ -52,6 +52,9 @@ public abstract class User {
 
         return false;
     }
+    public void setAccountBalance(BigDecimal accountBalance) {
+        this.accountBalance = accountBalance;
+    }
 
     // 3. POLYMORPHISM: Phương thức trừu tượng, bắt buộc các lớp con phải tự định nghĩa
     public abstract String getRole();

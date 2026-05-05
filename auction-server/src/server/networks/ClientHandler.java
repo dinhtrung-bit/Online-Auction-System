@@ -6,7 +6,7 @@ import server.dao.impl.UserDAOimpl;
 import server.dao.interfaces.UserDAO;
 import server.models.auction.AuctionRoom;
 import server.models.auction.AuctionStatus;
-import server.models.users.Bidder; // Đã thêm import Bidder
+import server.models.users.Bidder;
 import server.models.users.User;
 import server.models.users.UserFactory;
 import server.services.AuctionService;
@@ -44,6 +44,27 @@ public class ClientHandler implements Runnable {
         processors.put("GET_AVAILABLE_AUCTIONS",  this::handleGetAvailableAuctions);
         processors.put("GET_ALL_AUCTIONS",        this::handleGetAllAuctions);
         processors.put("GET_ALL_USERS",           this::handleGetAllUsers);
+
+        // ĐÃ THÊM LỆNH XỬ LÝ GET_BALANCE VÀO ĐÂY
+        processors.put("GET_BALANCE",             this::handleGetBalance);
+    }
+
+    private MessageDTO handleGetBalance(MessageDTO request) {
+        if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
+
+        try {
+            // Lấy lại thông tin user từ DB để đảm bảo số dư là mới nhất
+            User freshUser = userDAO.findByUsername(loggedInUser.getUsername());
+            if (freshUser != null) {
+                this.loggedInUser = freshUser; // Cập nhật lại session
+                return new MessageDTO("BALANCE_DATA", freshUser.getAccountBalance().toPlainString());
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi khi lấy số dư từ DB: " + e.getMessage());
+        }
+
+        // Trả về số dư dự phòng nếu lỗi DB
+        return new MessageDTO("BALANCE_DATA", loggedInUser.getAccountBalance().toPlainString());
     }
 
     @Override
@@ -200,6 +221,12 @@ public class ClientHandler implements Runnable {
             // 1. Kiểm tra đối tượng gửi request có phải Bidder không
             if (!(this.loggedInUser instanceof Bidder)) {
                 return new MessageDTO("BID_FAILED", "Chỉ người dùng Bidder mới được phép đặt giá!");
+            }
+            BigDecimal bidAmount = new BigDecimal(amount);
+            if (this.loggedInUser.getAccountBalance().compareTo(bidAmount) < 0) {
+                // Nếu tiền trong ví < số tiền định đặt -> Chặn luôn!
+                return new MessageDTO("BID_FAILED", "Số dư ví không đủ! Bạn đang có: " +
+                        this.loggedInUser.getAccountBalance().toPlainString() + "đ. Vui lòng nạp thêm.");
             }
 
             // 2. Gọi AuctionService để xác thực logic, cập nhật giá và lưu database
