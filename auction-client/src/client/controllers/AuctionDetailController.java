@@ -13,12 +13,15 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import javafx.scene.layout.VBox;
+// Import thêm Chart
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
-import javafx.scene.layout.VBox;
 
 public class AuctionDetailController implements Initializable {
 
@@ -27,7 +30,9 @@ public class AuctionDetailController implements Initializable {
     @FXML private Label lblTimer, lblCurrentPrice, lblWinner;
     @FXML private Button btnPlaceBid, btnToggleAutoBid;
 
-    // UI Overlay kết thúc
+    // Thêm khai báo Chart
+    @FXML private LineChart<String, Number> bidHistoryChart;
+
     @FXML private VBox overlayFinished;
     @FXML private Label lblFinishIcon, lblFinishTitle, lblFinishMessage;
 
@@ -36,6 +41,10 @@ public class AuctionDetailController implements Initializable {
     private volatile int remainingSeconds = 0;
     private Timer timer;
     private final Gson gson = new Gson();
+
+    // Logic quản lý Chart
+    private XYChart.Series<String, Number> priceSeries;
+    private int bidCount = 0;
 
     // Auto-bid logic
     private boolean isAutoBidActive = false;
@@ -47,6 +56,13 @@ public class AuctionDetailController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         this.myUsername = client.models.UserSession.username;
 
+        // Khởi tạo series cho biểu đồ
+        priceSeries = new XYChart.Series<>();
+        priceSeries.setName("Diễn biến giá");
+        if (bidHistoryChart != null) {
+            bidHistoryChart.getData().add(priceSeries);
+        }
+
         ClientMain.registerListener("AUCTION_DETAIL_DATA", payload -> {
             String[] data = payload.split(":");
             if (data.length < 3) return;
@@ -56,6 +72,12 @@ public class AuctionDetailController implements Initializable {
                 remainingSeconds = Integer.parseInt(data[1]);
                 boolean canBid = "RUNNING".equalsIgnoreCase(data[2]);
                 if (btnPlaceBid != null) btnPlaceBid.setDisable(!canBid);
+
+                // Reset biểu đồ khi vào phòng
+                priceSeries.getData().clear();
+                bidCount = 0;
+                priceSeries.getData().add(new XYChart.Data<>("Bắt đầu", currentPriceVal));
+
                 startTimer();
             });
         });
@@ -70,14 +92,17 @@ public class AuctionDetailController implements Initializable {
                 lblWinner.setText("👤 Người dẫn đầu: " + lastWinner);
                 historyList.getItems().add(0, lastWinner + " đặt " + formatPrice(data[1]) + " đ");
 
+                // Cập nhật biểu đồ real-time
+                bidCount++;
+                priceSeries.getData().add(new XYChart.Data<>("Lần " + bidCount, currentPriceVal));
+
                 // THUẬT TOÁN AUTO-BID
                 if (isAutoBidActive && !myUsername.equals(lastWinner)) {
-                    double nextBid = currentPriceVal + 100000; // Mặc định bước nhảy 100k
+                    double nextBid = currentPriceVal + 100000;
                     if (nextBid <= maxAutoBidAmount) {
                         MessageDTO req = new MessageDTO("BID", currentRoomId + ":" + myUsername + ":" + nextBid);
                         ClientMain.send(gson.toJson(req));
                     } else {
-                        // Vượt quá ngân sách -> Tắt auto bid
                         isAutoBidActive = false;
                         btnToggleAutoBid.setText("Kích hoạt lại (Đã vượt mức)");
                         btnToggleAutoBid.setStyle("-fx-text-fill: #ef4444; -fx-border-color: #ef4444;");
@@ -94,7 +119,6 @@ public class AuctionDetailController implements Initializable {
                 if (btnPlaceBid != null) btnPlaceBid.setDisable(true);
                 if (timer != null) timer.cancel();
 
-                // HIỂN THỊ MÀN HÌNH CHÚC MỪNG HOẶC CHIA BUỒN
                 overlayFinished.setVisible(true);
                 if (myUsername.equals(lastWinner)) {
                     lblFinishIcon.setText("🏆");
@@ -119,7 +143,7 @@ public class AuctionDetailController implements Initializable {
         ClientMain.send(gson.toJson(req));
     }
 
-    private void startTimer() { /* Giữ nguyên hàm của bạn */
+    private void startTimer() {
         if (timer != null) timer.cancel();
         timer = new Timer(true);
         timer.scheduleAtFixedRate(new TimerTask() {
@@ -143,36 +167,24 @@ public class AuctionDetailController implements Initializable {
 
     @FXML
     void handlePlaceBid() {
-        // Lọc sạch toàn bộ dấu chấm, phẩy, khoảng trắng để tránh lỗi ParseDouble
         String rawAmount = txtBidAmount.getText().replaceAll("[^\\d]", "");
-
         if (!rawAmount.isEmpty() && currentRoomId != null) {
             double amount = Double.parseDouble(rawAmount);
-
-            // 1. KIỂM TRA BẢO MẬT GIAO DIỆN: Tiền đặt phải > Giá hiện tại
             if (amount <= currentPriceVal) {
                 showAlert(Alert.AlertType.WARNING, "Không hợp lệ", "Giá đặt phải cao hơn giá hiện tại!");
                 return;
             }
-
-            // 2. LOGIC VÍ ĐIỆN TỬ: Kiểm tra xem ví còn đủ tiền không?
             if (amount > client.models.UserSession.balance) {
                 showAlert(Alert.AlertType.WARNING, "Số dư không đủ",
                         "Bạn chỉ còn " + formatPrice(String.valueOf(client.models.UserSession.balance)) +
                                 " đ trong ví. Vui lòng nạp thêm tiền để tiếp tục!");
                 return;
             }
-
-            // 3. Nếu mọi thứ hợp lệ, mới đóng gói gửi lên Server
             MessageDTO req = new MessageDTO("BID", currentRoomId + ":" + myUsername + ":" + amount);
             ClientMain.send(gson.toJson(req));
-
-            // Xóa ô nhập sau khi gửi
             txtBidAmount.clear();
         }
     }
-
-
 
     @FXML
     void handleToggleAutoBid(ActionEvent event) {

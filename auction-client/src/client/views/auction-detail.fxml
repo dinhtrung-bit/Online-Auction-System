@@ -3,6 +3,9 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
 
 <StackPane stylesheets="@app.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.AuctionDetailController">
     <VBox spacing="20.0" styleClass="main-bg">
@@ -31,8 +34,24 @@
                     <Label fx:id="lblTimer" text="--:--:--" textFill="#ef4444"><font><Font name="System Bold" size="24.0"/></font></Label>
                 </HBox>
 
-                <Label text="Lịch sử đặt giá"><font><Font name="System Bold" size="14.0"/></font></Label>
-                <ListView fx:id="historyList" VBox.vgrow="ALWAYS" style="-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0;"/>
+                <Label text="Diễn biến đấu giá"><font><Font name="System Bold" size="14.0"/></font></Label>
+                <TabPane tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS" style="-fx-border-color: #e2e8f0; -fx-background-color: white;">
+                    <tabs>
+                        <Tab text="📈 Biểu đồ giá">
+                            <LineChart fx:id="bidHistoryChart" animated="true" legendVisible="false" style="-fx-padding: 10;">
+                                <xAxis>
+                                    <CategoryAxis label="Lượt đặt" animated="false" />
+                                </xAxis>
+                                <yAxis>
+                                    <NumberAxis label="VNĐ" animated="false" />
+                                </yAxis>
+                            </LineChart>
+                        </Tab>
+                        <Tab text="📄 Lịch sử chi tiết">
+                            <ListView fx:id="historyList" style="-fx-background-color: #f8fafc;"/>
+                        </Tab>
+                    </tabs>
+                </TabPane>
             </VBox>
 
             <VBox spacing="15.0" prefWidth="350.0">
@@ -57,7 +76,7 @@
             <Label fx:id="lblFinishIcon" text="🏆"><font><Font size="60.0"/></font></Label>
             <Label fx:id="lblFinishTitle" text="CHÚC MỪNG CHIẾN THẮNG!"><font><Font name="System Bold" size="26.0"/></font></Label>
             <Label fx:id="lblFinishMessage" text="Đang tải dữ liệu..." style="-fx-font-size: 16px; -fx-text-fill: #475569;" wrapText="true" alignment="CENTER"/>
-            <Button text="Quay lại danh sách" onAction="#handleBackToList" styleClass="btn-primary" style="-fx-padding: 10 30; -fx-margin: 20 0 0 0;"/>
+            <Button text="Quay lại danh sách" onAction="#handleBackToList" styleClass="btn-primary" style="-fx-padding: 10 30;"/>
         </VBox>
     </VBox>
 </StackPane>
