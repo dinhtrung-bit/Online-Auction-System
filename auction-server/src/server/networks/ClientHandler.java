@@ -100,27 +100,22 @@ public class ClientHandler implements Runnable {
     private MessageDTO handleAddItem(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
-            System.out.println(">>> SERVER nhận ADD_ITEM, payload: " + request.getPayload());
-            System.out.println(">>> loggedInUser: " + loggedInUser.getUsername() + " | role: " + loggedInUser.getRole() + " | id: " + loggedInUser.getUserId());
-
             Map<String, Object> data = gson.fromJson(request.getPayload(), Map.class);
 
             String name      = (String) data.get("name");
             String artist    = data.get("artist") != null ? (String) data.get("artist") : "";
             BigDecimal price = new BigDecimal(data.get("startingPrice").toString());
 
-            System.out.println(">>> Parsed: name=" + name + " | artist=" + artist + " | price=" + price);
-
             Item newItem = ItemFactory.createItem("ART", 0, name, price, artist);
-            System.out.println(">>> Item created: " + (newItem == null ? "NULL!" : newItem.getName()));
 
-            itemDAO.insertWithSellerId(newItem, loggedInUser.getUserId());
-            System.out.println(">>> INSERT thành công!");
+            // Lấy itemId được DB tự sinh ra sau khi INSERT
+            int newItemId = itemDAO.insertWithSellerId(newItem, loggedInUser.getUserId());
+            System.out.println(">>> INSERT thành công! itemId=" + newItemId);
 
-            return new MessageDTO("ADD_ITEM_SUCCESS", "Thêm sản phẩm thành công!");
+            // Trả itemId về Client để Client tiếp tục gửi CREATE_AUCTION
+            return new MessageDTO("ADD_ITEM_SUCCESS", String.valueOf(newItemId));
         } catch (Exception e) {
             System.err.println(">>> ADD_ITEM lỗi: " + e.getMessage());
-            e.printStackTrace();
             return new MessageDTO("ADD_ITEM_FAILED", "Lỗi: " + e.getMessage());
         }
     }
@@ -179,27 +174,20 @@ public class ClientHandler implements Runnable {
     private MessageDTO handleCreateAuction(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
-            // format: "itemId:startTime:durationMinutes"
-            // startTime format: "yyyy-MM-ddTHH:mm" (ISO)
-            String[] data = request.getPayload().split(":");
-            int itemId = Integer.parseInt(data[0]);
-            String startTimeStr = data[1] + ":" + data[2]; // giờ:phút
-            int durationMinutes = Integer.parseInt(data[3]);
+            String[] data       = request.getPayload().split(":");
+            int itemId          = Integer.parseInt(data[0]);
+            int durationMinutes = Integer.parseInt(data[1]);
 
             Item item = itemDAO.findById(itemId);
             if (item == null) return new MessageDTO("ERROR", "Không tìm thấy sản phẩm!");
 
-            LocalDateTime startTime = LocalDateTime.parse(startTimeStr,
-                    java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
-            LocalDateTime endTime = startTime.plusMinutes(durationMinutes);
+            LocalDateTime now    = LocalDateTime.now();
+            LocalDateTime endTime = now.plusMinutes(durationMinutes);
 
-            AuctionRoom room = new AuctionRoom(0, loggedInUser.getUserId(), item, startTime, endTime);
+            AuctionRoom room = new AuctionRoom(0, loggedInUser.getUserId(), item, now, endTime);
             room.setStatus(AuctionStatus.OPEN);
             room.setCurrentPrice(item.getStartingPrice());
             auctionDAO.insert(room);
-
-            // Thêm vào RAM của AuctionService để autoUpdateStatuses() theo dõi
-            AuctionService.getInstance().getActiveRooms(); // trigger load
 
             return new MessageDTO("CREATE_AUCTION_SUCCESS", "Tạo phòng đấu giá thành công!");
         } catch (Exception e) {
@@ -214,7 +202,7 @@ public class ClientHandler implements Runnable {
             auctionDAO.delete(auctionId);
             return new MessageDTO("DELETE_AUCTION_SUCCESS", "Xóa phòng đấu giá thành công!");
         } catch (Exception e) {
-            return new MessageDTO( "DELETE_AUCTION_FAILED", "Lỗi: " + e.getMessage());
+            return new MessageDTO("DELETE_AUCTION_FAILED", "Lỗi: " + e.getMessage());
         }
     }
 
@@ -223,7 +211,6 @@ public class ClientHandler implements Runnable {
     private MessageDTO handleSetAutoBid(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
-            // format: "auctionId:maxBid:incrementStep"
             String[] data  = request.getPayload().split(":");
             int auctionId  = Integer.parseInt(data[0]);
             BigDecimal max = new BigDecimal(data[1]);
@@ -248,7 +235,6 @@ public class ClientHandler implements Runnable {
     private MessageDTO handleCancelAutoBid(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
-            // format: "auctionId"
             int auctionId = Integer.parseInt(request.getPayload().trim());
             autoBidDAO.deleteByAuctionId(auctionId);
             return new MessageDTO("CANCEL_AUTO_BID_SUCCESS", "Hủy auto bid thành công!");
@@ -257,7 +243,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    // ===================== CÁC HÀM CŨ GIỮ NGUYÊN =====================
+    // ===================== RUN & CORE =====================
 
     @Override
     public void run() {
@@ -391,12 +377,18 @@ public class ClientHandler implements Runnable {
             String amount  = data[2];
             if (!(this.loggedInUser instanceof Bidder))
                 return new MessageDTO("BID_FAILED", "Chỉ Bidder mới được đặt giá!");
+
+            // [FIX 1] Parsed bằng BigDecimal chuẩn, không dùng Double
             BigDecimal bidAmount = new BigDecimal(amount);
+
             if (this.loggedInUser.getAccountBalance().compareTo(bidAmount) < 0)
                 return new MessageDTO("BID_FAILED", "Số dư ví không đủ! Bạn đang có: "
                         + this.loggedInUser.getAccountBalance().toPlainString() + "đ.");
+
+            // [FIX 1] Truyền trực tiếp tham số bidAmount (kiểu BigDecimal) vào hàm
             String result = AuctionService.getInstance().handleBidRequest(
-                    Long.parseLong(roomId), (Bidder) this.loggedInUser, Double.parseDouble(amount));
+                    Long.parseLong(roomId), (Bidder) this.loggedInUser, bidAmount);
+
             if ("SUCCESS".equals(result)) {
                 broadcast(gson.toJson(new MessageDTO("UPDATE_PRICE", roomId + ":" + amount + ":" + userBid)));
                 return new MessageDTO("BID_SUCCESS", "Đặt giá thành công");
