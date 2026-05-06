@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 import com.google.gson.Gson;
 
@@ -28,10 +30,13 @@ public class AuctionService {
     private static AuctionService instance;
     private final Gson gson = new Gson();
 
+    // [FIX 4] Khai báo Logger để tracking lỗi rõ ràng hơn
+    private static final Logger logger = Logger.getLogger(AuctionService.class.getName());
+
     private final AuctionRoomDAO roomDAO = new AuctionRoomDAOImpl();
     private final ItemDAO itemDAO = new ItemDAOimpl();
     private final BidMessageDAO bidDAO = new BidMessageDAOImpl();
-    private final UserDAO userDAO = new UserDAOimpl(); // MỚI: Thêm DAO để cập nhật tiền user
+    private final UserDAO userDAO = new UserDAOimpl();
 
     private ConcurrentHashMap<Long, AuctionRoom> activeRooms;
 
@@ -51,13 +56,12 @@ public class AuctionService {
         try {
             List<AuctionRoom> rooms = roomDAO.findAll();
             rooms.forEach(r -> activeRooms.put((long)r.getId(), r));
-            System.out.println(">>> [Manager] Đã nạp dữ liệu từ Database vào RAM.");
+            logger.info(">>> [Manager] Đã nạp dữ liệu từ Database vào RAM.");
         } catch (Exception e) {
-            System.err.println("Lỗi nạp dữ liệu: " + e.getMessage());
+            logger.log(Level.SEVERE, "Lỗi nạp dữ liệu: " + e.getMessage(), e);
         }
     }
 
-    // MỚI: Cập nhật hàm này để nhận thêm sellerID
     public void createNewAuction(int sellerID, Item item, LocalDateTime endTime) {
         Long roomId = System.currentTimeMillis();
         AuctionRoom newRoom = new AuctionRoom(roomId.intValue(), sellerID, item, LocalDateTime.now(), endTime);
@@ -66,27 +70,25 @@ public class AuctionService {
         CompletableFuture.runAsync(() -> {
             try {
                 itemDAO.insert(item);
-                System.out.println(">>> [Manager] Đã lưu phiên đấu giá mới vào DB.");
+                logger.info(">>> [Manager] Đã lưu phiên đấu giá mới vào DB.");
             } catch (Exception e) {
-                System.err.println("Lỗi lưu DB: " + e.getMessage());
+                logger.log(Level.SEVERE, "Lỗi lưu DB: " + e.getMessage(), e);
             }
         });
     }
 
-    public String handleBidRequest(Long roomId, Bidder bidder, double amount) {
+    // [FIX 1] Tham số bidAmount là BigDecimal
+    public String handleBidRequest(Long roomId, Bidder bidder, BigDecimal bidAmount) {
         AuctionRoom room = activeRooms.get(roomId);
         if (room == null) return "LỖI: Không tìm thấy phòng đấu giá!";
 
-        BigDecimal bidAmount = BigDecimal.valueOf(amount);
-        BigDecimal oldPrice;
+        BigDecimal oldPrice = room.getCurrentPrice();
 
-        synchronized (room) {
-            try {
-                oldPrice = room.getCurrentPrice();
-                room.placeBid(bidder, bidAmount);
-            } catch (Exception e) {
-                return e.getMessage();
-            }
+        // [FIX 3] Đã loại bỏ synchronized (room) ở đây vì hàm room.placeBid() đã được khóa ở tầng Entity
+        try {
+            room.placeBid(bidder, bidAmount);
+        } catch (Exception e) {
+            return e.getMessage();
         }
 
         CompletableFuture.runAsync(() -> {
@@ -96,9 +98,10 @@ public class AuctionService {
                 BidMessage bid = new BidMessage(0, bidder.getUserId(), roomId.intValue(), bidAmount);
                 bidDAO.insert(bid);
 
-                System.out.println(">>> [DB Success] Phòng " + roomId + ": " + bidder.getUsername() + " bid " + amount);
+                logger.info(">>> [DB Success] Phòng " + roomId + ": " + bidder.getUsername() + " bid " + bidAmount);
             } catch (Exception e) {
-                System.err.println(">>> [DB Error] Lỗi lưu lịch sử đặt giá: " + e.getMessage());
+                // [FIX 4] Sử dụng Logger bắt trọn stack trace
+                logger.log(Level.SEVERE, ">>> [DB Error] Lỗi lưu lịch sử đặt giá: " + e.getMessage(), e);
             }
         });
 
@@ -113,25 +116,24 @@ public class AuctionService {
                 if (room.getStatus() == AuctionStatus.OPEN && !now.isBefore(room.getStarttime())) {
                     room.setStatus(AuctionStatus.RUNNING);
                     updateRoomInDB(room);
-                    System.out.println(">>> [Hệ thống] Room " + room.getId() + " START.");
+                    logger.info(">>> [Hệ thống] Room " + room.getId() + " START.");
                 }
                 else if (room.getStatus() == AuctionStatus.RUNNING && room.isExpired()) {
                     room.setStatus(AuctionStatus.FINISHED);
                     // Kết toán tiền tự động
                     processAuctionSettlement(room);
                     updateRoomInDB(room);
-                    // Thông báo cho tất cả Client đang xem phòng này biết phiên đã kết thúc
+                    // Thông báo cho tất cả Client
                     server.networks.ClientHandler.broadcast(
                             gson.toJson(new server.networks.dto.MessageDTO(
                                     "AUCTION_FINISHED", String.valueOf(room.getId())))
                     );
-                    System.out.println(">>> [Broadcast] Phòng " + room.getId() + " FINISHED → đã thông báo tất cả Client.");
+                    logger.info(">>> [Broadcast] Phòng " + room.getId() + " FINISHED → đã thông báo tất cả Client.");
                 }
             }
         });
     }
 
-    // MỚI: Xử lý trừ tiền và cộng tiền tự động
     private void processAuctionSettlement(AuctionRoom room) {
         User winner = room.getCurrentWinner();
         BigDecimal finalPrice = room.getCurrentPrice();
@@ -139,7 +141,7 @@ public class AuctionService {
         // Không có ai đặt giá
         if (winner == null || finalPrice == null) {
             room.setStatus(AuctionStatus.CANCELED);
-            System.out.println(">>> [Hệ thống] Room " + room.getId() + " CANCELED (Không có người mua).");
+            logger.info(">>> [Hệ thống] Room " + room.getId() + " CANCELED (Không có người mua).");
             return;
         }
 
@@ -148,23 +150,29 @@ public class AuctionService {
 
             // Kiểm tra số dư người thắng
             if (winner.getAccountBalance().compareTo(finalPrice) >= 0) {
-                // Trừ tiền người thắng và cộng cho người bán
-                winner.updateBalance(finalPrice.negate());
-                seller.updateBalance(finalPrice);
 
-                // Lưu lại Database
-                userDAO.update(winner);
-                userDAO.update(seller);
+                // [FIX 2] Sử dụng hàm transferMoney chạy trên 1 Transaction duy nhất trong CSDL
+                boolean transactionSuccess = userDAO.transferMoney(winner.getUserId(), seller.getUserId(), finalPrice);
 
-                room.setStatus(AuctionStatus.PAID);
-                System.out.println(">>> [Thanh toán] Room " + room.getId() + " SUCCESS: " + winner.getUsername() + " đã trả " + finalPrice);
+                if (transactionSuccess) {
+                    // Chỉ cập nhật dữ liệu trên RAM khi Database đã xác nhận Transaction an toàn
+                    winner.updateBalance(finalPrice.negate());
+                    seller.updateBalance(finalPrice);
+
+                    room.setStatus(AuctionStatus.PAID);
+                    logger.info(">>> [Thanh toán] Room " + room.getId() + " SUCCESS: " + winner.getUsername() + " đã trả " + finalPrice);
+                } else {
+                    room.setStatus(AuctionStatus.CANCELED);
+                    logger.warning(">>> [Thanh toán] Room " + room.getId() + " FAILED: Lỗi giao dịch hệ thống.");
+                }
+
             } else {
                 room.setStatus(AuctionStatus.CANCELED);
-                System.out.println(">>> [Thanh toán] Room " + room.getId() + " FAILED: Người thắng không đủ số dư.");
+                logger.warning(">>> [Thanh toán] Room " + room.getId() + " FAILED: Người thắng không đủ số dư.");
             }
         } catch (Exception e) {
             room.setStatus(AuctionStatus.CANCELED);
-            System.err.println(">>> [Lỗi] Kết toán thất bại: " + e.getMessage());
+            logger.log(Level.SEVERE, ">>> [Lỗi] Kết toán thất bại: " + e.getMessage(), e);
         }
     }
 
@@ -174,7 +182,7 @@ public class AuctionService {
             try {
                 roomDAO.update(room, currentPrice);
             } catch (Exception e) {
-                System.err.println(">>> [Lỗi DB] Update status thất bại: " + e.getMessage());
+                logger.log(Level.SEVERE, ">>> [Lỗi DB] Update status thất bại: " + e.getMessage(), e);
             }
         });
     }

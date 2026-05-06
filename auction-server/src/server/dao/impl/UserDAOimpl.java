@@ -104,6 +104,51 @@ public class UserDAOimpl implements UserDAO {
         }
         return userList;
     }
+    @Override
+    public boolean transferMoney(int fromUserId, int toUserId, BigDecimal amount) {
+        String sqlWithdraw = "UPDATE Users SET accountBalance = accountBalance - ? WHERE id = ? AND accountBalance >= ?";
+        String sqlDeposit = "UPDATE Users SET accountBalance = accountBalance + ? WHERE id = ?";
+
+        // Lưu ý: Thay DBConnection.getConnection() bằng object lấy connection của dự án bạn
+        try (java.sql.Connection conn = server.dao.core.DBConnection.getConnection()) {
+            conn.setAutoCommit(false); // Bắt đầu Transaction
+
+            try (java.sql.PreparedStatement pstmtWithdraw = conn.prepareStatement(sqlWithdraw);
+                 java.sql.PreparedStatement pstmtDeposit = conn.prepareStatement(sqlDeposit)) {
+
+                // Trừ tiền người mua
+                pstmtWithdraw.setBigDecimal(1, amount);
+                pstmtWithdraw.setInt(2, fromUserId);
+                pstmtWithdraw.setBigDecimal(3, amount); // Đảm bảo số dư >= giá mua
+                int rowsAffectedWithdraw = pstmtWithdraw.executeUpdate();
+
+                // Nếu người mua không đủ tiền (rowsAffected = 0) thì Rollback
+                if (rowsAffectedWithdraw == 0) {
+                    conn.rollback();
+                    return false;
+                }
+
+                // Cộng tiền cho người bán
+                pstmtDeposit.setBigDecimal(1, amount);
+                pstmtDeposit.setInt(2, toUserId);
+                pstmtDeposit.executeUpdate();
+
+                // Nếu cả 2 lệnh trên OK -> Commit
+                conn.commit();
+                return true;
+
+            } catch (Exception ex) {
+                conn.rollback(); // Có lỗi bất ngờ thì hoàn tác toàn bộ
+                ex.printStackTrace();
+                return false;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
     @Override
     public User findById(int id) throws Exception {

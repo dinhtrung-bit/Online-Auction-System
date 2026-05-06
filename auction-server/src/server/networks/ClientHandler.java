@@ -179,7 +179,6 @@ public class ClientHandler implements Runnable {
     private MessageDTO handleCreateAuction(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
-            // format: "itemId:durationMinutes"
             String[] data       = request.getPayload().split(":");
             int itemId          = Integer.parseInt(data[0]);
             int durationMinutes = Integer.parseInt(data[1]);
@@ -217,7 +216,6 @@ public class ClientHandler implements Runnable {
     private MessageDTO handleSetAutoBid(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
-            // format: "auctionId:maxBid:incrementStep"
             String[] data  = request.getPayload().split(":");
             int auctionId  = Integer.parseInt(data[0]);
             BigDecimal max = new BigDecimal(data[1]);
@@ -242,7 +240,6 @@ public class ClientHandler implements Runnable {
     private MessageDTO handleCancelAutoBid(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
-            // format: "auctionId"
             int auctionId = Integer.parseInt(request.getPayload().trim());
             autoBidDAO.deleteByAuctionId(auctionId);
             return new MessageDTO("CANCEL_AUTO_BID_SUCCESS", "Hủy auto bid thành công!");
@@ -251,7 +248,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    // ===================== CÁC HÀM CŨ GIỮ NGUYÊN =====================
+    // ===================== RUN & CORE =====================
 
     @Override
     public void run() {
@@ -385,12 +382,18 @@ public class ClientHandler implements Runnable {
             String amount  = data[2];
             if (!(this.loggedInUser instanceof Bidder))
                 return new MessageDTO("BID_FAILED", "Chỉ Bidder mới được đặt giá!");
+
+            // [FIX 1] Parsed bằng BigDecimal chuẩn, không dùng Double
             BigDecimal bidAmount = new BigDecimal(amount);
+
             if (this.loggedInUser.getAccountBalance().compareTo(bidAmount) < 0)
                 return new MessageDTO("BID_FAILED", "Số dư ví không đủ! Bạn đang có: "
                         + this.loggedInUser.getAccountBalance().toPlainString() + "đ.");
+
+            // [FIX 1] Truyền trực tiếp tham số bidAmount (kiểu BigDecimal) vào hàm
             String result = AuctionService.getInstance().handleBidRequest(
-                    Long.parseLong(roomId), (Bidder) this.loggedInUser, Double.parseDouble(amount));
+                    Long.parseLong(roomId), (Bidder) this.loggedInUser, bidAmount);
+
             if ("SUCCESS".equals(result)) {
                 broadcast(gson.toJson(new MessageDTO("UPDATE_PRICE", roomId + ":" + amount + ":" + userBid)));
                 return new MessageDTO("BID_SUCCESS", "Đặt giá thành công");

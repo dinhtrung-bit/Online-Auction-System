@@ -5,7 +5,46 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/TestDB.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/application/MainServer.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/dao/core/DBConnection.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/dao/core/GenericDAO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/dao/impl/AuctionRoomDAOImpl.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/dao/impl/BidMessageDAOImpl.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/dao/impl/ItemDAOimpl.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/dao/impl/UserDAOimpl.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/dao/interfaces/AuctionRoomDAO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/dao/interfaces/BidMessageDAO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/dao/interfaces/ItemDAO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/dao/interfaces/UserDAO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/exceptions/InvalidBidException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/exceptions/Validation.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/auction/AuctionRoom.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/auction/AuctionStatus.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/auction/AutoBidConfig.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/auction/BidMessage.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/items/Art.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/items/Electronics.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/items/Item.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/items/ItemFactory.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/items/Vehicle.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/users/Admin.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/users/Bidder.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/users/Seller.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/users/User.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/models/users/UserFactory.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/networks/ClientHandler.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/networks/dto/MessageDTO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/networks/mainServer.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/server/services/AuctionService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/test/java/AuctionRoomTest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/testItem.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/${project.build.directory}/classes/testUser.class" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/auction-server/src/server/dao/impl/UserDAOimpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/impl/UserDAOimpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/dao/interfaces/UserDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/interfaces/UserDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/networks/ClientHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/networks/ClientHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/services/AuctionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/services/AuctionService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
