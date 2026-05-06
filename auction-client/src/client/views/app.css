@@ -275,3 +275,20 @@
     -fx-cursor: hand;
 }
 .btn-success:hover { -fx-background-color: #059669; }
+/* Style cho ComboBox chọn trạng thái */
+.combo-box {
+    -fx-padding: 8 15;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-font-weight: bold;
+}
+
+.combo-box:hover {
+    -fx-border-color: #cbd5e1;
+}
+
+.combo-box:focused {
+    -fx-border-color: #3b82f6;
+    -fx-border-width: 2;
+}

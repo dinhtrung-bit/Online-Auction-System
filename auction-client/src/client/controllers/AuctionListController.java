@@ -16,6 +16,8 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import java.lang.reflect.Type;
 import java.net.URL;
@@ -29,13 +31,13 @@ public class AuctionListController implements Initializable {
 
     @FXML private VBox auctionContainer;
     @FXML private ToggleButton btnTabLive, btnTabWon;
-
-    // THÊM: Label hiển thị số dư ở giao diện
+    @FXML private ComboBox<String> cmbStatus;
     @FXML private Label lblBalance;
 
     private ToggleGroup tabGroup;
-    private List<AuctionViewModel> allAuctions = new ArrayList<>(); // Lưu cache từ Server
+    private List<AuctionViewModel> allAuctions = new ArrayList<>();
     private String currentTab = "LIVE";
+    private String currentStatusFilter = "ALL"; // ✅ THÊM: Lưu trạng thái lọc hiện tại
 
     private final Gson gson = new Gson();
     private static final NumberFormat VND = NumberFormat.getInstance(new Locale("vi", "VN"));
@@ -50,6 +52,11 @@ public class AuctionListController implements Initializable {
         if(btnTabLive != null) btnTabLive.setToggleGroup(tabGroup);
         if(btnTabWon != null) btnTabWon.setToggleGroup(tabGroup);
 
+        // ✅ THÊM: Setup ComboBox chọn trạng thái
+        if (cmbStatus != null) {
+            cmbStatus.setValue("TẤT CẢ");
+        }
+
         // Đăng ký nhận danh sách đấu giá
         ClientMain.registerListener("AUCTION_LIST", payload -> {
             Type listType = new TypeToken<List<AuctionViewModel>>(){}.getType();
@@ -57,14 +64,21 @@ public class AuctionListController implements Initializable {
             Platform.runLater(this::applyFilterAndRender);
         });
 
-        // THÊM: Đăng ký lắng nghe tin nhắn chứa Số dư (BALANCE_DATA) từ Server
+        // ✅ THÊM: Đăng ký lắng nghe danh sách lọc theo trạng thái
+        ClientMain.registerListener("AUCTION_LIST_BY_STATUS", payload -> {
+            Type listType = new TypeToken<List<AuctionViewModel>>(){}.getType();
+            List<AuctionViewModel> filteredAuctions = gson.fromJson(payload, listType);
+            Platform.runLater(() -> {
+                applyTabFilterAndRender(filteredAuctions);
+            });
+        });
+
+        // Đăng ký lắng nghe tin nhắn chứa Số dư (BALANCE_DATA) từ Server
         ClientMain.registerListener("BALANCE_DATA", payload -> {
             Platform.runLater(() -> {
                 try {
                     double balanceVal = Double.parseDouble(payload);
-                    // Lưu vào Session để màn hình Đặt giá (AuctionDetail) có thể dùng để kiểm tra
                     client.models.UserSession.balance = balanceVal;
-                    // Hiển thị lên giao diện
                     if (lblBalance != null) {
                         lblBalance.setText("💳 Số dư: " + VND.format(balanceVal) + " đ");
                     }
@@ -89,10 +103,53 @@ public class AuctionListController implements Initializable {
         applyFilterAndRender();
     }
 
+    // ✅ THÊM: Handler cho ComboBox chọn trạng thái
+    @FXML
+    void handleFilterByStatus(ActionEvent event) {
+        String selectedStatus = cmbStatus.getValue();
+
+        if (selectedStatus == null || selectedStatus.equals("TẤT CẢ")) {
+            // Hiển thị tất cả
+            currentStatusFilter = "ALL";
+            applyFilterAndRender();
+        } else {
+            // Gửi yêu cầu lọc đến Server
+            currentStatusFilter = selectedStatus;
+            new Thread(() -> {
+                ClientMain.send(gson.toJson(new MessageDTO("GET_AUCTIONS_BY_STATUS", selectedStatus)));
+            }).start();
+        }
+    }
+
     private void applyFilterAndRender() {
+        // Nếu có lọc theo trạng thái, bỏ qua lọc tab
+        if (!currentStatusFilter.equals("ALL")) {
+            return; // Để applyTabFilterAndRender xử lý
+        }
+
         List<AuctionViewModel> filtered = new ArrayList<>();
 
         for (AuctionViewModel a : allAuctions) {
+            if ("WON".equals(currentTab)) {
+                // Chỉ lấy đồ đã KẾT THÚC và người thắng LÀ MÌNH
+                if ("FINISHED".equalsIgnoreCase(a.getStatus()) && myUsername.equals(a.getCurrentWinner())) {
+                    filtered.add(a);
+                }
+            } else {
+                // Đang diễn ra hoặc sắp bắt đầu
+                if (!"FINISHED".equalsIgnoreCase(a.getStatus()) && !"CANCELED".equalsIgnoreCase(a.getStatus())) {
+                    filtered.add(a);
+                }
+            }
+        }
+        renderAuctionCards(filtered);
+    }
+
+    // ✅ THÊM: Method áp dụng lọc Tab cho danh sách đã lọc theo trạng thái
+    private void applyTabFilterAndRender(List<AuctionViewModel> statusFilteredList) {
+        List<AuctionViewModel> filtered = new ArrayList<>();
+
+        for (AuctionViewModel a : statusFilteredList) {
             if ("WON".equals(currentTab)) {
                 // Chỉ lấy đồ đã KẾT THÚC và người thắng LÀ MÌNH
                 if ("FINISHED".equalsIgnoreCase(a.getStatus()) && myUsername.equals(a.getCurrentWinner())) {
@@ -134,40 +191,98 @@ public class AuctionListController implements Initializable {
         lblName.setStyle("-fx-font-weight: bold; -fx-font-size: 16px;");
         Label lblBadge = new Label(badgeTextFor(auction.getStatus()));
         lblBadge.setStyle(badgeStyleFor(auction.getStatus()));
-        HBox nameRow = new HBox(10, lblName, lblBadge); nameRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        Label lblSub = new Label("ID: " + auction.getId()); lblSub.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 12px;");
+        HBox nameRow = new HBox(10, lblName, lblBadge);
+        nameRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label lblSub = new Label("ID: " + auction.getId());
+        lblSub.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 12px;");
         VBox colWinner = metaCol("👤 Người dẫn đầu", auction.getCurrentWinner());
         VBox colPrice = metaCol("💰 Giá hiện tại", VND.format((long) auction.getCurrentPrice()) + " đ");
         ((Label) colPrice.getChildren().get(1)).setStyle("-fx-font-weight: bold; -fx-text-fill: #ef4444;");
-        HBox metaRow = new HBox(40, colWinner, colPrice); metaRow.setPadding(new Insets(10, 0, 0, 0));
-        VBox info = new VBox(5, nameRow, lblSub, metaRow); HBox.setHgrow(info, Priority.ALWAYS);
+        HBox metaRow = new HBox(40, colWinner, colPrice);
+        metaRow.setPadding(new Insets(10, 0, 0, 0));
+        VBox info = new VBox(5, nameRow, lblSub, metaRow);
+        HBox.setHgrow(info, Priority.ALWAYS);
         Button btnDetail = new Button("🔍 Chi tiết");
         btnDetail.setStyle("-fx-background-color: transparent; -fx-border-color: #e2e8f0; -fx-border-radius: 6; -fx-background-radius: 6; -fx-cursor: hand;");
-        btnDetail.setPrefHeight(40); btnDetail.setUserData(String.valueOf(auction.getId()));
+        btnDetail.setPrefHeight(40);
+        btnDetail.setUserData(String.valueOf(auction.getId()));
         btnDetail.setOnAction(this::viewDetail);
-        HBox card = new HBox(20, icon, info, btnDetail); card.setAlignment(javafx.geometry.Pos.CENTER_LEFT); card.setPadding(new Insets(16));
+        HBox card = new HBox(20, icon, info, btnDetail);
+        card.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        card.setPadding(new Insets(16));
         card.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-border-color: #e2e8f0; -fx-border-radius: 10;");
         return card;
     }
 
     private VBox metaCol(String label, String value) {
-        Label lbl = new Label(label); lbl.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 12px;");
-        Label val = new Label(value); val.setStyle("-fx-font-weight: bold;"); return new VBox(2, lbl, val);
+        Label lbl = new Label(label);
+        lbl.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 12px;");
+        Label val = new Label(value);
+        val.setStyle("-fx-font-weight: bold;");
+        return new VBox(2, lbl, val);
     }
 
-    private String iconFor(String status) { return status == null ? "📦" : switch (status.toUpperCase()) { case "RUNNING" -> "🔴"; case "FINISHED" -> "✅"; case "CANCELED" -> "❌"; default -> "🕐"; }; }
-
-    private String badgeTextFor(String status) { return status == null ? "" : switch (status.toUpperCase()) { case "OPEN" -> "🕐 Sắp diễn ra"; case "RUNNING" -> "● Đang diễn ra"; case "FINISHED" -> "✓ Kết thúc"; case "CANCELED" -> "✗ Đã hủy"; default -> status; }; }
-
-    private String badgeStyleFor(String status) { String base = "-fx-padding: 2 8; -fx-background-radius: 4; -fx-font-size: 11px; -fx-font-weight: bold;"; return status == null ? base : switch (status.toUpperCase()) { case "RUNNING" -> base + "-fx-background-color: #dcfce7; -fx-text-fill: #166534;"; case "FINISHED" -> base + "-fx-background-color: #f1f5f9; -fx-text-fill: #64748b;"; case "CANCELED" -> base + "-fx-background-color: #fee2e2; -fx-text-fill: #991b1b;"; default -> base + "-fx-background-color: #fef9c3; -fx-text-fill: #854d0e;"; }; }
-
-    @FXML void viewDetail(ActionEvent event) {
-        Button btn = (Button) event.getSource(); String auctionId = btn.getUserData() != null ? btn.getUserData().toString() : btn.getId();
-        try { ClientMain.unregisterListener("AUCTION_LIST"); ClientMain.unregisterListener("BALANCE_DATA"); FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/auction-detail.fxml")); Parent root = loader.load();
-            AuctionDetailController dc = loader.getController(); dc.setRoomId(auctionId); Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow(); stage.getScene().setRoot(root); } catch (Exception e) { e.printStackTrace(); }
+    private String iconFor(String status) {
+        return status == null ? "📦" : switch (status.toUpperCase()) {
+            case "RUNNING" -> "🔴";
+            case "FINISHED" -> "✅";
+            case "CANCELED" -> "❌";
+            default -> "🕐";
+        };
     }
 
-    @FXML void handleLogout(ActionEvent event) {
-        ClientMain.unregisterListener("AUCTION_LIST"); ClientMain.unregisterListener("BALANCE_DATA"); try { Parent root = FXMLLoader.load(getClass().getResource("/client/views/login.fxml")); Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow(); stage.getScene().setRoot(root); } catch (Exception e) { e.printStackTrace(); }
+    private String badgeTextFor(String status) {
+        return status == null ? "" : switch (status.toUpperCase()) {
+            case "OPEN" -> "🕐 Sắp diễn ra";
+            case "RUNNING" -> "● Đang diễn ra";
+            case "FINISHED" -> "✓ Kết thúc";
+            case "CANCELED" -> "✗ Đã hủy";
+            case "PAID" -> "💳 Đã thanh toán";
+            default -> status;
+        };
+    }
+
+    private String badgeStyleFor(String status) {
+        String base = "-fx-padding: 2 8; -fx-background-radius: 4; -fx-font-size: 11px; -fx-font-weight: bold;";
+        return status == null ? base : switch (status.toUpperCase()) {
+            case "RUNNING" -> base + "-fx-background-color: #dcfce7; -fx-text-fill: #166534;";
+            case "FINISHED" -> base + "-fx-background-color: #f1f5f9; -fx-text-fill: #64748b;";
+            case "CANCELED" -> base + "-fx-background-color: #fee2e2; -fx-text-fill: #991b1b;";
+            case "PAID" -> base + "-fx-background-color: #dbeafe; -fx-text-fill: #0c4a6e;";
+            default -> base + "-fx-background-color: #fef9c3; -fx-text-fill: #854d0e;";
+        };
+    }
+
+    @FXML
+    void viewDetail(ActionEvent event) {
+        Button btn = (Button) event.getSource();
+        String auctionId = btn.getUserData() != null ? btn.getUserData().toString() : btn.getId();
+        try {
+            ClientMain.unregisterListener("AUCTION_LIST");
+            ClientMain.unregisterListener("BALANCE_DATA");
+            ClientMain.unregisterListener("AUCTION_LIST_BY_STATUS"); // ✅ THÊM
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/auction-detail.fxml"));
+            Parent root = loader.load();
+            AuctionDetailController dc = loader.getController();
+            dc.setRoomId(auctionId);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.getScene().setRoot(root);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    void handleLogout(ActionEvent event) {
+        ClientMain.unregisterListener("AUCTION_LIST");
+        ClientMain.unregisterListener("BALANCE_DATA");
+        ClientMain.unregisterListener("AUCTION_LIST_BY_STATUS"); // ✅ THÊM
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/client/views/login.fxml"));
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.getScene().setRoot(root);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
