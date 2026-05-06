@@ -100,27 +100,22 @@ public class ClientHandler implements Runnable {
     private MessageDTO handleAddItem(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
-            System.out.println(">>> SERVER nhận ADD_ITEM, payload: " + request.getPayload());
-            System.out.println(">>> loggedInUser: " + loggedInUser.getUsername() + " | role: " + loggedInUser.getRole() + " | id: " + loggedInUser.getUserId());
-
             Map<String, Object> data = gson.fromJson(request.getPayload(), Map.class);
 
             String name      = (String) data.get("name");
             String artist    = data.get("artist") != null ? (String) data.get("artist") : "";
             BigDecimal price = new BigDecimal(data.get("startingPrice").toString());
 
-            System.out.println(">>> Parsed: name=" + name + " | artist=" + artist + " | price=" + price);
-
             Item newItem = ItemFactory.createItem("ART", 0, name, price, artist);
-            System.out.println(">>> Item created: " + (newItem == null ? "NULL!" : newItem.getName()));
 
-            itemDAO.insertWithSellerId(newItem, loggedInUser.getUserId());
-            System.out.println(">>> INSERT thành công!");
+            // Lấy itemId được DB tự sinh ra sau khi INSERT
+            int newItemId = itemDAO.insertWithSellerId(newItem, loggedInUser.getUserId());
+            System.out.println(">>> INSERT thành công! itemId=" + newItemId);
 
-            return new MessageDTO("ADD_ITEM_SUCCESS", "Thêm sản phẩm thành công!");
+            // Trả itemId về Client để Client tiếp tục gửi CREATE_AUCTION
+            return new MessageDTO("ADD_ITEM_SUCCESS", String.valueOf(newItemId));
         } catch (Exception e) {
             System.err.println(">>> ADD_ITEM lỗi: " + e.getMessage());
-            e.printStackTrace();
             return new MessageDTO("ADD_ITEM_FAILED", "Lỗi: " + e.getMessage());
         }
     }

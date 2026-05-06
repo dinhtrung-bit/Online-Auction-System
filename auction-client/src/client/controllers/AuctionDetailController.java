@@ -12,11 +12,11 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
-import javafx.stage.Stage;
 import javafx.scene.layout.VBox;
 // Import thêm Chart
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
+import javafx.stage.Stage;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -96,18 +96,19 @@ public class AuctionDetailController implements Initializable {
                 bidCount++;
                 priceSeries.getData().add(new XYChart.Data<>("Lần " + bidCount, currentPriceVal));
 
-                // THUẬT TOÁN AUTO-BID
-                if (isAutoBidActive && !myUsername.equals(lastWinner)) {
-                    double nextBid = currentPriceVal + 100000;
-                    if (nextBid <= maxAutoBidAmount) {
-                        MessageDTO req = new MessageDTO("BID", currentRoomId + ":" + myUsername + ":" + nextBid);
-                        ClientMain.send(gson.toJson(req));
-                    } else {
-                        isAutoBidActive = false;
-                        btnToggleAutoBid.setText("Kích hoạt lại (Đã vượt mức)");
-                        btnToggleAutoBid.setStyle("-fx-text-fill: #ef4444; -fx-border-color: #ef4444;");
-                    }
-                }
+                // ĐÃ XÓA LOGIC AUTO-BID CỦA CLIENT Ở ĐÂY
+                // Do mọi thao tác giờ do Server xử lý qua thuật toán PriorityQueue
+            });
+        });
+
+        // Thêm listener xử lý khi Server báo Auto-Bid đã vượt quá giới hạn hoặc thất bại
+        ClientMain.registerListener("AUTO_BID_EXCEEDED", payload -> {
+            if (!payload.equals(currentRoomId)) return;
+            Platform.runLater(() -> {
+                isAutoBidActive = false;
+                btnToggleAutoBid.setText("Kích hoạt lại (Đã vượt mức)");
+                btnToggleAutoBid.setStyle("-fx-text-fill: #ef4444; -fx-border-color: #ef4444;");
+                txtAutoBidMax.setDisable(false);
             });
         });
 
@@ -194,14 +195,26 @@ public class AuctionDetailController implements Initializable {
                 showAlert(Alert.AlertType.WARNING, "Cảnh báo", "Vui lòng nhập mức giá tối đa để kích hoạt Auto-Bid!");
                 return;
             }
+
             maxAutoBidAmount = Double.parseDouble(rawMax);
+            double increment = 100000.0; // Bước giá mặc định là 100.000đ
+
+            // ĐÓNG GÓI PAYLOAD GỬI LÊN SERVER (roomId:maxBid:increment)
+            String payload = currentRoomId + ":" + maxAutoBidAmount + ":" + increment;
+            MessageDTO req = new MessageDTO("SET_AUTO_BID", payload);
+            ClientMain.send(gson.toJson(req));
+
             isAutoBidActive = true;
             btnToggleAutoBid.setText("⏹ Hủy Auto-Bid (Đang bật)");
             btnToggleAutoBid.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white;");
             txtAutoBidMax.setDisable(true);
         } else {
+            // NẾU NGƯỜI DÙNG CHỦ ĐỘNG HỦY AUTO-BID
+            MessageDTO req = new MessageDTO("CANCEL_AUTO_BID", currentRoomId);
+            ClientMain.send(gson.toJson(req));
+
             isAutoBidActive = false;
-            btnToggleAutoBid.setText("Kích hoạt");
+            btnToggleAutoBid.setText("Kích hoạt Auto-Bid");
             btnToggleAutoBid.setStyle("");
             txtAutoBidMax.setDisable(false);
         }
@@ -210,10 +223,12 @@ public class AuctionDetailController implements Initializable {
     @FXML
     void handleBackToList(ActionEvent event) {
         if (timer != null) timer.cancel();
+        // Clear listeners khi rời khỏi phòng
         ClientMain.unregisterListener("AUCTION_DETAIL_DATA");
         ClientMain.unregisterListener("UPDATE_PRICE");
         ClientMain.unregisterListener("AUCTION_FINISHED");
         ClientMain.unregisterListener("BID_FAILED");
+        ClientMain.unregisterListener("AUTO_BID_EXCEEDED");
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/client/views/auction-list.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();

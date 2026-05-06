@@ -105,11 +105,12 @@ public class ItemDAOimpl implements ItemDAO {
         return ItemFactory.createItem(categoryInfo, itemId, name, startingPrice, description);
     }
 
-    public void insertWithSellerId(Item item, int sellerId) throws Exception {
+    public int insertWithSellerId(Item item, int sellerId) throws Exception {
         String sql = "INSERT INTO items (seller_id, name, description, CategoryInfo, startingPrice) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql,
+                     java.sql.Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setInt(1, sellerId);
             pstmt.setString(2, item.getName());
@@ -117,7 +118,12 @@ public class ItemDAOimpl implements ItemDAO {
             pstmt.setString(4, item.getCategoryInfo());
             pstmt.setBigDecimal(5, item.getStartingPrice());
             pstmt.executeUpdate();
+
+            try (java.sql.ResultSet keys = pstmt.getGeneratedKeys()) {
+                if (keys.next()) return keys.getInt(1);
+            }
         }
+        return -1;
     }
 
     @Override
