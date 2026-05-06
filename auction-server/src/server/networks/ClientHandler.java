@@ -179,30 +179,30 @@ public class ClientHandler implements Runnable {
     private MessageDTO handleCreateAuction(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
-            // format: "itemId:startTime:durationMinutes"
-            // startTime format: "yyyy-MM-ddTHH:mm" (ISO)
             String[] data = request.getPayload().split(":");
-            int itemId = Integer.parseInt(data[0]);
-            String startTimeStr = data[1] + ":" + data[2]; // giờ:phút
+            // FIX: parse double trước rồi ép sang int để tránh lỗi "4.0"
+            int itemId = (int) Double.parseDouble(data[0]);
+            String startTime = data[1] + ":" + data[2]; // "2026-05-06T08:30"
             int durationMinutes = Integer.parseInt(data[3]);
 
             Item item = itemDAO.findById(itemId);
             if (item == null) return new MessageDTO("ERROR", "Không tìm thấy sản phẩm!");
 
-            LocalDateTime startTime = LocalDateTime.parse(startTimeStr,
+            LocalDateTime startDateTime = LocalDateTime.parse(startTime,
                     java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
-            LocalDateTime endTime = startTime.plusMinutes(durationMinutes);
+            LocalDateTime endTime = startDateTime.plusMinutes(durationMinutes);
 
-            AuctionRoom room = new AuctionRoom(0, loggedInUser.getUserId(), item, startTime, endTime);
+            AuctionRoom room = new AuctionRoom(0, loggedInUser.getUserId(), item, startDateTime, endTime);
             room.setStatus(AuctionStatus.OPEN);
             room.setCurrentPrice(item.getStartingPrice());
             auctionDAO.insert(room);
 
-            // Thêm vào RAM của AuctionService để autoUpdateStatuses() theo dõi
-            AuctionService.getInstance().getActiveRooms(); // trigger load
+            // Reload lại RAM của AuctionService
+            AuctionService.getInstance().reloadFromDatabase();
 
             return new MessageDTO("CREATE_AUCTION_SUCCESS", "Tạo phòng đấu giá thành công!");
         } catch (Exception e) {
+            System.err.println("CREATE_AUCTION lỗi: " + e.getMessage());
             return new MessageDTO("CREATE_AUCTION_FAILED", "Lỗi: " + e.getMessage());
         }
     }

@@ -15,6 +15,7 @@
 
             <Button maxWidth="Infinity" text="📦 Quản lý sản phẩm" styleClass="sidebar-btn, sidebar-btn-active" />
             <Button maxWidth="Infinity" onAction="#showAddProductDialog" text="➕ Đăng bán mới" styleClass="sidebar-btn" />
+            <Button maxWidth="Infinity" onAction="#handleStartAuction" text="🔨 Bắt đầu đấu giá" styleClass="sidebar-btn" />
             <Button maxWidth="Infinity" text="📊 Báo cáo doanh thu" styleClass="sidebar-btn" />
 
             <Pane VBox.vgrow="ALWAYS" />
@@ -32,6 +33,7 @@
 
                 <Button onAction="#handleDeleteProduct" text="🗑 Xóa" styleClass="btn-danger" />
                 <Button onAction="#handleEditProduct" text="✏️ Sửa" styleClass="btn-info" />
+                <Button onAction="#handleStartAuction" text="🔨 Đấu giá" styleClass="btn-success" style="-fx-background-color: #f59e0b;" />
                 <Button onAction="#showAddProductDialog" text="+ Thêm Mới" styleClass="btn-success" />
             </HBox>
 
