@@ -24,7 +24,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
         // CẬP NHẬT: Thêm trường seller_id vào câu lệnh INSERT
         String sql = "INSERT INTO auctions (item_id, start_price, current_highest_price, start_time, end_time, status, winner_id, seller_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, room.getItem().getItemId());
             pstmt.setBigDecimal(2, room.getStartPrice());
@@ -62,7 +62,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
                     "WHERE auction_id = ? AND current_highest_price = ?";
         }
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setBigDecimal(1, room.getCurrentPrice());
@@ -94,7 +94,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
         // CẬP NHẬT: Sửa 'id' thành 'auction_id' cho khớp với tên cột trong DB
         String sql = "DELETE FROM auctions WHERE auction_id = ?";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, id);
@@ -107,7 +107,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
         List<AuctionRoom> rooms = new ArrayList<>();
         String sql = "SELECT * FROM auctions";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
 
@@ -123,7 +123,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
         List<AuctionRoom> rooms = new ArrayList<>();
         String sql = "SELECT * FROM auctions WHERE status = ?";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, status.toUpperCase());
@@ -184,7 +184,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
     public AuctionRoom findById(int id) throws Exception {
         String sql = "SELECT * FROM auctions WHERE auction_id = ?";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);

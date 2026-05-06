@@ -17,7 +17,7 @@ public class BidMessageDAOImpl implements BidMessageDAO {
                 VALUES (?, ?, ?, ?)
                 """;
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, obj.getAuctionRoomId());
@@ -37,7 +37,7 @@ public class BidMessageDAOImpl implements BidMessageDAO {
                 WHERE auction_id = ? AND bidder_id = ? AND bid_time = ?
                 """;
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, obj.getAuctionRoomId());
@@ -57,7 +57,7 @@ public class BidMessageDAOImpl implements BidMessageDAO {
     public void delete(int id) throws Exception {
         String sql = "DELETE FROM bid_message WHERE transaction_id = ?";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);
@@ -75,7 +75,7 @@ public class BidMessageDAOImpl implements BidMessageDAO {
                 ORDER BY bid_time ASC
                 """;
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
@@ -98,7 +98,7 @@ public class BidMessageDAOImpl implements BidMessageDAO {
                 ORDER BY bid_time ASC
                 """;
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, auctionRoomId);
@@ -123,7 +123,7 @@ public class BidMessageDAOImpl implements BidMessageDAO {
                 LIMIT 1
                 """;
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, auctionRoomId);
@@ -155,7 +155,7 @@ public class BidMessageDAOImpl implements BidMessageDAO {
     public BidMessage findById(int id) throws Exception {
         String sql = "SELECT * FROM bid_message WHERE transaction_id = ?";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);

@@ -6,35 +6,41 @@ import java.sql.SQLException;
 
 public class DBConnection {
     private static DBConnection instance;
-    private static Connection connection;
+    private Connection connection;
+
     private static final String URL = "jdbc:mysql://localhost:3306/daugia";
     private static final String USER = "root";
     private static final String PASSWORD = "";
 
     private DBConnection() {
+        connect();
+    }
+
+    private void connect() {
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");//tạo ra cầu nối giữa java và csdl
-            this.connection = DriverManager.getConnection(URL, USER, PASSWORD);
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            connection = DriverManager.getConnection(URL, USER, PASSWORD);
             System.out.println("Kết nối cơ sở dữ liệu thành công");
-        }
-        catch(ClassNotFoundException | SQLException e){
-            e.printStackTrace();
-            throw new RuntimeException("Lỗi kết nối cơ sở dữ liệu");
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new RuntimeException("Lỗi kết nối cơ sở dữ liệu", e);
         }
     }
+
     public static synchronized DBConnection getInstance() {
-        try {
-            if (instance == null || instance.getConnection().isClosed()) {
-                instance = new DBConnection();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        if (instance == null) {
+            instance = new DBConnection();
         }
         return instance;
     }
 
-    public static Connection getConnection() {
-        return connection;
+    public Connection getConnection() {
+        try {
+            if (connection == null || connection.isClosed()) {
+                connect();
+            }
+            return connection;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra kết nối cơ sở dữ liệu", e);
+        }
     }
 }
-
