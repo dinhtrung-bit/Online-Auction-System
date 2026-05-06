@@ -14,6 +14,7 @@ import server.models.auction.BidMessage;
 import server.models.items.Item;
 import server.models.users.Bidder;
 import server.models.users.User;
+import server.networks.ClientHandler;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -111,12 +112,21 @@ public class AuctionService {
                     room.setStatus(AuctionStatus.RUNNING);
                     updateRoomInDB(room);
                     System.out.println(">>> [Hệ thống] Room " + room.getId() + " START.");
+
+                    // THÊM: Broadcast cho tất cả client biết room vừa bắt đầu
+                    ClientHandler.broadcast(new com.google.gson.Gson().toJson(
+                            new server.networks.dto.MessageDTO("AUCTION_STARTED", String.valueOf(room.getId()))
+                    ));
                 }
                 else if (room.getStatus() == AuctionStatus.RUNNING && room.isExpired()) {
                     room.setStatus(AuctionStatus.FINISHED);
-                    // Ngay khi kết thúc, hệ thống sẽ thực hiện kết toán tiền ngay lập tức
                     processAuctionSettlement(room);
                     updateRoomInDB(room);
+
+                    // THÊM: Broadcast cho tất cả client biết room vừa kết thúc
+                    ClientHandler.broadcast(new com.google.gson.Gson().toJson(
+                            new server.networks.dto.MessageDTO("AUCTION_FINISHED", String.valueOf(room.getId()))
+                    ));
                 }
             }
         });

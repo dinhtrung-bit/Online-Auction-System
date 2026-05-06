@@ -179,21 +179,27 @@ public class ClientHandler implements Runnable {
     private MessageDTO handleCreateAuction(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
-            // format: "itemId:durationMinutes"
-            String[] data       = request.getPayload().split(":");
-            int itemId          = Integer.parseInt(data[0]);
-            int durationMinutes = Integer.parseInt(data[1]);
+            // format: "itemId:startTime:durationMinutes"
+            // startTime format: "yyyy-MM-ddTHH:mm" (ISO)
+            String[] data = request.getPayload().split(":");
+            int itemId = Integer.parseInt(data[0]);
+            String startTimeStr = data[1] + ":" + data[2]; // giờ:phút
+            int durationMinutes = Integer.parseInt(data[3]);
 
             Item item = itemDAO.findById(itemId);
             if (item == null) return new MessageDTO("ERROR", "Không tìm thấy sản phẩm!");
 
-            LocalDateTime now    = LocalDateTime.now();
-            LocalDateTime endTime = now.plusMinutes(durationMinutes);
+            LocalDateTime startTime = LocalDateTime.parse(startTimeStr,
+                    java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+            LocalDateTime endTime = startTime.plusMinutes(durationMinutes);
 
-            AuctionRoom room = new AuctionRoom(0, loggedInUser.getUserId(), item, now, endTime);
+            AuctionRoom room = new AuctionRoom(0, loggedInUser.getUserId(), item, startTime, endTime);
             room.setStatus(AuctionStatus.OPEN);
             room.setCurrentPrice(item.getStartingPrice());
             auctionDAO.insert(room);
+
+            // Thêm vào RAM của AuctionService để autoUpdateStatuses() theo dõi
+            AuctionService.getInstance().getActiveRooms(); // trigger load
 
             return new MessageDTO("CREATE_AUCTION_SUCCESS", "Tạo phòng đấu giá thành công!");
         } catch (Exception e) {
@@ -208,7 +214,7 @@ public class ClientHandler implements Runnable {
             auctionDAO.delete(auctionId);
             return new MessageDTO("DELETE_AUCTION_SUCCESS", "Xóa phòng đấu giá thành công!");
         } catch (Exception e) {
-            return new MessageDTO("DELETE_AUCTION_FAILED", "Lỗi: " + e.getMessage());
+            return new MessageDTO( "DELETE_AUCTION_FAILED", "Lỗi: " + e.getMessage());
         }
     }
 
