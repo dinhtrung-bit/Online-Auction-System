@@ -206,11 +206,28 @@ public class AuctionService {
                             new server.networks.dto.MessageDTO("AUCTION_FINISHED",
                                     String.valueOf(room.getId()))
                     ));
-                }
+                } else if (room.getStatus() == AuctionStatus.RUNNING && room.isExpired()) {
+                room.setStatus(AuctionStatus.FINISHED);
+                processAuctionSettlement(room);
+                updateRoomInDB(room);
+
+                // Xóa khỏi RAM sau 30 giây để giảm tải
+                long roomIdToRemove = room.getId();
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        Thread.sleep(30000); // Chờ 30 giây
+                        activeRooms.remove(roomIdToRemove);
+                        System.out.println(">>> [Manager] Đã xóa Room " + roomIdToRemove + " khỏi RAM.");
+                    } catch (Exception e) { }
+                });
+
+                ClientHandler.broadcast(new com.google.gson.Gson().toJson(
+                        new server.networks.dto.MessageDTO("AUCTION_FINISHED", String.valueOf(room.getId()))
+                ));
+            }
             }
         });
     }
-
     private void processAuctionSettlement(AuctionRoom room) {
         User winner = room.getCurrentWinner();
         BigDecimal finalPrice = room.getCurrentPrice();

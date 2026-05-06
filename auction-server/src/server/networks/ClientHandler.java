@@ -63,24 +63,40 @@ public class ClientHandler implements Runnable {
         processors.put("GET_ALL_AUCTIONS",       this::handleGetAllAuctions);
         processors.put("GET_ALL_USERS",          this::handleGetAllUsers);
         processors.put("GET_BALANCE",            this::handleGetBalance);
-
-        // items
         processors.put("ADD_ITEM",               this::handleAddItem);
         processors.put("UPDATE_ITEM",            this::handleUpdateItem);
         processors.put("DELETE_ITEM",            this::handleDeleteItem);
         processors.put("GET_MY_ITEMS",           this::handleGetMyItems);
-
-        // auctions
         processors.put("CREATE_AUCTION",         this::handleCreateAuction);
         processors.put("DELETE_AUCTION",         this::handleDeleteAuction);
-
-        // auto_bids
         processors.put("SET_AUTO_BID",           this::handleSetAutoBid);
         processors.put("CANCEL_AUTO_BID",        this::handleCancelAutoBid);
+        processors.put("DEPOSIT",                this::handleDeposit); // FIX: bỏ ()
+        processors.put("GET_MY_AUCTIONS", this::handleGetMyAuctions);
     }
 
     // ===================== BALANCE =====================
-
+    private MessageDTO handleGetMyAuctions(MessageDTO request) {
+        if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
+        try {
+            List<Map<String, Object>> result = AuctionService.getInstance().getActiveRooms()
+                    .stream()
+                    .filter(r -> r.getSellerID() == loggedInUser.getUserId())
+                    .map(r -> {
+                        Map<String, Object> m = new LinkedHashMap<>();
+                        m.put("auctionId",    r.getId());
+                        m.put("itemId",       r.getItem() != null ? r.getItem().getItemId() : 0);
+                        m.put("itemName",     r.getItem() != null ? r.getItem().getName() : "");
+                        m.put("currentPrice", r.getCurrentPrice() != null
+                                ? r.getCurrentPrice().doubleValue() : 0);
+                        m.put("status",       r.getStatus().name());
+                        return m;
+                    }).collect(Collectors.toList());
+            return new MessageDTO("MY_AUCTIONS", gson.toJson(result));
+        } catch (Exception e) {
+            return new MessageDTO("ERROR", "Lỗi: " + e.getMessage());
+        }
+    }
     private MessageDTO handleGetBalance(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
@@ -95,6 +111,25 @@ public class ClientHandler implements Runnable {
         return new MessageDTO("BALANCE_DATA", loggedInUser.getAccountBalance().toPlainString());
     }
 
+    // ===================== DEPOSIT =====================
+
+    private MessageDTO handleDeposit(MessageDTO request) {
+        if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
+        try {
+            double amount = Double.parseDouble(request.getPayload().trim());
+            if (amount <= 0) return new MessageDTO("DEPOSIT_FAILED", "Số tiền không hợp lệ!");
+
+            BigDecimal depositAmount = BigDecimal.valueOf(amount);
+            loggedInUser.updateBalance(depositAmount);
+            userDAO.update(loggedInUser);
+
+            System.out.println(">>> [Nạp tiền] " + loggedInUser.getUsername() + " nạp " + amount);
+            return new MessageDTO("DEPOSIT_SUCCESS", loggedInUser.getAccountBalance().toPlainString());
+        } catch (Exception e) {
+            return new MessageDTO("DEPOSIT_FAILED", "Lỗi: " + e.getMessage());
+        }
+    }
+
     // ===================== ITEMS =====================
 
     private MessageDTO handleAddItem(MessageDTO request) {
@@ -104,23 +139,17 @@ public class ClientHandler implements Runnable {
             System.out.println(">>> loggedInUser: " + loggedInUser.getUsername() + " | role: " + loggedInUser.getRole() + " | id: " + loggedInUser.getUserId());
 
             Map<String, Object> data = gson.fromJson(request.getPayload(), Map.class);
-
-            String name      = (String) data.get("name");
-            String artist    = data.get("artist") != null ? (String) data.get("artist") : "";
+            String name   = (String) data.get("name");
+            String artist = data.get("artist") != null ? (String) data.get("artist") : "";
             BigDecimal price = new BigDecimal(data.get("startingPrice").toString());
 
-            System.out.println(">>> Parsed: name=" + name + " | artist=" + artist + " | price=" + price);
-
             Item newItem = ItemFactory.createItem("ART", 0, name, price, artist);
-            System.out.println(">>> Item created: " + (newItem == null ? "NULL!" : newItem.getName()));
-
             itemDAO.insertWithSellerId(newItem, loggedInUser.getUserId());
             System.out.println(">>> INSERT thành công!");
 
             return new MessageDTO("ADD_ITEM_SUCCESS", "Thêm sản phẩm thành công!");
         } catch (Exception e) {
             System.err.println(">>> ADD_ITEM lỗi: " + e.getMessage());
-            e.printStackTrace();
             return new MessageDTO("ADD_ITEM_FAILED", "Lỗi: " + e.getMessage());
         }
     }
@@ -128,15 +157,15 @@ public class ClientHandler implements Runnable {
     private MessageDTO handleUpdateItem(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
-            String[] data      = request.getPayload().split(":");
-            int itemId         = Integer.parseInt(data[0]);
-            String name        = data[1];
+            String[] data  = request.getPayload().split(":");
+            int itemId     = Integer.parseInt(data[0]);
+            String name    = data[1];
             String description = data[2];
-            String category    = data[3];
-            BigDecimal price   = new BigDecimal(data[4]);
+            String category = data[3];
+            BigDecimal price = new BigDecimal(data[4]);
 
             Item item = ItemFactory.createItem(category, itemId, name, price, description);
-            item.setSeller((Seller) loggedInUser); // cast sang Seller
+            item.setSeller((Seller) loggedInUser);
             itemDAO.update(item);
             return new MessageDTO("UPDATE_ITEM_SUCCESS", "Cập nhật thành công!");
         } catch (Exception e) {
@@ -147,7 +176,7 @@ public class ClientHandler implements Runnable {
     private MessageDTO handleDeleteItem(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
-            int itemId = Integer.parseInt(request.getPayload().trim());
+            int itemId = (int) Double.parseDouble(request.getPayload().trim());
             itemDAO.delete(itemId);
             return new MessageDTO("DELETE_ITEM_SUCCESS", "Xóa sản phẩm thành công!");
         } catch (Exception e) {
@@ -161,11 +190,11 @@ public class ClientHandler implements Runnable {
             List<Item> items = itemDAO.findBySellerId(loggedInUser.getUserId());
             List<Map<String, Object>> result = items.stream().map(i -> {
                 Map<String, Object> m = new LinkedHashMap<>();
-                m.put("itemId",       i.getItemId());
-                m.put("name",         i.getName());
-                m.put("description",  i.getDescription());
-                m.put("category",     i.getCategoryInfo());
-                m.put("startingPrice",i.getStartingPrice());
+                m.put("itemId",        i.getItemId());
+                m.put("name",          i.getName());
+                m.put("description",   i.getDescription());
+                m.put("category",      i.getCategoryInfo());
+                m.put("startingPrice", i.getStartingPrice());
                 return m;
             }).collect(Collectors.toList());
             return new MessageDTO("MY_ITEMS", gson.toJson(result));
@@ -180,9 +209,8 @@ public class ClientHandler implements Runnable {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
             String[] data = request.getPayload().split(":");
-            // FIX: parse double trước rồi ép sang int để tránh lỗi "4.0"
             int itemId = (int) Double.parseDouble(data[0]);
-            String startTime = data[1] + ":" + data[2]; // "2026-05-06T08:30"
+            String startTime = data[1] + ":" + data[2];
             int durationMinutes = Integer.parseInt(data[3]);
 
             Item item = itemDAO.findById(itemId);
@@ -197,7 +225,6 @@ public class ClientHandler implements Runnable {
             room.setCurrentPrice(item.getStartingPrice());
             auctionDAO.insert(room);
 
-            // Reload lại RAM của AuctionService
             AuctionService.getInstance().reloadFromDatabase();
 
             return new MessageDTO("CREATE_AUCTION_SUCCESS", "Tạo phòng đấu giá thành công!");
@@ -214,7 +241,7 @@ public class ClientHandler implements Runnable {
             auctionDAO.delete(auctionId);
             return new MessageDTO("DELETE_AUCTION_SUCCESS", "Xóa phòng đấu giá thành công!");
         } catch (Exception e) {
-            return new MessageDTO( "DELETE_AUCTION_FAILED", "Lỗi: " + e.getMessage());
+            return new MessageDTO("DELETE_AUCTION_FAILED", "Lỗi: " + e.getMessage());
         }
     }
 
@@ -223,8 +250,7 @@ public class ClientHandler implements Runnable {
     private MessageDTO handleSetAutoBid(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
-            // format: "auctionId:maxBid:incrementStep"
-            String[] data  = request.getPayload().split(":");
+            String[] data = request.getPayload().split(":");
             int auctionId  = Integer.parseInt(data[0]);
             BigDecimal max = new BigDecimal(data[1]);
             BigDecimal step= new BigDecimal(data[2]);
@@ -248,7 +274,6 @@ public class ClientHandler implements Runnable {
     private MessageDTO handleCancelAutoBid(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
-            // format: "auctionId"
             int auctionId = Integer.parseInt(request.getPayload().trim());
             autoBidDAO.deleteByAuctionId(auctionId);
             return new MessageDTO("CANCEL_AUTO_BID_SUCCESS", "Hủy auto bid thành công!");
@@ -257,7 +282,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    // ===================== CÁC HÀM CŨ GIỮ NGUYÊN =====================
+    // ===================== CÁC HÀM CŨ =====================
 
     @Override
     public void run() {
@@ -321,7 +346,8 @@ public class ClientHandler implements Runnable {
             String price = room.getCurrentPrice() != null
                     ? room.getCurrentPrice().toPlainString()
                     : room.getItem().getStartingPrice().toPlainString();
-            return new MessageDTO("AUCTION_DETAIL_DATA", price + ":" + secondsLeft + ":" + room.getStatus().name());
+            return new MessageDTO("AUCTION_DETAIL_DATA",
+                    price + ":" + secondsLeft + ":" + room.getStatus().name());
         } catch (Exception e) {
             return new MessageDTO("ERROR", "Lỗi lấy chi tiết: " + e.getMessage());
         }
@@ -398,7 +424,8 @@ public class ClientHandler implements Runnable {
             String result = AuctionService.getInstance().handleBidRequest(
                     Long.parseLong(roomId), (Bidder) this.loggedInUser, Double.parseDouble(amount));
             if ("SUCCESS".equals(result)) {
-                broadcast(gson.toJson(new MessageDTO("UPDATE_PRICE", roomId + ":" + amount + ":" + userBid)));
+                broadcast(gson.toJson(new MessageDTO("UPDATE_PRICE",
+                        roomId + ":" + amount + ":" + userBid)));
                 return new MessageDTO("BID_SUCCESS", "Đặt giá thành công");
             }
             return new MessageDTO("BID_FAILED", result);
