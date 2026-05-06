@@ -273,7 +273,56 @@ public class AuctionListController implements Initializable {
             e.printStackTrace();
         }
     }
+    @FXML
+    void handleDeposit(ActionEvent event) {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Nạp tiền");
+        dialog.setHeaderText("Nhập số tiền muốn nạp vào ví");
+        dialog.setContentText("Số tiền (VNĐ):");
 
+        dialog.showAndWait().ifPresent(input -> {
+            try {
+                double amount = Double.parseDouble(input.replaceAll("[^\\d]", ""));
+                if (amount <= 0) {
+                    showSimpleAlert("Số tiền phải lớn hơn 0!");
+                    return;
+                }
+
+                ClientMain.registerListener("DEPOSIT_SUCCESS", payload -> {
+                    ClientMain.unregisterListener("DEPOSIT_SUCCESS");
+                    ClientMain.unregisterListener("DEPOSIT_FAILED");
+                    Platform.runLater(() -> {
+                        client.models.UserSession.balance += amount;
+                        if (lblBalance != null) {
+                            lblBalance.setText("💳 Số dư: " + VND.format((long) client.models.UserSession.balance) + " đ");
+                        }
+                        showSimpleAlert("Nạp tiền thành công! Số dư mới: " + VND.format((long) client.models.UserSession.balance) + " đ");
+                    });
+                });
+
+                ClientMain.registerListener("DEPOSIT_FAILED", payload -> {
+                    ClientMain.unregisterListener("DEPOSIT_SUCCESS");
+                    ClientMain.unregisterListener("DEPOSIT_FAILED");
+                    Platform.runLater(() -> showSimpleAlert("Nạp tiền thất bại: " + payload));
+                });
+
+                new Thread(() -> ClientMain.send(gson.toJson(
+                        new MessageDTO("DEPOSIT", String.valueOf(amount))
+                ))).start();
+
+            } catch (NumberFormatException e) {
+                showSimpleAlert("Số tiền không hợp lệ!");
+            }
+        });
+    }
+
+    private void showSimpleAlert(String msg) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Thông báo");
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+        alert.showAndWait();
+    }
     @FXML
     void handleLogout(ActionEvent event) {
         ClientMain.unregisterListener("AUCTION_LIST");
