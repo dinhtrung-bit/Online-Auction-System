@@ -77,6 +77,9 @@ public class ClientHandler implements Runnable {
         // auto_bids
         processors.put("SET_AUTO_BID",           this::handleSetAutoBid);
         processors.put("CANCEL_AUTO_BID",        this::handleCancelAutoBid);
+
+        // ✅ THÊM: Processor cho lọc theo trạng thái
+        processors.put("GET_AUCTIONS_BY_STATUS", this::handleGetAuctionsByStatus);
     }
 
     // ===================== BALANCE =====================
@@ -240,6 +243,32 @@ public class ClientHandler implements Runnable {
             return new MessageDTO("CANCEL_AUTO_BID_SUCCESS", "Hủy auto bid thành công!");
         } catch (Exception e) {
             return new MessageDTO("CANCEL_AUTO_BID_FAILED", "Lỗi: " + e.getMessage());
+        }
+    }
+
+    // ✅ THÊM: Handler cho lọc theo trạng thái
+    private MessageDTO handleGetAuctionsByStatus(MessageDTO request) {
+        try {
+            String status = request.getPayload().trim().toUpperCase();
+
+            // Kiểm tra trạng thái hợp lệ
+            AuctionStatus auctionStatus;
+            try {
+                auctionStatus = AuctionStatus.valueOf(status);
+            } catch (IllegalArgumentException e) {
+                return new MessageDTO("ERROR", "Trạng thái không hợp lệ! Các trạng thái hợp lệ: OPEN, RUNNING, FINISHED, PAID, CANCELED");
+            }
+
+            // Lọc phòng theo trạng thái
+            List<Map<String, Object>> result = AuctionService.getInstance().getActiveRooms()
+                    .stream()
+                    .filter(r -> r.getStatus() == auctionStatus)
+                    .map(this::roomToMap)
+                    .collect(Collectors.toList());
+
+            return new MessageDTO("AUCTION_LIST_BY_STATUS", gson.toJson(result));
+        } catch (Exception e) {
+            return new MessageDTO("ERROR", "Lỗi lọc phòng: " + e.getMessage());
         }
     }
 

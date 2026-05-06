@@ -31,11 +31,11 @@ public class AuctionListController implements Initializable {
 
     @FXML private VBox auctionContainer;
     @FXML private ToggleButton btnTabLive, btnTabWon;
-    @FXML private ComboBox<String> cmbStatus;
+    @FXML private ComboBox<String> cmbStatus; // ✅ THÊM: ComboBox chọn trạng thái
     @FXML private Label lblBalance;
 
     private ToggleGroup tabGroup;
-    private List<AuctionViewModel> allAuctions = new ArrayList<>();
+    private List<AuctionViewModel> allAuctions = new ArrayList<>(); // Lưu cache từ Server
     private String currentTab = "LIVE";
     private String currentStatusFilter = "ALL"; // ✅ THÊM: Lưu trạng thái lọc hiện tại
 
@@ -64,7 +64,7 @@ public class AuctionListController implements Initializable {
             Platform.runLater(this::applyFilterAndRender);
         });
 
-        // ✅ THÊM: Đăng ký lắng nghe danh sách lọc theo trạng thái
+        // ✅ THÊM: Đăng ký lắng nghe danh sách lọc theo trạng thái từ Server
         ClientMain.registerListener("AUCTION_LIST_BY_STATUS", payload -> {
             Type listType = new TypeToken<List<AuctionViewModel>>(){}.getType();
             List<AuctionViewModel> filteredAuctions = gson.fromJson(payload, listType);
@@ -73,12 +73,14 @@ public class AuctionListController implements Initializable {
             });
         });
 
-        // Đăng ký lắng nghe tin nhắn chứa Số dư (BALANCE_DATA) từ Server
+        // THÊM: Đăng ký lắng nghe tin nhắn chứa Số dư (BALANCE_DATA) từ Server
         ClientMain.registerListener("BALANCE_DATA", payload -> {
             Platform.runLater(() -> {
                 try {
                     double balanceVal = Double.parseDouble(payload);
+                    // Lưu vào Session để màn hình Đặt giá (AuctionDetail) có thể dùng để kiểm tra
                     client.models.UserSession.balance = balanceVal;
+                    // Hiển thị lên giao diện
                     if (lblBalance != null) {
                         lblBalance.setText("💳 Số dư: " + VND.format(balanceVal) + " đ");
                     }
@@ -122,7 +124,7 @@ public class AuctionListController implements Initializable {
     }
 
     private void applyFilterAndRender() {
-        // Nếu có lọc theo trạng thái, bỏ qua lọc tab
+        // Nếu có lọc theo trạng thái, bỏ qua lọc này
         if (!currentStatusFilter.equals("ALL")) {
             return; // Để applyTabFilterAndRender xử lý
         }
@@ -245,11 +247,11 @@ public class AuctionListController implements Initializable {
     private String badgeStyleFor(String status) {
         String base = "-fx-padding: 2 8; -fx-background-radius: 4; -fx-font-size: 11px; -fx-font-weight: bold;";
         return status == null ? base : switch (status.toUpperCase()) {
-            case "RUNNING" -> base + "-fx-background-color: #dcfce7; -fx-text-fill: #166534;";
-            case "FINISHED" -> base + "-fx-background-color: #f1f5f9; -fx-text-fill: #64748b;";
-            case "CANCELED" -> base + "-fx-background-color: #fee2e2; -fx-text-fill: #991b1b;";
-            case "PAID" -> base + "-fx-background-color: #dbeafe; -fx-text-fill: #0c4a6e;";
-            default -> base + "-fx-background-color: #fef9c3; -fx-text-fill: #854d0e;";
+            case "RUNNING" -> base + " -fx-background-color: #dcfce7; -fx-text-fill: #166534;";
+            case "FINISHED" -> base + " -fx-background-color: #f1f5f9; -fx-text-fill: #64748b;";
+            case "CANCELED" -> base + " -fx-background-color: #fee2e2; -fx-text-fill: #991b1b;";
+            case "PAID" -> base + " -fx-background-color: #dbeafe; -fx-text-fill: #0c4a6e;";
+            default -> base + " -fx-background-color: #fef9c3; -fx-text-fill: #854d0e;";
         };
     }
 
