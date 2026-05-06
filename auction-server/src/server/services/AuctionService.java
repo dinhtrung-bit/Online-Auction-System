@@ -169,6 +169,16 @@ public class AuctionService {
         }
     }
 
+    public void reloadFromDatabase() {
+        try {
+            List<AuctionRoom> rooms = roomDAO.findAll();
+            rooms.forEach(r -> activeRooms.put((long) r.getId(), r));
+            System.out.println(">>> [Manager] Đã reload dữ liệu từ DB vào RAM.");
+        } catch (Exception e) {
+            System.err.println("Lỗi reload: " + e.getMessage());
+        }
+    }
+
     private void updateRoomInDB(AuctionRoom room) {
         BigDecimal currentPrice = room.getCurrentPrice();
         CompletableFuture.runAsync(() -> {
