@@ -22,8 +22,11 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CompletableFuture;
 
+import com.google.gson.Gson;
+
 public class AuctionService {
     private static AuctionService instance;
+    private final Gson gson = new Gson();
 
     private final AuctionRoomDAO roomDAO = new AuctionRoomDAOImpl();
     private final ItemDAO itemDAO = new ItemDAOimpl();
@@ -114,9 +117,15 @@ public class AuctionService {
                 }
                 else if (room.getStatus() == AuctionStatus.RUNNING && room.isExpired()) {
                     room.setStatus(AuctionStatus.FINISHED);
-                    // Ngay khi kết thúc, hệ thống sẽ thực hiện kết toán tiền ngay lập tức
+                    // Kết toán tiền tự động
                     processAuctionSettlement(room);
                     updateRoomInDB(room);
+                    // Thông báo cho tất cả Client đang xem phòng này biết phiên đã kết thúc
+                    server.networks.ClientHandler.broadcast(
+                            gson.toJson(new server.networks.dto.MessageDTO(
+                                    "AUCTION_FINISHED", String.valueOf(room.getId())))
+                    );
+                    System.out.println(">>> [Broadcast] Phòng " + room.getId() + " FINISHED → đã thông báo tất cả Client.");
                 }
             }
         });

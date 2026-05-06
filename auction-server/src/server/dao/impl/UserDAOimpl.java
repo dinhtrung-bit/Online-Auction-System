@@ -28,14 +28,15 @@ public class UserDAOimpl implements UserDAO {
 
     @Override
     public void update(User user) throws Exception {
-        String sql = "UPDATE users SET username = ?, password_hash = ?, role = ? WHERE user_id = ?";
+        String sql = "UPDATE users SET username = ?, password_hash = ?, role = ?, balance = ? WHERE user_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, user.getUsername());
             pstmt.setString(2, user.getPasswordHash());
             pstmt.setString(3, user.getRole());
-            pstmt.setInt(4, user.getUserId());
+            pstmt.setBigDecimal(4, user.getAccountBalance());
+            pstmt.setInt(5, user.getUserId());
 
             pstmt.executeUpdate();
         }
