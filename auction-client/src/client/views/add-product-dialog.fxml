@@ -43,12 +43,12 @@
         <VBox spacing="15.0" HBox.hgrow="ALWAYS" prefWidth="300.0">
             <HBox spacing="15.0">
                 <VBox spacing="5.0" HBox.hgrow="ALWAYS">
-                    <Label text="Giá khởi điểm ($)" style="-fx-font-weight: bold;" textFill="#475569"/>
-                    <TextField fx:id="txtPrice" promptText="Vd: 1000" styleClass="input-field" />
+                    <Label text="Giá khởi điểm (VNĐ)" style="-fx-font-weight: bold;" textFill="#475569"/>
+                    <TextField fx:id="txtPrice" promptText="Vd: 1000000" styleClass="input-field" />
                 </VBox>
                 <VBox spacing="5.0" HBox.hgrow="ALWAYS">
-                    <Label text="Bước nhảy ($)" style="-fx-font-weight: bold;" textFill="#475569"/>
-                    <TextField fx:id="txtBidIncrement" promptText="Vd: 50" styleClass="input-field" />
+                    <Label text="Bước nhảy (VNĐ)" style="-fx-font-weight: bold;" textFill="#475569"/>
+                    <TextField fx:id="txtBidIncrement" promptText="Vd: 50000" styleClass="input-field" />
                 </VBox>
             </HBox>
 

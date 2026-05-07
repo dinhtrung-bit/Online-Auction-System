@@ -1,52 +1,194 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane styleClass="main-bg" stylesheets="@app.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.SellerDashboardController">
+<BorderPane styleClass="main-bg" stylesheets="@app.css"
+            xmlns="http://javafx.com/javafx/17.0.2-ea"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="client.controllers.SellerDashboardController">
+
     <left>
         <VBox prefWidth="260.0" styleClass="sidebar">
-            <padding><Insets top="20.0" bottom="20.0"/></padding>
+            <padding>
+                <Insets top="20.0" bottom="20.0"/>
+            </padding>
+
             <Label text="AuctionVN Seller" textFill="WHITE">
-                <font><Font name="System Bold" size="24.0" /></font>
-                <VBox.margin><Insets bottom="30.0" left="20.0" right="20.0" /></VBox.margin>
+                <font>
+                    <Font name="System Bold" size="24.0"/>
+                </font>
+                <VBox.margin>
+                    <Insets bottom="30.0" left="20.0" right="20.0"/>
+                </VBox.margin>
             </Label>
 
-            <Button maxWidth="Infinity" text="📦 Quản lý sản phẩm" styleClass="sidebar-btn, sidebar-btn-active" />
-            <Button maxWidth="Infinity" onAction="#showAddProductDialog" text="➕ Đăng bán mới" styleClass="sidebar-btn" />
-            <Button maxWidth="Infinity" onAction="#handleStartAuction" text="🔨 Bắt đầu đấu giá" styleClass="sidebar-btn" />
-            <Button maxWidth="Infinity" text="📊 Báo cáo doanh thu" styleClass="sidebar-btn" />
+            <Button fx:id="btnInventory"
+                    maxWidth="Infinity"
+                    onAction="#handleShowInventory"
+                    text="📦 Quản lý sản phẩm"
+                    styleClass="sidebar-btn, sidebar-btn-active"/>
 
-            <Pane VBox.vgrow="ALWAYS" />
-            <Button maxWidth="Infinity" onAction="#handleLogout" text="🚪 Đăng xuất" styleClass="sidebar-btn" style="-fx-text-fill: #ef4444;" />
+            <Button maxWidth="Infinity"
+                    onAction="#showAddProductDialog"
+                    text="➕ Đăng bán mới"
+                    styleClass="sidebar-btn"/>
+
+            <Button maxWidth="Infinity"
+                    onAction="#handleStartAuction"
+                    text="🔨 Bắt đầu đấu giá"
+                    styleClass="sidebar-btn"/>
+
+            <Button fx:id="btnReport"
+                    maxWidth="Infinity"
+                    onAction="#handleShowReport"
+                    text="📊 Báo cáo doanh thu"
+                    styleClass="sidebar-btn"/>
+
+            <Pane VBox.vgrow="ALWAYS"/>
+
+            <Button maxWidth="Infinity"
+                    onAction="#handleLogout"
+                    text="🚪 Đăng xuất"
+                    styleClass="sidebar-btn"
+                    style="-fx-text-fill: #ef4444;"/>
         </VBox>
     </left>
 
     <center>
-        <VBox spacing="20.0">
-            <padding><Insets bottom="30.0" left="30.0" right="30.0" top="30.0" /></padding>
+        <StackPane>
 
-            <HBox alignment="CENTER_LEFT" spacing="10.0">
-                <Label text="Quản lý kho hàng"><font><Font name="System Bold" size="26.0" /></font></Label>
-                <Pane HBox.hgrow="ALWAYS" />
+            <VBox fx:id="inventoryView" spacing="20.0">
+                <padding>
+                    <Insets bottom="30.0" left="30.0" right="30.0" top="30.0"/>
+                </padding>
 
-                <Button onAction="#handleDeleteProduct" text="🗑 Xóa" styleClass="btn-danger" />
-                <Button onAction="#handleEditProduct" text="✏️ Sửa" styleClass="btn-info" />
-                <Button onAction="#handleStartAuction" text="🔨 Đấu giá" styleClass="btn-success" style="-fx-background-color: #f59e0b;" />
-                <Button onAction="#showAddProductDialog" text="+ Thêm Mới" styleClass="btn-success" />
-            </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <VBox spacing="4.0">
+                        <Label text="Quản lý kho hàng">
+                            <font>
+                                <Font name="System Bold" size="28.0"/>
+                            </font>
+                        </Label>
+                        <Label text="Theo dõi sản phẩm, trạng thái đấu giá và giá hiện tại"
+                               styleClass="text-muted"/>
+                    </VBox>
 
-            <TableView fx:id="tableItems" VBox.vgrow="ALWAYS" styleClass="table-view-custom">
-                <columns>
-                    <TableColumn fx:id="colId" prefWidth="80" text="ID" />
-                    <TableColumn fx:id="colName" prefWidth="300" text="Tên sản phẩm" />
-                    <TableColumn fx:id="colPrice" prefWidth="150" text="Giá hiện tại" />
-                    <TableColumn fx:id="colWinner" prefWidth="150" text="Người dẫn đầu" />
-                    <TableColumn fx:id="colStatus" prefWidth="150" text="Trạng thái" />
-                </columns>
-                <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
-            </TableView>
-        </VBox>
+                    <Pane HBox.hgrow="ALWAYS"/>
+
+                    <Button onAction="#handleDeleteProduct"
+                            text="🗑 Xóa"
+                            styleClass="btn-danger"/>
+
+                    <Button onAction="#handleEditProduct"
+                            text="✏️ Sửa"
+                            styleClass="btn-info"/>
+
+                    <Button onAction="#handleStartAuction"
+                            text="🔨 Đấu giá"
+                            styleClass="btn-warning"/>
+
+                    <Button onAction="#showAddProductDialog"
+                            text="+ Thêm Mới"
+                            styleClass="btn-success"/>
+                </HBox>
+
+                <TableView fx:id="tableItems"
+                           VBox.vgrow="ALWAYS"
+                           styleClass="table-view-custom">
+                    <columns>
+                        <TableColumn fx:id="colId" prefWidth="80" text="ID"/>
+                        <TableColumn fx:id="colName" prefWidth="300" text="Tên sản phẩm"/>
+                        <TableColumn fx:id="colPrice" prefWidth="150" text="Giá hiện tại"/>
+                        <TableColumn fx:id="colWinner" prefWidth="150" text="Thông tin chi tiết"/>
+                        <TableColumn fx:id="colStatus" prefWidth="150" text="Trạng thái"/>
+                    </columns>
+                    <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                    </columnResizePolicy>
+                </TableView>
+            </VBox>
+
+            <VBox fx:id="reportView" visible="false" managed="false" spacing="20.0">
+                <padding>
+                    <Insets bottom="30.0" left="30.0" right="30.0" top="30.0"/>
+                </padding>
+
+                <HBox alignment="CENTER_LEFT">
+                    <VBox spacing="4.0">
+                        <Label text="Báo cáo doanh thu">
+                            <font>
+                                <Font name="System Bold" size="28.0"/>
+                            </font>
+                        </Label>
+                        <Label text="Thống kê hiệu quả bán hàng và tình hình đấu giá"
+                               styleClass="text-muted"/>
+                    </VBox>
+
+                    <Pane HBox.hgrow="ALWAYS"/>
+
+                    <Button onAction="#handleRefreshReport"
+                            text="🔄 Làm mới báo cáo"
+                            styleClass="btn-info"/>
+                </HBox>
+
+                <HBox spacing="20.0">
+                    <VBox styleClass="stat-card, stat-blue" HBox.hgrow="ALWAYS">
+                        <Label text="Tổng sản phẩm" styleClass="stat-title"/>
+                        <Label fx:id="lblTotalItems" text="0" styleClass="stat-value"/>
+                        <Label text="Sản phẩm trong kho" styleClass="stat-subtitle"/>
+                    </VBox>
+
+                    <VBox styleClass="stat-card, stat-green" HBox.hgrow="ALWAYS">
+                        <Label text="Đang đấu giá" styleClass="stat-title"/>
+                        <Label fx:id="lblRunningAuctions" text="0" styleClass="stat-value"/>
+                        <Label text="Phiên đang hoạt động" styleClass="stat-subtitle"/>
+                    </VBox>
+
+                    <VBox styleClass="stat-card, stat-orange" HBox.hgrow="ALWAYS">
+                        <Label text="Đã kết thúc" styleClass="stat-title"/>
+                        <Label fx:id="lblFinishedAuctions" text="0" styleClass="stat-value"/>
+                        <Label text="Phiên hoàn thành" styleClass="stat-subtitle"/>
+                    </VBox>
+
+                    <VBox styleClass="stat-card, stat-purple" HBox.hgrow="ALWAYS">
+                        <Label text="Tổng doanh thu" styleClass="stat-title"/>
+                        <Label fx:id="lblTotalRevenue" text="0 đ" styleClass="stat-value"/>
+                        <Label text="Theo giá hiện tại/kết thúc" styleClass="stat-subtitle"/>
+                    </VBox>
+                </HBox>
+
+                <HBox spacing="20.0" VBox.vgrow="ALWAYS">
+                    <VBox styleClass="chart-card" HBox.hgrow="ALWAYS">
+                        <Label text="Doanh thu theo sản phẩm" styleClass="chart-title"/>
+
+                        <BarChart fx:id="revenueBarChart"
+                                  legendVisible="false"
+                                  animated="true"
+                                  VBox.vgrow="ALWAYS">
+                            <xAxis>
+                                <CategoryAxis label="Sản phẩm"/>
+                            </xAxis>
+                            <yAxis>
+                                <NumberAxis label="Doanh thu (VNĐ)"/>
+                            </yAxis>
+                        </BarChart>
+                    </VBox>
+
+                    <VBox styleClass="chart-card" HBox.hgrow="ALWAYS">
+                        <Label text="Tỷ lệ trạng thái đấu giá" styleClass="chart-title"/>
+
+                        <PieChart fx:id="statusPieChart"
+                                  legendVisible="true"
+                                  animated="true"
+                                  VBox.vgrow="ALWAYS"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+        </StackPane>
     </center>
 </BorderPane>

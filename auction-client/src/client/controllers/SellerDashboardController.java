@@ -26,8 +26,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javafx.event.ActionEvent;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.PieChart;
+import javafx.scene.chart.XYChart;
+import javafx.scene.layout.VBox;
 
 public class SellerDashboardController {
+    private String formatVND(double amount) {
+        return String.format("%,.0f đ", amount).replace(",", ".");
+    }
 
     @FXML private TableView<Item> tableItems;
     @FXML private TableColumn<Item, String> colId;
@@ -35,6 +42,18 @@ public class SellerDashboardController {
     @FXML private TableColumn<Item, Double> colPrice;
     @FXML private TableColumn<Item, String> colWinner;
     @FXML private TableColumn<Item, String> colStatus;
+    @FXML private VBox inventoryView;
+    @FXML private VBox reportView;
+    @FXML private Button btnInventory;
+    @FXML private Button btnReport;
+
+    @FXML private Label lblTotalItems;
+    @FXML private Label lblRunningAuctions;
+    @FXML private Label lblFinishedAuctions;
+    @FXML private Label lblTotalRevenue;
+
+    @FXML private BarChart<String, Number> revenueBarChart;
+    @FXML private PieChart statusPieChart;
 
     private ObservableList<Item> itemList;
     private Gson gson = new Gson();
@@ -56,12 +75,25 @@ public class SellerDashboardController {
 
         // Giá hiện tại — lấy từ auctionMap nếu có
         colPrice.setCellValueFactory(cellData -> {
+
             Item item = cellData.getValue();
             Map<String, Object> auction = auctionMap.get(item.getItemId());
             double price = auction != null
                     ? Double.parseDouble(auction.get("currentPrice").toString())
                     : item.getStartingPrice();
             return new javafx.beans.property.SimpleObjectProperty<>(price);
+        });
+        colPrice.setCellFactory(column -> new TableCell<Item, Double>() {
+            @Override
+            protected void updateItem(Double price, boolean empty) {
+                super.updateItem(price, empty);
+
+                if (empty || price == null) {
+                    setText(null);
+                } else {
+                    setText(formatVND(price));
+                }
+            }
         });
 
         colWinner.setText("Thông tin chi tiết");
@@ -347,5 +379,90 @@ public class SellerDashboardController {
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+    @FXML
+    private void handleShowInventory() {
+        inventoryView.setVisible(true);
+        inventoryView.setManaged(true);
+
+        reportView.setVisible(false);
+        reportView.setManaged(false);
+
+        btnInventory.getStyleClass().add("sidebar-btn-active");
+        btnReport.getStyleClass().remove("sidebar-btn-active");
+    }
+
+    @FXML
+    private void handleShowReport() {
+        inventoryView.setVisible(false);
+        inventoryView.setManaged(false);
+
+        reportView.setVisible(true);
+        reportView.setManaged(true);
+
+        btnReport.getStyleClass().add("sidebar-btn-active");
+        btnInventory.getStyleClass().remove("sidebar-btn-active");
+
+        updateReport();
+    }
+
+    @FXML
+    private void handleRefreshReport() {
+        loadMyAuctionsFromServer();
+        updateReport();
+    }
+
+    private void updateReport() {
+        int totalItems = itemList == null ? 0 : itemList.size();
+        int running = 0;
+        int finished = 0;
+        double totalRevenue = 0;
+
+        revenueBarChart.getData().clear();
+        statusPieChart.getData().clear();
+
+        XYChart.Series<String, Number> revenueSeries = new XYChart.Series<>();
+
+        if (itemList != null) {
+            for (Item item : itemList) {
+                Map<String, Object> auction = auctionMap.get(item.getItemId());
+
+                double price = item.getStartingPrice();
+                String status = "NONE";
+
+                if (auction != null) {
+                    if (auction.get("currentPrice") != null) {
+                        price = Double.parseDouble(auction.get("currentPrice").toString());
+                    }
+                    if (auction.get("status") != null) {
+                        status = auction.get("status").toString();
+                    }
+                }
+
+                if ("RUNNING".equals(status)) {
+                    running++;
+                }
+
+                if ("FINISHED".equals(status) || "PAID".equals(status)) {
+                    finished++;
+                    totalRevenue += price;
+                }
+
+                revenueSeries.getData().add(new XYChart.Data<>(item.getName(), price));
+            }
+        }
+
+        lblTotalItems.setText(String.valueOf(totalItems));
+        lblRunningAuctions.setText(String.valueOf(running));
+        lblFinishedAuctions.setText(String.valueOf(finished));
+        lblTotalRevenue.setText(formatVND(totalRevenue));
+
+        revenueBarChart.getData().add(revenueSeries);
+
+        int notStarted = Math.max(totalItems - running - finished, 0);
+
+        statusPieChart.getData().add(new PieChart.Data("Đang đấu giá", running));
+        statusPieChart.getData().add(new PieChart.Data("Đã kết thúc", finished));
+        statusPieChart.getData().add(new PieChart.Data("Chưa đăng", notStarted));
     }
 }
