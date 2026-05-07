@@ -1,5 +1,7 @@
 package server.dao.core;
 
+import server.exceptions.DatabaseConnectionException;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -22,7 +24,7 @@ public class DBConnection {
             connection = DriverManager.getConnection(URL, USER, PASSWORD);
             System.out.println("Kết nối cơ sở dữ liệu thành công");
         } catch (ClassNotFoundException | SQLException e) {
-            throw new RuntimeException("Lỗi kết nối cơ sở dữ liệu", e);
+            throw new DatabaseConnectionException("Lỗi kết nối cơ sở dữ liệu", e);
         }
     }
 
@@ -40,7 +42,7 @@ public class DBConnection {
             }
             return connection;
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi kiểm tra kết nối cơ sở dữ liệu", e);
+            throw new DatabaseConnectionException("Lỗi kiểm tra kết nối cơ sở dữ liệu", e);
         }
     }
 }
