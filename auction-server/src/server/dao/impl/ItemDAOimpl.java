@@ -16,19 +16,36 @@ import java.util.List;
 public class ItemDAOimpl implements ItemDAO {
 
     @Override
-    public void insert(Item item) throws Exception {
-        String sql = "INSERT INTO items (seller_id, name, description, CategoryInfo, startingPrice) VALUES (?, ?, ?, ?, ?)";
+    public void insert( Item item) throws Exception {
+        insertWithSellerId(item, item.getSeller().getUserId());
+    }
+
+    public int insertWithSellerId( Item item, int sellerId) throws Exception {
+        String sql = "INSERT INTO items (seller_id, name, description, CategoryInfo, startingPrice) " +
+                "VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(
+                     sql,
+                     java.sql.Statement.RETURN_GENERATED_KEYS
+             )) {
 
-            pstmt.setInt(1, item.getSeller().getUserId());
+            pstmt.setInt(1, sellerId);
             pstmt.setString(2, item.getName());
             pstmt.setString(3, item.getDescription());
             pstmt.setString(4, item.getCategoryInfo());
             pstmt.setBigDecimal(5, item.getStartingPrice());
+
             pstmt.executeUpdate();
+
+            try (ResultSet keys = pstmt.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
+            }
         }
+
+        return -1;
     }
 
     @Override
@@ -103,27 +120,6 @@ public class ItemDAOimpl implements ItemDAO {
         BigDecimal startingPrice = rs.getBigDecimal("startingPrice");
 
         return ItemFactory.createItem(categoryInfo, itemId, name, startingPrice, description);
-    }
-
-    public int insertWithSellerId(Item item, int sellerId) throws Exception {
-        String sql = "INSERT INTO items (seller_id, name, description, CategoryInfo, startingPrice) VALUES (?, ?, ?, ?, ?)";
-
-        try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql,
-                     java.sql.Statement.RETURN_GENERATED_KEYS)) {
-
-            pstmt.setInt(1, sellerId);
-            pstmt.setString(2, item.getName());
-            pstmt.setString(3, item.getDescription());
-            pstmt.setString(4, item.getCategoryInfo());
-            pstmt.setBigDecimal(5, item.getStartingPrice());
-            pstmt.executeUpdate();
-
-            try (java.sql.ResultSet keys = pstmt.getGeneratedKeys()) {
-                if (keys.next()) return keys.getInt(1);
-            }
-        }
-        return -1;
     }
 
     @Override
