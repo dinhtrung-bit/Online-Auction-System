@@ -33,10 +33,30 @@
 
             <VBox spacing="8.0">
                 <Label text="Bạn là ai?"><font><Font name="System Bold" size="13.0" /></font></Label>
-                <HBox spacing="10.0">
-                    <Button fx:id="btnAdmin" onAction="#selectAdmin" prefHeight="40.0" prefWidth="110.0" text="Admin" />
-                    <Button fx:id="btnSeller" onAction="#selectSeller" prefHeight="40.0" prefWidth="110.0" text="Người bán" />
-                    <Button fx:id="btnBidder" onAction="#selectBidder" prefHeight="40.0" prefWidth="110.0" text="Người mua" />
+                <HBox spacing="12.0" alignment="CENTER">
+                    <Button fx:id="btnAdmin"
+                            onAction="#selectAdmin"
+                            minHeight="44.0"
+                            prefHeight="44.0"
+                            prefWidth="118.0"
+                            text="Admin"
+                            styleClass="role-button" />
+
+                    <Button fx:id="btnSeller"
+                            onAction="#selectSeller"
+                            minHeight="44.0"
+                            prefHeight="44.0"
+                            prefWidth="118.0"
+                            text="Người bán"
+                            styleClass="role-button" />
+
+                    <Button fx:id="btnBidder"
+                            onAction="#selectBidder"
+                            minHeight="44.0"
+                            prefHeight="44.0"
+                            prefWidth="118.0"
+                            text="Người mua"
+                            styleClass="role-button" />
                 </HBox>
             </VBox>
 

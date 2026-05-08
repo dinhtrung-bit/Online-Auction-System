@@ -134,18 +134,28 @@ public class ClientHandler implements Runnable {
 
     private MessageDTO handleAddItem(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
+
         try {
             System.out.println(">>> SERVER nhận ADD_ITEM, payload: " + request.getPayload());
-            System.out.println(">>> loggedInUser: " + loggedInUser.getUsername() + " | role: " + loggedInUser.getRole() + " | id: " + loggedInUser.getUserId());
+            System.out.println(">>> loggedInUser: " + loggedInUser.getUsername()
+                    + " | role: " + loggedInUser.getRole()
+                    + " | id: " + loggedInUser.getUserId());
 
             Map<String, Object> data = gson.fromJson(request.getPayload(), Map.class);
-            String name   = (String) data.get("name");
-            String artist = data.get("artist") != null ? (String) data.get("artist") : "";
+
+            String name = data.get("name") != null ? data.get("name").toString() : "";
+            String description = data.get("description") != null ? data.get("description").toString() : "";
             BigDecimal price = new BigDecimal(data.get("startingPrice").toString());
 
-            Item newItem = ItemFactory.createItem("ART", 0, name, price, artist);
+            String category = "ART";
+            if (data.get("category") != null) {
+                category = data.get("category").toString();
+            }
+
+            Item newItem = ItemFactory.createItem(category, 0, name, price, description);
             itemDAO.insertWithSellerId(newItem, loggedInUser.getUserId());
-            System.out.println(">>> INSERT thành công!");
+
+            System.out.println(">>> INSERT thành công! description = " + description);
 
             return new MessageDTO("ADD_ITEM_SUCCESS", "Thêm sản phẩm thành công!");
         } catch (Exception e) {
@@ -153,7 +163,6 @@ public class ClientHandler implements Runnable {
             return new MessageDTO("ADD_ITEM_FAILED", "Lỗi: " + e.getMessage());
         }
     }
-
     private MessageDTO handleUpdateItem(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {

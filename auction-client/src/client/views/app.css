@@ -395,3 +395,95 @@
 .btn-warning:hover {
     -fx-background-color: #D97706;
 }
+.description-area {
+    -fx-min-height: 120;
+    -fx-pref-height: 120;
+}
+
+.description-area .content {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+}
+
+.table-view-custom .table-cell {
+    -fx-alignment: center-left;
+    -fx-padding: 8 10;
+}
+
+.table-view-custom .table-row-cell {
+    -fx-cell-size: 70px;
+}
+.description-area {
+    -fx-min-height: 150;
+    -fx-pref-height: 150;
+}
+
+.description-area .content {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+}
+
+.table-view-custom .table-cell {
+    -fx-alignment: center-left;
+    -fx-padding: 8 10;
+}
+
+.table-view-custom .table-row-cell {
+    -fx-cell-size: 78px;
+}
+.table-view-custom .table-row-cell:selected {
+    -fx-background-color: #DBEAFE;
+    -fx-text-background-color: #0F172A;
+    -fx-text-fill: #0F172A;
+}
+
+.table-view-custom .table-row-cell:selected .table-cell {
+    -fx-text-fill: #0F172A;
+    -fx-border-color: transparent #BFDBFE transparent transparent;
+}
+
+.table-view-custom .table-row-cell:selected .label {
+    -fx-text-fill: #0F172A;
+}
+
+.table-view-custom .table-row-cell:focused:selected {
+    -fx-background-color: #DBEAFE;
+    -fx-text-background-color: #0F172A;
+}
+
+.table-view-custom .table-cell {
+    -fx-text-fill: #1E293B;
+    -fx-alignment: center-left;
+    -fx-padding: 10 14;
+}
+
+.table-view-custom .table-row-cell:hover {
+    -fx-background-color: #EFF6FF;
+}
+
+.table-view-custom .table-row-cell:hover .table-cell {
+    -fx-text-fill: #0F172A;
+}
+
+.table-view-custom .table-row-cell:selected:hover {
+    -fx-background-color: #BFDBFE;
+}
+.role-button {
+    -fx-min-height: 44;
+    -fx-pref-height: 44;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-background-color: white;
+    -fx-border-color: #CBD5E1;
+    -fx-border-width: 1.5;
+    -fx-text-fill: #334155;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+}
+
+.role-button:hover {
+    -fx-background-color: #F0FDF4;
+    -fx-border-color: #10B981;
+    -fx-text-fill: #059669;
+}

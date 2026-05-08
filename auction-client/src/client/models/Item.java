@@ -8,11 +8,9 @@ public abstract class Item implements Serializable {
     protected String itemId;
     protected String name;
     protected double startingPrice;
-
-    // THÊM 3 THUỘC TÍNH MỚI:
-    protected double bidIncrement; // Bước nhảy
-    protected int durationMinutes; // Thời gian đếm ngược (Phút)
-    protected String imagePath;    // Đường dẫn ảnh minh họa
+    protected double bidIncrement;
+    protected String imagePath;
+    protected String description;
 
     public Item(String itemId, String name, double startingPrice) {
         this.itemId = itemId;
@@ -20,20 +18,41 @@ public abstract class Item implements Serializable {
         this.startingPrice = startingPrice;
     }
 
-    // Các Getter cũ...
-    public String getItemId() { return itemId; }
-    public String getName() { return name; }
-    public double getStartingPrice() { return startingPrice; }
+    public String getItemId() {
+        return itemId;
+    }
 
-    // Thêm Getter/Setter cho các thuộc tính mới
-    public double getBidIncrement() { return bidIncrement; }
-    public void setBidIncrement(double bidIncrement) { this.bidIncrement = bidIncrement; }
+    public String getName() {
+        return name;
+    }
 
-    public int getDurationMinutes() { return durationMinutes; }
-    public void setDurationMinutes(int durationMinutes) { this.durationMinutes = durationMinutes; }
+    public double getStartingPrice() {
+        return startingPrice;
+    }
 
-    public String getImagePath() { return imagePath; }
-    public void setImagePath(String imagePath) { this.imagePath = imagePath; }
+    public double getBidIncrement() {
+        return bidIncrement;
+    }
+
+    public void setBidIncrement(double bidIncrement) {
+        this.bidIncrement = bidIncrement;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
+
+    public String getDescription() {
+        return description == null ? "" : description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
     public abstract String getDetails();
 }

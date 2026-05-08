@@ -1,7 +1,6 @@
 package client.controllers;
 
 import client.models.Item;
-import client.models.UserSession;
 import client.networks.ClientMain;
 import client.networks.MessageDTO;
 import com.google.gson.Gson;
@@ -10,12 +9,17 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.PieChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -25,13 +29,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javafx.event.ActionEvent;
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.PieChart;
-import javafx.scene.chart.XYChart;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.Priority;
 
 public class SellerDashboardController {
+
     private String formatVND(double amount) {
         return String.format("%,.0f đ", amount).replace(",", ".");
     }
@@ -42,6 +45,7 @@ public class SellerDashboardController {
     @FXML private TableColumn<Item, Double> colPrice;
     @FXML private TableColumn<Item, String> colWinner;
     @FXML private TableColumn<Item, String> colStatus;
+
     @FXML private VBox inventoryView;
     @FXML private VBox reportView;
     @FXML private Button btnInventory;
@@ -56,10 +60,8 @@ public class SellerDashboardController {
     @FXML private PieChart statusPieChart;
 
     private ObservableList<Item> itemList;
-    private Gson gson = new Gson();
-
-    // Map itemId -> auction info (status, currentPrice)
-    private Map<String, Map<String, Object>> auctionMap = new HashMap<>();
+    private final Gson gson = new Gson();
+    private final Map<String, Map<String, Object>> auctionMap = new HashMap<>();
 
     @FXML
     public void initialize() {
@@ -73,26 +75,22 @@ public class SellerDashboardController {
         colId.setCellValueFactory(new PropertyValueFactory<>("itemId"));
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
 
-        // Giá hiện tại — lấy từ auctionMap nếu có
         colPrice.setCellValueFactory(cellData -> {
-
             Item item = cellData.getValue();
             Map<String, Object> auction = auctionMap.get(item.getItemId());
-            double price = auction != null
+
+            double price = auction != null && auction.get("currentPrice") != null
                     ? Double.parseDouble(auction.get("currentPrice").toString())
                     : item.getStartingPrice();
+
             return new javafx.beans.property.SimpleObjectProperty<>(price);
         });
+
         colPrice.setCellFactory(column -> new TableCell<Item, Double>() {
             @Override
             protected void updateItem(Double price, boolean empty) {
                 super.updateItem(price, empty);
-
-                if (empty || price == null) {
-                    setText(null);
-                } else {
-                    setText(formatVND(price));
-                }
+                setText(empty || price == null ? null : formatVND(price));
             }
         });
 
@@ -100,11 +98,35 @@ public class SellerDashboardController {
         colWinner.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getDetails()));
 
-        // Trạng thái — lấy từ auctionMap
+        colWinner.setCellFactory(column -> new TableCell<Item, String>() {
+            private final Label label = new Label();
+
+            {
+                label.setWrapText(true);
+                label.setStyle("-fx-text-fill: #334155; -fx-line-spacing: 3px;");
+            }
+
+            @Override
+            protected void updateItem(String text, boolean empty) {
+                super.updateItem(text, empty);
+
+                if (empty || text == null || text.isBlank()) {
+                    setGraphic(null);
+                } else {
+                    label.setText(text);
+                    label.setMaxWidth(colWinner.getWidth() - 20);
+                    setGraphic(label);
+                }
+            }
+        });
+
         colStatus.setCellValueFactory(cellData -> {
             Item item = cellData.getValue();
             Map<String, Object> auction = auctionMap.get(item.getItemId());
-            String status = auction != null ? (String) auction.get("status") : "NONE";
+            String status = auction != null && auction.get("status") != null
+                    ? auction.get("status").toString()
+                    : "NONE";
+
             return new SimpleStringProperty(statusToText(status));
         });
 
@@ -112,16 +134,21 @@ public class SellerDashboardController {
             @Override
             protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
-                if (empty || status == null) { setGraphic(null); return; }
+
+                if (empty || status == null) {
+                    setGraphic(null);
+                    return;
+                }
+
                 Label badge = new Label(status);
                 badge.setStyle(stylForStatus(status));
                 setGraphic(badge);
             }
         });
 
-        // Lắng nghe broadcast AUCTION_STARTED và AUCTION_FINISHED để cập nhật realtime
         ClientMain.registerListener("AUCTION_STARTED", payload ->
                 Platform.runLater(this::loadMyAuctionsFromServer));
+
         ClientMain.registerListener("AUCTION_FINISHED", payload ->
                 Platform.runLater(this::loadMyAuctionsFromServer));
 
@@ -130,77 +157,114 @@ public class SellerDashboardController {
 
     private String statusToText(String status) {
         return switch (status) {
-            case "OPEN"     -> "⏳ Sắp bắt đầu";
-            case "RUNNING"  -> "🔴 Đang đấu giá";
+            case "OPEN" -> "⏳ Sắp bắt đầu";
+            case "RUNNING" -> "🔴 Đang đấu giá";
             case "FINISHED" -> "✅ Kết thúc";
-            case "PAID"     -> "💰 Đã thanh toán";
+            case "PAID" -> "💰 Đã thanh toán";
             case "CANCELED" -> "❌ Đã hủy";
-            default         -> "📦 Chưa đăng";
+            default -> "📦 Chưa đăng";
         };
     }
 
     private String stylForStatus(String status) {
         String base = "-fx-padding: 3 8; -fx-background-radius: 5; -fx-font-weight: bold; -fx-font-size: 11px;";
+
         return switch (status) {
-            case "🔴 Đang đấu giá"  -> base + "-fx-background-color: #dcfce7; -fx-text-fill: #166534;";
-            case "⏳ Sắp bắt đầu"   -> base + "-fx-background-color: #fef9c3; -fx-text-fill: #854d0e;";
-            case "✅ Kết thúc"       -> base + "-fx-background-color: #f1f5f9; -fx-text-fill: #64748b;";
-            case "💰 Đã thanh toán"  -> base + "-fx-background-color: #dbeafe; -fx-text-fill: #1e40af;";
-            case "❌ Đã hủy"         -> base + "-fx-background-color: #fee2e2; -fx-text-fill: #991b1b;";
-            default                  -> base + "-fx-background-color: #f1f5f9; -fx-text-fill: #64748b;";
+            case "🔴 Đang đấu giá" -> base + "-fx-background-color: #dcfce7; -fx-text-fill: #166534;";
+            case "⏳ Sắp bắt đầu" -> base + "-fx-background-color: #fef9c3; -fx-text-fill: #854d0e;";
+            case "✅ Kết thúc" -> base + "-fx-background-color: #f1f5f9; -fx-text-fill: #64748b;";
+            case "💰 Đã thanh toán" -> base + "-fx-background-color: #dbeafe; -fx-text-fill: #1e40af;";
+            case "❌ Đã hủy" -> base + "-fx-background-color: #fee2e2; -fx-text-fill: #991b1b;";
+            default -> base + "-fx-background-color: #f1f5f9; -fx-text-fill: #64748b;";
         };
     }
 
     private void loadMyItemsFromServer() {
         ClientMain.registerListener("MY_ITEMS", payload -> {
             ClientMain.unregisterListener("MY_ITEMS");
+
             try {
-                Type listType = new TypeToken<List<Map<String, Object>>>(){}.getType();
+                Type listType = new TypeToken<List<Map<String, Object>>>() {}.getType();
                 List<Map<String, Object>> list = gson.fromJson(payload, listType);
+
                 Platform.runLater(() -> {
                     itemList.clear();
+
                     if (list != null) {
                         for (Map<String, Object> m : list) {
                             String itemId = m.get("itemId") != null ? m.get("itemId").toString() : "";
-                            String name = (String) m.getOrDefault("name", "");
-                            String description = (String) m.getOrDefault("description", "");
+                            String name = m.get("name") != null ? m.get("name").toString() : "";
+                            String description = m.get("description") != null ? m.get("description").toString() : "";
+
+                            String categoryInfo = "";
+
+                            if (m.get("categoryInfo") != null) {
+                                categoryInfo = m.get("categoryInfo").toString();
+                            } else if (m.get("CategoryInfo") != null) {
+                                categoryInfo = m.get("CategoryInfo").toString();
+                            }
+
                             double price = m.get("startingPrice") != null
-                                    ? Double.parseDouble(m.get("startingPrice").toString()) : 0;
-                            Item item = new client.models.Art(itemId, name, price, description);
+                                    ? Double.parseDouble(m.get("startingPrice").toString())
+                                    : 0;
+
+                            Item item = new client.models.Art(itemId, name, price, categoryInfo);
+                            item.setDescription(description);
+                            if (m.get("bidIncrement") != null) {
+                                item.setBidIncrement(Double.parseDouble(m.get("bidIncrement").toString()));
+                            }
+
+                            if (m.get("imagePath") != null) {
+                                item.setImagePath(m.get("imagePath").toString());
+                            }
+
                             itemList.add(item);
                         }
                     }
-                    // Sau khi load items xong, load auction status
+
                     loadMyAuctionsFromServer();
+
+                    if (reportView != null && reportView.isVisible()) {
+                        updateReport();
+                    }
                 });
             } catch (Exception e) {
                 System.err.println("Lỗi parse MY_ITEMS: " + e.getMessage());
             }
         });
+
         new Thread(() -> ClientMain.send(gson.toJson(new MessageDTO("GET_MY_ITEMS", "")))).start();
     }
 
     private void loadMyAuctionsFromServer() {
         ClientMain.registerListener("MY_AUCTIONS", payload -> {
             ClientMain.unregisterListener("MY_AUCTIONS");
+
             try {
-                Type listType = new TypeToken<List<Map<String, Object>>>(){}.getType();
+                Type listType = new TypeToken<List<Map<String, Object>>>() {}.getType();
                 List<Map<String, Object>> list = gson.fromJson(payload, listType);
+
                 Platform.runLater(() -> {
                     auctionMap.clear();
+
                     if (list != null) {
                         for (Map<String, Object> a : list) {
-                            String itemId = a.get("itemId") != null
-                                    ? a.get("itemId").toString() : "";
+                            String itemId = a.get("itemId") != null ? a.get("itemId").toString() : "";
                             auctionMap.put(itemId, a);
                         }
                     }
-                    tableItems.refresh(); // Cập nhật lại bảng
+
+                    tableItems.refresh();
+
+                    if (reportView != null && reportView.isVisible()) {
+                        updateReport();
+                    }
                 });
             } catch (Exception e) {
                 System.err.println("Lỗi parse MY_AUCTIONS: " + e.getMessage());
             }
         });
+
         new Thread(() -> ClientMain.send(gson.toJson(new MessageDTO("GET_MY_AUCTIONS", "")))).start();
     }
 
@@ -209,6 +273,7 @@ public class SellerDashboardController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/add-product-dialog.fxml"));
             Parent root = loader.load();
+
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Thêm Sản Phẩm Mới");
             dialogStage.initModality(Modality.APPLICATION_MODAL);
@@ -223,16 +288,19 @@ public class SellerDashboardController {
                 ClientMain.registerListener("ADD_ITEM_SUCCESS", payload -> {
                     ClientMain.unregisterListener("ADD_ITEM_SUCCESS");
                     ClientMain.unregisterListener("ADD_ITEM_FAILED");
+
                     Platform.runLater(() -> {
                         showAlert("Thành công", "Đã thêm sản phẩm!");
                         loadMyItemsFromServer();
                     });
                 });
+
                 ClientMain.registerListener("ADD_ITEM_FAILED", payload -> {
                     ClientMain.unregisterListener("ADD_ITEM_SUCCESS");
                     ClientMain.unregisterListener("ADD_ITEM_FAILED");
                     Platform.runLater(() -> showAlert("Lỗi", "Thêm thất bại: " + payload));
                 });
+
                 ClientMain.send(gson.toJson(new MessageDTO("ADD_ITEM", gson.toJson(newItem))));
             }
         } catch (IOException e) {
@@ -244,6 +312,7 @@ public class SellerDashboardController {
     @FXML
     private void handleStartAuction() {
         Item selectedItem = tableItems.getSelectionModel().getSelectedItem();
+
         if (selectedItem == null) {
             showAlert("Nhắc nhở", "Vui lòng chọn sản phẩm để tạo phiên đấu giá!");
             return;
@@ -251,68 +320,198 @@ public class SellerDashboardController {
 
         Dialog<String> dialog = new Dialog<>();
         dialog.setTitle("Tạo phiên đấu giá");
-        dialog.setHeaderText("Sản phẩm: " + selectedItem.getName());
+        dialog.setHeaderText(null);
 
-        ButtonType btnOk = new ButtonType("Bắt đầu", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnOk = new ButtonType("🚀 Bắt đầu", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(btnOk, ButtonType.CANCEL);
 
-        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
-        grid.setHgap(10); grid.setVgap(10);
-        grid.setPadding(new javafx.geometry.Insets(20));
+        VBox root = new VBox(18);
+        root.setPadding(new javafx.geometry.Insets(25));
+        root.setStyle("""
+            -fx-background-color: white;
+            -fx-background-radius: 18;
+            """);
+
+        VBox header = new VBox(6);
+        Label title = new Label("Tạo phiên đấu giá");
+        title.setStyle("""
+            -fx-font-size: 24px;
+            -fx-font-weight: bold;
+            -fx-text-fill: #0f172a;
+            """);
+
+        Label subTitle = new Label("Thiết lập thời gian bắt đầu và thời lượng phiên đấu giá");
+        subTitle.setStyle("""
+            -fx-font-size: 13px;
+            -fx-text-fill: #64748b;
+            """);
+
+        Label productName = new Label("📦 Sản phẩm: " + selectedItem.getName());
+        productName.setStyle("""
+            -fx-background-color: #eff6ff;
+            -fx-text-fill: #1d4ed8;
+            -fx-font-weight: bold;
+            -fx-padding: 10 14;
+            -fx-background-radius: 10;
+            """);
+
+        header.getChildren().addAll(title, subTitle, productName);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(14);
+        grid.setVgap(14);
 
         DatePicker datePicker = new DatePicker(java.time.LocalDate.now());
-        TextField txtTime = new TextField(java.time.LocalTime.now()
-                .plusMinutes(5).format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")));
+
+        TextField txtTime = new TextField(
+                java.time.LocalTime.now()
+                        .plusMinutes(5)
+                        .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+        );
+
         TextField txtDuration = new TextField("30");
 
-        grid.add(new Label("Ngày bắt đầu:"), 0, 0);
+        datePicker.setMaxWidth(Double.MAX_VALUE);
+        txtTime.setMaxWidth(Double.MAX_VALUE);
+        txtDuration.setMaxWidth(Double.MAX_VALUE);
+
+        String inputStyle = """
+            -fx-background-color: #f8fafc;
+            -fx-border-color: #cbd5e1;
+            -fx-border-radius: 10;
+            -fx-background-radius: 10;
+            -fx-padding: 10;
+            -fx-font-size: 14px;
+            """;
+
+        datePicker.setStyle(inputStyle);
+        txtTime.setStyle(inputStyle);
+        txtDuration.setStyle(inputStyle);
+
+        Label lblDate = createAuctionLabel("Ngày bắt đầu");
+        Label lblTime = createAuctionLabel("Giờ bắt đầu");
+        Label lblDuration = createAuctionLabel("Thời gian đấu giá");
+
+        grid.add(lblDate, 0, 0);
         grid.add(datePicker, 1, 0);
-        grid.add(new Label("Giờ bắt đầu (HH:mm):"), 0, 1);
+
+        grid.add(lblTime, 0, 1);
         grid.add(txtTime, 1, 1);
-        grid.add(new Label("Thời gian đấu giá (phút):"), 0, 2);
+
+        grid.add(lblDuration, 0, 2);
         grid.add(txtDuration, 1, 2);
 
-        dialog.getDialogPane().setContent(grid);
-        dialog.setResultConverter(btn -> btn == btnOk
-                ? datePicker.getValue() + "T" + txtTime.getText() + ":" + txtDuration.getText()
-                : null);
+        ColumnConstraints c1 = new ColumnConstraints();
+        c1.setPrefWidth(150);
+
+        ColumnConstraints c2 = new ColumnConstraints();
+        c2.setPrefWidth(260);
+        c2.setHgrow(Priority.ALWAYS);
+
+        grid.getColumnConstraints().addAll(c1, c2);
+
+        Label note = new Label("Gợi ý: thời gian nên đặt sau hiện tại vài phút để bidder kịp tham gia.");
+        note.setWrapText(true);
+        note.setStyle("""
+            -fx-background-color: #fefce8;
+            -fx-text-fill: #854d0e;
+            -fx-padding: 10 14;
+            -fx-background-radius: 10;
+            -fx-font-size: 12px;
+            """);
+
+        root.getChildren().addAll(header, grid, note);
+
+        dialog.getDialogPane().setContent(root);
+        dialog.getDialogPane().setPrefWidth(520);
+        dialog.getDialogPane().setStyle("""
+            -fx-background-color: white;
+            -fx-background-radius: 18;
+            """);
+
+        Button okButton = (Button) dialog.getDialogPane().lookupButton(btnOk);
+        okButton.setStyle("""
+            -fx-background-color: #10b981;
+            -fx-text-fill: white;
+            -fx-font-weight: bold;
+            -fx-background-radius: 10;
+            -fx-padding: 10 22;
+            -fx-cursor: hand;
+            """);
+
+        Button cancelButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
+        cancelButton.setText("Hủy bỏ");
+        cancelButton.setStyle("""
+            -fx-background-color: #f1f5f9;
+            -fx-text-fill: #475569;
+            -fx-font-weight: bold;
+            -fx-background-radius: 10;
+            -fx-padding: 10 22;
+            -fx-cursor: hand;
+            """);
+
+        dialog.setResultConverter(btn -> {
+            if (btn == btnOk) {
+                return datePicker.getValue() + "T" + txtTime.getText() + ":" + txtDuration.getText();
+            }
+            return null;
+        });
 
         dialog.showAndWait().ifPresent(data -> {
-            String[] parts = data.split(":");
-            String startTime = parts[0] + ":" + parts[1];
-            String duration  = parts[2];
-            String payload   = selectedItem.getItemId() + ":" + startTime + ":" + duration;
+            try {
+                String[] parts = data.split(":");
+                String startTime = parts[0] + ":" + parts[1];
+                String duration = parts[2];
+                String payload = selectedItem.getItemId() + ":" + startTime + ":" + duration;
 
-            ClientMain.registerListener("CREATE_AUCTION_SUCCESS", p -> {
-                ClientMain.unregisterListener("CREATE_AUCTION_SUCCESS");
-                ClientMain.unregisterListener("CREATE_AUCTION_FAILED");
-                Platform.runLater(() -> {
-                    showAlert("Thành công", "Phiên đấu giá sẽ bắt đầu lúc "
-                            + startTime.replace("T", " "));
-                    loadMyAuctionsFromServer();
+                ClientMain.registerListener("CREATE_AUCTION_SUCCESS", p -> {
+                    ClientMain.unregisterListener("CREATE_AUCTION_SUCCESS");
+                    ClientMain.unregisterListener("CREATE_AUCTION_FAILED");
+
+                    Platform.runLater(() -> {
+                        showAlert("Thành công", "Phiên đấu giá sẽ bắt đầu lúc " + startTime.replace("T", " "));
+                        loadMyAuctionsFromServer();
+                    });
                 });
-            });
-            ClientMain.registerListener("CREATE_AUCTION_FAILED", p -> {
-                ClientMain.unregisterListener("CREATE_AUCTION_SUCCESS");
-                ClientMain.unregisterListener("CREATE_AUCTION_FAILED");
-                Platform.runLater(() -> showAlert("Lỗi", "Tạo phiên thất bại: " + p));
-            });
 
-            new Thread(() -> ClientMain.send(gson.toJson(
-                    new MessageDTO("CREATE_AUCTION", payload)))).start();
+                ClientMain.registerListener("CREATE_AUCTION_FAILED", p -> {
+                    ClientMain.unregisterListener("CREATE_AUCTION_SUCCESS");
+                    ClientMain.unregisterListener("CREATE_AUCTION_FAILED");
+                    Platform.runLater(() -> showAlert("Lỗi", "Tạo phiên thất bại: " + p));
+                });
+
+                new Thread(() -> ClientMain.send(gson.toJson(
+                        new MessageDTO("CREATE_AUCTION", payload)
+                ))).start();
+
+            } catch (Exception e) {
+                showAlert("Lỗi nhập liệu", "Vui lòng nhập đúng định dạng giờ HH:mm và thời gian là số phút.");
+            }
         });
+    }
+    private Label createAuctionLabel(String text) {
+        Label label = new Label(text);
+        label.setStyle("""
+            -fx-font-weight: bold;
+            -fx-text-fill: #334155;
+            -fx-font-size: 13px;
+            """);
+        return label;
     }
 
     @FXML
     private void handleEditProduct() {
         Item selectedItem = tableItems.getSelectionModel().getSelectedItem();
+
         if (selectedItem == null) {
             showAlert("Nhắc nhở", "Vui lòng chọn một sản phẩm để chỉnh sửa!");
             return;
         }
+
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/add-product-dialog.fxml"));
             Parent root = loader.load();
+
             AddProductController controller = loader.getController();
             controller.setEditData(selectedItem);
 
@@ -322,34 +521,47 @@ public class SellerDashboardController {
             dialogStage.showAndWait();
 
             Item updatedItem = controller.getResultItem();
+
             if (updatedItem != null) {
                 int index = itemList.indexOf(selectedItem);
                 itemList.set(index, updatedItem);
-                ClientMain.send(gson.toJson(new MessageDTO("UPDATE_ITEM",
-                        updatedItem.getItemId() + ":" + updatedItem.getName() + ":"
-                                + updatedItem.getDetails() + ":ART:" + updatedItem.getStartingPrice())));
+                tableItems.refresh();
+
+                ClientMain.send(gson.toJson(new MessageDTO(
+                        "UPDATE_ITEM",
+                        gson.toJson(updatedItem)
+                )));
             }
         } catch (Exception e) {
             e.printStackTrace();
+            showAlert("Lỗi hệ thống", "Không thể mở form sửa sản phẩm.");
         }
     }
 
     @FXML
     private void handleDeleteProduct() {
         Item selectedItem = tableItems.getSelectionModel().getSelectedItem();
+
         if (selectedItem == null) {
             showAlert("Nhắc nhở", "Vui lòng chọn một sản phẩm để xóa!");
             return;
         }
+
         Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
         confirmDialog.setTitle("Xác nhận xóa");
         confirmDialog.setHeaderText("Xóa sản phẩm: " + selectedItem.getName());
         confirmDialog.setContentText("Bạn có chắc chắn muốn xóa?");
 
         Optional<ButtonType> result = confirmDialog.showAndWait();
+
         if (result.isPresent() && result.get() == ButtonType.OK) {
             ClientMain.send(gson.toJson(new MessageDTO("DELETE_ITEM", selectedItem.getItemId())));
             itemList.remove(selectedItem);
+            tableItems.refresh();
+
+            if (reportView != null && reportView.isVisible()) {
+                updateReport();
+            }
         }
     }
 
@@ -357,11 +569,14 @@ public class SellerDashboardController {
     private void handleLogout() {
         ClientMain.unregisterListener("AUCTION_STARTED");
         ClientMain.unregisterListener("AUCTION_FINISHED");
+
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/login.fxml"));
             Parent root = loader.load();
+
             Scene currentScene = tableItems.getScene();
             currentScene.setRoot(root);
+
             Stage stage = (Stage) currentScene.getWindow();
             stage.setTitle("Đăng nhập - AuctionVN");
         } catch (IOException e) {
@@ -371,15 +586,10 @@ public class SellerDashboardController {
     }
 
     @FXML
-    void handleEditProduct(ActionEvent event) { handleEditProduct(); }
-
-    private void showAlert(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
+    void handleEditProduct(ActionEvent event) {
+        handleEditProduct();
     }
+
     @FXML
     private void handleShowInventory() {
         inventoryView.setVisible(true);
@@ -408,6 +618,7 @@ public class SellerDashboardController {
 
     @FXML
     private void handleRefreshReport() {
+        loadMyItemsFromServer();
         loadMyAuctionsFromServer();
         updateReport();
     }
@@ -434,6 +645,7 @@ public class SellerDashboardController {
                     if (auction.get("currentPrice") != null) {
                         price = Double.parseDouble(auction.get("currentPrice").toString());
                     }
+
                     if (auction.get("status") != null) {
                         status = auction.get("status").toString();
                     }
@@ -464,5 +676,13 @@ public class SellerDashboardController {
         statusPieChart.getData().add(new PieChart.Data("Đang đấu giá", running));
         statusPieChart.getData().add(new PieChart.Data("Đã kết thúc", finished));
         statusPieChart.getData().add(new PieChart.Data("Chưa đăng", notStarted));
+    }
+
+    private void showAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

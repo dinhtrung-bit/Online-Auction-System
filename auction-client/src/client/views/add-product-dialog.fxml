@@ -1,77 +1,114 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefWidth="650.0" spacing="20.0" styleClass="card, main-bg" stylesheets="@app.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.AddProductController">
-    <padding><Insets bottom="30.0" left="30.0" right="30.0" top="30.0" /></padding>
+<VBox prefWidth="760.0" spacing="18.0" styleClass="card, main-bg"
+      stylesheets="@app.css"
+      xmlns="http://javafx.com/javafx/17.0.2-ea"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="client.controllers.AddProductController">
+
+    <padding>
+        <Insets top="30.0" right="30.0" bottom="30.0" left="30.0"/>
+    </padding>
 
     <VBox spacing="5.0">
         <Label text="Thêm / Sửa Sản Phẩm" textFill="#1e293b">
-            <font><Font name="System Bold" size="24.0" /></font>
+            <font>
+                <Font name="System Bold" size="26.0"/>
+            </font>
         </Label>
-        <Label text="Vui lòng điền đầy đủ thông tin chi tiết và tải ảnh minh họa lên" styleClass="text-muted" />
+        <Label text="Nhập thông tin sản phẩm, mô tả chi tiết và ảnh minh họa"
+               styleClass="text-muted"/>
     </VBox>
 
-    <Separator />
+    <Separator/>
 
-    <HBox spacing="30.0">
-        <VBox spacing="15.0" HBox.hgrow="ALWAYS" prefWidth="300.0">
+    <HBox spacing="35.0">
+        <VBox spacing="16.0" HBox.hgrow="ALWAYS" prefWidth="350.0">
+
             <VBox spacing="5.0">
                 <Label text="Loại sản phẩm" style="-fx-font-weight: bold;" textFill="#475569"/>
-                <ComboBox fx:id="cmbCategory" maxWidth="Infinity" styleClass="input-field" />
+                <ComboBox fx:id="cmbCategory" maxWidth="Infinity" styleClass="input-field"/>
             </VBox>
 
             <VBox spacing="5.0">
                 <Label text="Mã sản phẩm (ID)" style="-fx-font-weight: bold;" textFill="#475569"/>
-                <TextField fx:id="txtId" promptText="Vd: ART001" styleClass="input-field" />
+                <TextField fx:id="txtId" promptText="Vd: ART001" styleClass="input-field"/>
             </VBox>
 
             <VBox spacing="5.0">
                 <Label text="Tên sản phẩm" style="-fx-font-weight: bold;" textFill="#475569"/>
-                <TextField fx:id="txtName" promptText="Vd: Bức tranh Mona Lisa" styleClass="input-field" />
+                <TextField fx:id="txtName" promptText="Vd: Bức tranh Mona Lisa" styleClass="input-field"/>
             </VBox>
 
-            <VBox fx:id="dynamicFieldContainer" spacing="5.0">
-                <Label fx:id="lblDynamic" style="-fx-font-weight: bold;" textFill="#475569" text="Thông tin thêm"/>
-                <TextField fx:id="txtDynamic" promptText="..." styleClass="input-field" />
+            <VBox spacing="5.0">
+                <Label text="Mô tả sản phẩm" style="-fx-font-weight: bold;" textFill="#475569"/>
+                <TextArea fx:id="txtDescription"
+                          promptText="Nhập mô tả chi tiết sản phẩm"
+                          wrapText="true"
+                          prefRowCount="8"
+                          styleClass="input-field, description-area"/>
             </VBox>
+
         </VBox>
 
-        <VBox spacing="15.0" HBox.hgrow="ALWAYS" prefWidth="300.0">
+        <VBox spacing="16.0" HBox.hgrow="ALWAYS" prefWidth="350.0">
+
             <HBox spacing="15.0">
                 <VBox spacing="5.0" HBox.hgrow="ALWAYS">
                     <Label text="Giá khởi điểm (VNĐ)" style="-fx-font-weight: bold;" textFill="#475569"/>
-                    <TextField fx:id="txtPrice" promptText="Vd: 1000000" styleClass="input-field" />
+                    <TextField fx:id="txtPrice" promptText="Vd: 1000000" styleClass="input-field"/>
                 </VBox>
+
                 <VBox spacing="5.0" HBox.hgrow="ALWAYS">
                     <Label text="Bước nhảy (VNĐ)" style="-fx-font-weight: bold;" textFill="#475569"/>
-                    <TextField fx:id="txtBidIncrement" promptText="Vd: 50000" styleClass="input-field" />
+                    <TextField fx:id="txtBidIncrement" promptText="Vd: 50000" styleClass="input-field"/>
                 </VBox>
             </HBox>
 
-            <VBox spacing="5.0">
-                <Label text="Thời gian đếm ngược (Phút)" style="-fx-font-weight: bold;" textFill="#475569"/>
-                <TextField fx:id="txtDuration" promptText="Vd: 60" styleClass="input-field" />
-            </VBox>
-
             <VBox spacing="5.0" alignment="CENTER">
-                <Label text="Ảnh minh họa" style="-fx-font-weight: bold;" textFill="#475569" maxWidth="Infinity" alignment="CENTER_LEFT"/>
-                <VBox styleClass="image-upload-box" alignment="CENTER" spacing="10.0" minHeight="120.0" onMouseClicked="#handleChooseImage">
-                    <ImageView fx:id="imgPreview" fitHeight="100.0" fitWidth="150.0" preserveRatio="true" />
-                    <Label text="Nhấp vào đây để chọn ảnh" textFill="#94a3b8" />
+                <Label text="Ảnh minh họa"
+                       style="-fx-font-weight: bold;"
+                       textFill="#475569"
+                       maxWidth="Infinity"
+                       alignment="CENTER_LEFT"/>
+
+                <VBox styleClass="image-upload-box"
+                      alignment="CENTER"
+                      spacing="10.0"
+                      minHeight="300.0"
+                      onMouseClicked="#handleChooseImage">
+                    <ImageView fx:id="imgPreview"
+                               fitHeight="230.0"
+                               fitWidth="310.0"
+                               preserveRatio="true"/>
+                    <Label text="Nhấp vào đây để chọn ảnh" textFill="#94a3b8"/>
                 </VBox>
-                <Button onAction="#handleChooseImage" text="Duyệt file..." styleClass="btn-outline" maxWidth="Infinity" />
+
+                <Button onAction="#handleChooseImage"
+                        text="Duyệt file..."
+                        styleClass="btn-outline"
+                        maxWidth="Infinity"/>
             </VBox>
         </VBox>
     </HBox>
 
-    <Separator />
+    <Separator/>
 
     <HBox spacing="15.0" alignment="CENTER_RIGHT">
-        <Button onAction="#handleCancel" text="Hủy bỏ" styleClass="btn-outline" style="-fx-padding: 10 25;" />
-        <Button onAction="#handleSave" text="💾 Lưu Sản Phẩm" styleClass="btn-primary" style="-fx-padding: 10 25;" />
+        <Button onAction="#handleCancel"
+                text="Hủy bỏ"
+                styleClass="btn-outline"
+                style="-fx-padding: 10 25;"/>
+
+        <Button onAction="#handleSave"
+                text="💾 Lưu Sản Phẩm"
+                styleClass="btn-primary"
+                style="-fx-padding: 10 25;"/>
     </HBox>
 </VBox>

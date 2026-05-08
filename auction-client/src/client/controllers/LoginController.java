@@ -22,9 +22,31 @@ public class LoginController {
     private String selectedRole = "Bidder";
     private Gson gson = new Gson();
 
-    private final String IDLE_STYLE = "-fx-background-color: white; -fx-border-color: #D1D5DB; -fx-border-radius: 8; -fx-background-radius: 8; -fx-cursor: hand; -fx-text-fill: #374151;";
-    private final String ACTIVE_STYLE = "-fx-background-color: #ECFDF5; -fx-text-fill: #10B981; -fx-border-color: #34D399; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8; -fx-font-weight: bold; -fx-cursor: hand;";
+    private final String IDLE_STYLE =
+            "-fx-background-color: white;" +
+                    "-fx-border-color: #CBD5E1;" +
+                    "-fx-border-width: 1.5;" +
+                    "-fx-border-radius: 12;" +
+                    "-fx-background-radius: 12;" +
+                    "-fx-text-fill: #334155;" +
+                    "-fx-font-weight: bold;" +
+                    "-fx-cursor: hand;" +
+                    "-fx-padding: 0;" +
+                    "-fx-min-height: 44;" +
+                    "-fx-pref-height: 44;";
 
+    private final String ACTIVE_STYLE =
+            "-fx-background-color: #ECFDF5;" +
+                    "-fx-border-color: #10B981;" +
+                    "-fx-border-width: 2;" +
+                    "-fx-border-radius: 12;" +
+                    "-fx-background-radius: 12;" +
+                    "-fx-text-fill: #059669;" +
+                    "-fx-font-weight: bold;" +
+                    "-fx-cursor: hand;" +
+                    "-fx-padding: 0;" +
+                    "-fx-min-height: 44;" +
+                    "-fx-pref-height: 44;";
     @FXML void selectAdmin(ActionEvent event) { selectedRole = "Admin"; updateButtonStyles(); }
     @FXML void selectSeller(ActionEvent event) { selectedRole = "Seller"; updateButtonStyles(); }
     @FXML void selectBidder(ActionEvent event) { selectedRole = "Bidder"; updateButtonStyles(); }
@@ -104,5 +126,9 @@ public class LoginController {
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+    @FXML
+    public void initialize() {
+        updateButtonStyles();
     }
 }
