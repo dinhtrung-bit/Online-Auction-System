@@ -41,7 +41,7 @@
         <HBox style="-fx-background-color: #e2e8f0; -fx-background-radius: 8; -fx-padding: 4;" spacing="5.0">
             <ToggleButton fx:id="btnTabLive" text="🔴 Đang diễn ra" selected="true" onAction="#switchTab"
                           style="-fx-background-color: white; -fx-background-radius: 6; -fx-padding: 8 15; -fx-font-weight: bold; -fx-cursor: hand;"/>
-            <ToggleButton fx:id="btnTabWon" text="🏆 Vật phẩm đã trúng" onAction="#switchTab"
+            <ToggleButton fx:id="btnTabWon" text="🏆 Kho vật phẩm" onAction="#switchTab"
                           style="-fx-background-color: transparent; -fx-background-radius: 6; -fx-padding: 8 15; -fx-text-fill: #475569; -fx-font-weight: bold; -fx-cursor: hand;"/>
         </HBox>
 

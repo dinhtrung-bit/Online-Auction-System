@@ -1,6 +1,7 @@
 package client.controllers;
 
-import client.models.AuctionViewModel;
+import client.models.auction.AuctionViewModel;
+import client.models.user.UserSession;
 import client.networks.ClientMain;
 import client.networks.MessageDTO;
 import com.google.gson.Gson;
@@ -16,8 +17,6 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 
 import java.lang.reflect.Type;
 import java.net.URL;
@@ -45,7 +44,7 @@ public class AuctionListController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        this.myUsername = client.models.UserSession.username;
+        this.myUsername = UserSession.username;
 
         // Nhóm 2 nút Toggle lại thành 1 Tab menu
         tabGroup = new ToggleGroup();
@@ -79,7 +78,7 @@ public class AuctionListController implements Initializable {
                 try {
                     double balanceVal = Double.parseDouble(payload);
                     // Lưu vào Session để màn hình Đặt giá (AuctionDetail) có thể dùng để kiểm tra
-                    client.models.UserSession.balance = balanceVal;
+                    UserSession.balance = balanceVal;
                     // Hiển thị lên giao diện
                     if (lblBalance != null) {
                         lblBalance.setText("💳 Số dư: " + VND.format(balanceVal) + " đ");
@@ -88,6 +87,20 @@ public class AuctionListController implements Initializable {
                     System.out.println("Lỗi hiển thị số dư: " + e.getMessage());
                 }
             });
+        });
+
+        // Đăng ký lắng nghe kho vật phẩm đã thắng từ Server
+        ClientMain.registerListener("WON_AUCTIONS", payload -> {
+            try {
+                java.lang.reflect.Type listType =
+                        new com.google.gson.reflect.TypeToken<
+                                java.util.List<java.util.Map<String, Object>>>(){}.getType();
+                java.util.List<java.util.Map<String, Object>> wonList =
+                        gson.fromJson(payload, listType);
+                Platform.runLater(() -> renderWonAuctionCards(wonList));
+            } catch (Exception e) {
+                System.err.println("Lỗi parse WON_AUCTIONS: " + e.getMessage());
+            }
         });
 
         // Tải danh sách đấu giá
@@ -100,9 +113,15 @@ public class AuctionListController implements Initializable {
 
     @FXML
     void switchTab(ActionEvent event) {
-        if (btnTabWon.isSelected()) currentTab = "WON";
-        else currentTab = "LIVE";
-        applyFilterAndRender();
+        if (btnTabWon != null && btnTabWon.isSelected()) {
+            currentTab = "WON";
+            // Gửi request lấy kho vật phẩm đã thắng từ Server
+            new Thread(() -> ClientMain.send(
+                    gson.toJson(new MessageDTO("GET_MY_WON_AUCTIONS", "")))).start();
+        } else {
+            currentTab = "LIVE";
+            applyFilterAndRender();
+        }
     }
 
     // ✅ THÊM: Handler cho ComboBox chọn trạng thái
@@ -178,12 +197,86 @@ public class AuctionListController implements Initializable {
     private void renderAuctionCards(List<AuctionViewModel> list) {
         auctionContainer.getChildren().clear();
         if (list == null || list.isEmpty()) {
-            Label empty = new Label(currentTab.equals("WON") ? "Bạn chưa trúng đấu giá vật phẩm nào." : "Hiện không có phiên đấu giá nào đang mở.");
+            Label empty = new Label(currentTab.equals("WON")
+                    ? "Bạn chưa trúng đấu giá vật phẩm nào."
+                    : "Hiện không có phiên đấu giá nào đang mở.");
             empty.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 14px;");
             auctionContainer.getChildren().add(empty);
             return;
         }
-        for (AuctionViewModel auction : list) { auctionContainer.getChildren().add(buildCard(auction)); }
+        for (AuctionViewModel auction : list) {
+            auctionContainer.getChildren().add(buildCard(auction));
+        }
+    }
+
+    /** Render kho vật phẩm đã trúng đấu giá — dữ liệu thật từ Server */
+    private void renderWonAuctionCards(java.util.List<java.util.Map<String, Object>> wonList) {
+        auctionContainer.getChildren().clear();
+
+        if (wonList == null || wonList.isEmpty()) {
+            Label empty = new Label("🎁 Kho vật phẩm trống. Hãy tham gia đấu giá và giành chiến thắng!");
+            empty.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 14px; -fx-font-style: italic;");
+            auctionContainer.getChildren().add(empty);
+            return;
+        }
+
+        // Tiêu đề kho
+        Label title = new Label("🏆 Kho vật phẩm đã trúng đấu giá (" + wonList.size() + " vật phẩm)");
+        title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #0c4a6e;");
+        auctionContainer.getChildren().add(title);
+
+        for (java.util.Map<String, Object> item : wonList) {
+            auctionContainer.getChildren().add(buildWonCard(item));
+        }
+    }
+
+    private HBox buildWonCard(java.util.Map<String, Object> item) {
+        // Icon
+        Label icon = new Label("🏅");
+        icon.setStyle("-fx-font-size: 36px;");
+
+        // Tên vật phẩm
+        Label lblName = new Label(String.valueOf(item.get("itemName")));
+        lblName.setStyle("-fx-font-weight: bold; -fx-font-size: 15px;");
+
+        // Badge trạng thái
+        String status = String.valueOf(item.getOrDefault("status", "PAID"));
+        Label lblBadge = new Label("PAID".equals(status) ? "💰 Đã thanh toán" : "✅ Đã kết thúc");
+        lblBadge.setStyle("-fx-background-color: #dbeafe; -fx-text-fill: #1e3a8a; "
+                + "-fx-padding: 2 8; -fx-background-radius: 4; -fx-font-size: 11px; -fx-font-weight: bold;");
+
+        HBox nameRow = new HBox(10, lblName, lblBadge);
+        nameRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        // Giá cuối
+        double finalPrice = ((Number) item.getOrDefault("finalPrice", 0)).doubleValue();
+        VBox colPrice = metaCol("💰 Giá trúng",
+                VND.format((long) finalPrice) + " đ");
+        ((Label) colPrice.getChildren().get(1))
+                .setStyle("-fx-font-weight: bold; -fx-text-fill: #059669;");
+
+        // Thời gian kết thúc
+        String endTime = String.valueOf(item.getOrDefault("endTime", ""));
+        String endTimeShort = endTime.length() >= 16 ? endTime.substring(0, 16).replace("T", " ") : endTime;
+        VBox colTime = metaCol("🕐 Kết thúc lúc", endTimeShort);
+
+        // ID phiên
+        VBox colId = metaCol("🔖 Phiên #",
+                String.valueOf(item.getOrDefault("auctionId", "")));
+
+        HBox metaRow = new HBox(40, colPrice, colTime, colId);
+        metaRow.setPadding(new Insets(8, 0, 0, 0));
+
+        VBox info = new VBox(5, nameRow, metaRow);
+        HBox.setHgrow(info, Priority.ALWAYS);
+
+        // Card container
+        HBox card = new HBox(16, icon, info);
+        card.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        card.setPadding(new Insets(16));
+        card.setStyle("-fx-background-color: #f0fdf4; -fx-background-radius: 10; "
+                + "-fx-border-color: #86efac; -fx-border-radius: 10; -fx-border-width: 1.5;");
+        return card;
     }
 
     private HBox buildCard(AuctionViewModel auction) {
@@ -262,7 +355,8 @@ public class AuctionListController implements Initializable {
         try {
             ClientMain.unregisterListener("AUCTION_LIST");
             ClientMain.unregisterListener("BALANCE_DATA");
-            ClientMain.unregisterListener("AUCTION_LIST_BY_STATUS"); // ✅ THÊM
+            ClientMain.unregisterListener("AUCTION_LIST_BY_STATUS");
+            ClientMain.unregisterListener("WON_AUCTIONS");
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/auction-detail.fxml"));
             Parent root = loader.load();
             AuctionDetailController dc = loader.getController();
@@ -292,11 +386,11 @@ public class AuctionListController implements Initializable {
                     ClientMain.unregisterListener("DEPOSIT_SUCCESS");
                     ClientMain.unregisterListener("DEPOSIT_FAILED");
                     Platform.runLater(() -> {
-                        client.models.UserSession.balance += amount;
+                        UserSession.balance += amount;
                         if (lblBalance != null) {
-                            lblBalance.setText("💳 Số dư: " + VND.format((long) client.models.UserSession.balance) + " đ");
+                            lblBalance.setText("💳 Số dư: " + VND.format((long) UserSession.balance) + " đ");
                         }
-                        showSimpleAlert("Nạp tiền thành công! Số dư mới: " + VND.format((long) client.models.UserSession.balance) + " đ");
+                        showSimpleAlert("Nạp tiền thành công! Số dư mới: " + VND.format((long) UserSession.balance) + " đ");
                     });
                 });
 
@@ -327,7 +421,8 @@ public class AuctionListController implements Initializable {
     void handleLogout(ActionEvent event) {
         ClientMain.unregisterListener("AUCTION_LIST");
         ClientMain.unregisterListener("BALANCE_DATA");
-        ClientMain.unregisterListener("AUCTION_LIST_BY_STATUS"); // ✅ THÊM
+        ClientMain.unregisterListener("AUCTION_LIST_BY_STATUS");
+        ClientMain.unregisterListener("WON_AUCTIONS");
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/client/views/login.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();

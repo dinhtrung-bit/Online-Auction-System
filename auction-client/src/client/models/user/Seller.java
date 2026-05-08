@@ -1,4 +1,4 @@
-package client.models;
+package client.models.user;
 
 public class Seller extends User {
 

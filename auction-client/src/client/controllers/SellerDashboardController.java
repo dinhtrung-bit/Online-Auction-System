@@ -1,6 +1,7 @@
 package client.controllers;
 
-import client.models.Item;
+import client.models.item.Item;
+import client.models.item.Art;
 import client.networks.ClientMain;
 import client.networks.MessageDTO;
 import com.google.gson.Gson;
@@ -208,7 +209,7 @@ public class SellerDashboardController {
                                     ? Double.parseDouble(m.get("startingPrice").toString())
                                     : 0;
 
-                            Item item = new client.models.Art(itemId, name, price, categoryInfo);
+                            Item item = new Art(itemId, name, price, categoryInfo);
                             item.setDescription(description);
                             if (m.get("bidIncrement") != null) {
                                 item.setBidIncrement(Double.parseDouble(m.get("bidIncrement").toString()));

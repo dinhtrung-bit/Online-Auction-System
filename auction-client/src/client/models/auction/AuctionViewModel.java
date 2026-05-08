@@ -1,4 +1,4 @@
-package client.models;
+package client.models.auction;
 
 public class AuctionViewModel {
     private int id;

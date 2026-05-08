@@ -1,8 +1,8 @@
 package client.controllers;
 
-import client.models.Art;
-import client.models.Electronics;
-import client.models.Item;
+import client.models.item.Art;
+import client.models.item.Electronics;
+import client.models.item.Item;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;

@@ -1,8 +1,8 @@
-package client.models;
+package client.models.item;
 
-public class Art extends Item {
+public class Electronics extends Item {
 
-    public Art(String itemId, String name, double startingPrice, String artist) {
+    public Electronics(String itemId, String name, double startingPrice, int warrantyMonths) {
         super(itemId, name, startingPrice);
     }
 

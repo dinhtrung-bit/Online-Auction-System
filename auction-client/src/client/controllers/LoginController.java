@@ -1,6 +1,6 @@
 package client.controllers;
 
-import client.models.UserSession;
+import client.models.user.UserSession;
 import com.google.gson.Gson;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;

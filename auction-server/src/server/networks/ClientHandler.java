@@ -71,8 +71,10 @@ public class ClientHandler implements Runnable {
         processors.put("DELETE_AUCTION",         this::handleDeleteAuction);
         processors.put("SET_AUTO_BID",           this::handleSetAutoBid);
         processors.put("CANCEL_AUTO_BID",        this::handleCancelAutoBid);
-        processors.put("DEPOSIT",                this::handleDeposit); // FIX: bỏ ()
-        processors.put("GET_MY_AUCTIONS", this::handleGetMyAuctions);
+        processors.put("DEPOSIT",                this::handleDeposit);
+        processors.put("GET_MY_AUCTIONS",        this::handleGetMyAuctions);
+        processors.put("GET_BID_HISTORY",        this::handleGetBidHistory);
+        processors.put("GET_MY_WON_AUCTIONS",    this::handleGetMyWonAuctions);
     }
 
     // ===================== BALANCE =====================
@@ -415,6 +417,71 @@ public class ClientHandler implements Runnable {
                 ? room.getCurrentWinner().getUsername() : "Chưa có");
         m.put("status",       room.getStatus().name());
         return m;
+    }
+
+    // ===================== LỊCH SỬ ĐẤU GIÁ =====================
+
+    /**
+     * Trả lịch sử bid của 1 phòng từ DB — không bị mất khi client thoát ra.
+     * Payload: roomId
+     * Response: BID_HISTORY — JSON array [{username, amount, time}, ...]
+     */
+    private MessageDTO handleGetBidHistory(MessageDTO request) {
+        try {
+            int roomId = Integer.parseInt(request.getPayload().trim());
+            List<BidMessage> bids = bidMessageDAO.getBidHistoryByAuctionRoomId(roomId);
+
+            List<Map<String, Object>> result = bids.stream().map(b -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                // Lấy username từ DB theo bidderId
+                String username = "Người dùng #" + b.getBidderId();
+                try {
+                    User u = userDAO.findById(b.getBidderId());
+                    if (u != null) username = u.getUsername();
+                } catch (Exception ignored) {}
+                m.put("username", username);
+                m.put("amount",   b.getBidAmount().doubleValue());
+                m.put("time",     b.getTimestamp() != null
+                        ? b.getTimestamp().toString() : "");
+                return m;
+            }).collect(Collectors.toList());
+
+            return new MessageDTO("BID_HISTORY", gson.toJson(result));
+        } catch (Exception e) {
+            return new MessageDTO("ERROR", "Lỗi lấy lịch sử: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Trả danh sách phiên đấu giá Bidder đã THẮNG (status PAID hoặc FINISHED + winner = mình).
+     * Payload: "" (rỗng)
+     * Response: WON_AUCTIONS — JSON array [{auctionId, itemName, finalPrice, endTime, status}, ...]
+     */
+    private MessageDTO handleGetMyWonAuctions(MessageDTO request) {
+        if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
+        try {
+            List<Map<String, Object>> result = AuctionService.getInstance().getActiveRooms()
+                    .stream()
+                    .filter(r -> (r.getStatus() == AuctionStatus.PAID
+                            || r.getStatus() == AuctionStatus.FINISHED)
+                            && r.getCurrentWinner() != null
+                            && r.getCurrentWinner().getUserId() == loggedInUser.getUserId())
+                    .map(r -> {
+                        Map<String, Object> m = new LinkedHashMap<>();
+                        m.put("auctionId",  r.getId());
+                        m.put("itemName",   r.getItem() != null ? r.getItem().getName() : "N/A");
+                        m.put("finalPrice", r.getCurrentPrice() != null
+                                ? r.getCurrentPrice().doubleValue() : 0);
+                        m.put("endTime",    r.getEndTime() != null
+                                ? r.getEndTime().toString() : "");
+                        m.put("status",     r.getStatus().name());
+                        return m;
+                    }).collect(Collectors.toList());
+
+            return new MessageDTO("WON_AUCTIONS", gson.toJson(result));
+        } catch (Exception e) {
+            return new MessageDTO("ERROR", "Lỗi lấy kho vật phẩm: " + e.getMessage());
+        }
     }
 
     private MessageDTO handleBid(MessageDTO request) {

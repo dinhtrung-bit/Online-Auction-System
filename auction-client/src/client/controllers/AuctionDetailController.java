@@ -1,5 +1,6 @@
 package client.controllers;
 
+import client.models.user.UserSession;
 import client.networks.ClientMain;
 import client.networks.MessageDTO;
 import com.google.gson.Gson;
@@ -11,7 +12,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 // Import thêm Chart
 import javafx.scene.chart.LineChart;
@@ -54,7 +54,7 @@ public class AuctionDetailController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        this.myUsername = client.models.UserSession.username;
+        this.myUsername = UserSession.username;
 
         // Khởi tạo series cho biểu đồ
         priceSeries = new XYChart.Series<>();
@@ -136,12 +136,57 @@ public class AuctionDetailController implements Initializable {
         });
 
         ClientMain.registerListener("BID_FAILED", payload -> Platform.runLater(() -> showAlert(Alert.AlertType.WARNING, "Đặt giá thất bại", payload)));
+
+        // Lịch sử bid từ DB — load khi vào phòng, giữ nguyên dù client đã từng thoát
+        ClientMain.registerListener("BID_HISTORY", payload -> {
+            try {
+                java.lang.reflect.Type listType =
+                        new com.google.gson.reflect.TypeToken<
+                                java.util.List<java.util.Map<String, Object>>>(){}.getType();
+                java.util.List<java.util.Map<String, Object>> history =
+                        gson.fromJson(payload, listType);
+                Platform.runLater(() -> {
+                    historyList.getItems().clear();
+                    priceSeries.getData().clear();
+                    bidCount = 0;
+
+                    if (history == null || history.isEmpty()) return;
+
+                    // Đổ lịch sử vào ListView và LineChart theo thứ tự thời gian
+                    for (java.util.Map<String, Object> entry : history) {
+                        String username = (String) entry.get("username");
+                        double amount   = ((Number) entry.get("amount")).doubleValue();
+                        String time     = (String) entry.get("time");
+
+                        // Rút gọn timestamp: chỉ lấy HH:mm:ss
+                        String timeShort = time.length() >= 19 ? time.substring(11, 19) : time;
+
+                        historyList.getItems().add(0,
+                                username + " đặt " + formatPrice(String.valueOf(amount))
+                                        + " đ  (" + timeShort + ")");
+
+                        bidCount++;
+                        priceSeries.getData().add(
+                                new XYChart.Data<>("Lần " + bidCount, amount));
+                    }
+
+                    // Cập nhật giá hiện tại từ bid cuối cùng
+                    java.util.Map<String, Object> lastBid = history.get(history.size() - 1);
+                    currentPriceVal = ((Number) lastBid.get("amount")).doubleValue();
+                    lastWinner = (String) lastBid.get("username");
+                });
+            } catch (Exception e) {
+                System.err.println("Lỗi parse BID_HISTORY: " + e.getMessage());
+            }
+        });
     }
 
     public void setRoomId(String id) {
         this.currentRoomId = id;
-        MessageDTO req = new MessageDTO("GET_AUCTION_DETAIL", id);
-        ClientMain.send(gson.toJson(req));
+        // Lấy thông tin realtime (giá, timer, status)
+        ClientMain.send(gson.toJson(new MessageDTO("GET_AUCTION_DETAIL", id)));
+        // Lấy lịch sử bid từ DB — không bị mất dù client đã từng thoát
+        ClientMain.send(gson.toJson(new MessageDTO("GET_BID_HISTORY", id)));
     }
 
     private void startTimer() {
@@ -175,9 +220,9 @@ public class AuctionDetailController implements Initializable {
                 showAlert(Alert.AlertType.WARNING, "Không hợp lệ", "Giá đặt phải cao hơn giá hiện tại!");
                 return;
             }
-            if (amount > client.models.UserSession.balance) {
+            if (amount > UserSession.balance) {
                 showAlert(Alert.AlertType.WARNING, "Số dư không đủ",
-                        "Bạn chỉ còn " + formatPrice(String.valueOf(client.models.UserSession.balance)) +
+                        "Bạn chỉ còn " + formatPrice(String.valueOf(UserSession.balance)) +
                                 " đ trong ví. Vui lòng nạp thêm tiền để tiếp tục!");
                 return;
             }
@@ -228,6 +273,7 @@ public class AuctionDetailController implements Initializable {
         ClientMain.unregisterListener("UPDATE_PRICE");
         ClientMain.unregisterListener("AUCTION_FINISHED");
         ClientMain.unregisterListener("BID_FAILED");
+        ClientMain.unregisterListener("BID_HISTORY");
         ClientMain.unregisterListener("AUTO_BID_EXCEEDED");
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/client/views/auction-list.fxml"));

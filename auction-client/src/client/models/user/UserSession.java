@@ -1,4 +1,4 @@
-package client.models;
+package client.models.user;
 
 public class UserSession {
     // Biến static sẽ tồn tại trong suốt quá trình app chạy
