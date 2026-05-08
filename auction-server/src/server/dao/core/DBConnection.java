@@ -14,7 +14,7 @@ public class DBConnection {
             "jdbc:mysql://mysql-24b3aff1-vnu-8ca6.k.aivencloud.com:15190/daugia?sslMode=REQUIRED";
 
     private static final String USER = "avnadmin";
-    private static final String PASSWORD = "";
+    private static final String PASSWORD = "AVNS_z7YUU9pQJHKGFnNqf8-";
 
     private DBConnection() {
         connect();
