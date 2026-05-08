@@ -1,5 +1,5 @@
 
-package test.java;
+
 import org.junit.jupiter.api.Test;
 import server.models.auction.AuctionRoom;
 import server.models.auction.AuctionStatus;
