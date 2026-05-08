@@ -195,8 +195,8 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
      * vì ResultSet gốc đã được đóng trước khi phương thức này được gọi.
      */
     private AuctionRoom buildFromRaw(AuctionRoomRaw raw) throws Exception {
-        ItemDAO itemDAO = new ItemDAOimpl();
-        UserDAO userDAO = new UserDAOimpl();
+        ItemDAO itemDAO = new ItemDAOImpl();
+        UserDAO userDAO = new UserDAOImpl();
 
         Item item = itemDAO.findById(raw.itemId);
 

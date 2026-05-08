@@ -6,12 +6,27 @@
   <component name="ChangeListManager">
     <list default="true" id="f8a5b71a-742d-45ff-85aa-4306870d1750" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/AdminDashboardController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/AdminDashboardController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/AuctionDetailController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/AuctionDetailController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/AuctionListController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/AuctionListController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/LoginController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-client/src/client/controllers/SellerDashboardController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/controllers/SellerDashboardController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auction-client/src/client/views/auction-list.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/views/auction-list.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/Readme.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/models/user/Seller.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/models/user/Seller.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-client/src/client/models/user/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-client/src/client/models/user/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/application/MainServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/application/MainServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/dao/core/DBConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/core/DBConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/dao/impl/AuctionRoomDAOImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/impl/AuctionRoomDAOImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/dao/impl/AutoBidDAOimpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/impl/AutoBidDAOImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/dao/impl/ItemDAOimpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/impl/ItemDAOImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/dao/impl/UserDAOimpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/dao/impl/UserDAOImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/exceptions/Validation.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/utils/Validation.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/auction/AuctionRoom.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/auction/AuctionRoom.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/users/CreateAdmin.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/users/CreateAdmin.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/models/users/Seller.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/models/users/Seller.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/networks/ClientHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/networks/ClientHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/networks/TestServer.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/services/AuctionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/services/AuctionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/server/services/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/server/services/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/test/java/AuctionRoomTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/test/java/AuctionRoomTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/test/java/AuctionServiceTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auction-server/src/test/java/ValidationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/auction-server/src/test/java/ValidationTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,7 +73,7 @@
     <urls />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="AISelfReview" />
   </component>
   <component name="ProjectColorInfo">{
         &quot;associatedIndex&quot;: 2
@@ -71,61 +86,61 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.ClientApp.executor": "Run",
-    "Application.ClientMain.executor": "Run",
-    "Application.Launcher.executor": "Run",
-    "Application.MainServer.executor": "Run",
-    "Application.ServerRocket.executor": "Run",
-    "Application.TestDB.executor": "Run",
-    "Application.client.networks.ClientMain.executor": "Run",
-    "Application.server.networks.ServerRocket.executor": "Run",
-    "Application.testItem.executor": "Run",
-    "Application.testUser.executor": "Run",
-    "DefaultHtmlFileTemplate": "HTML File",
-    "JUnit.AuctionRoomTest.executor": "Run",
-    "JUnit.AuctionRoomTest.testAntiSnipingExtension.executor": "Run",
-    "JUnit.AuctionRoomTest.testAntiSnipingMaxLimit.executor": "Run",
-    "JUnit.AuctionRoomTest.testAutoBidAllIn.executor": "Run",
-    "JUnit.AuctionRoomTest.testAutoBidNormalStep.executor": "Run",
-    "JUnit.AuctionRoomTest.testAutoBid_TieBreaker (1).executor": "Run",
-    "JUnit.AuctionRoomTest.testAutoBid_TieBreaker.executor": "Run",
-    "JUnit.AuctionRoomTest.testAutoBid_Versus_AutoBid.executor": "Run",
-    "JUnit.AuctionServiceTest.executor": "Run",
-    "JUnit.AuctionServiceTest.testAutoUpdateStatuses (1).executor": "Run",
-    "JUnit.AuctionServiceTest.testAutoUpdateStatuses.executor": "Run",
-    "JUnit.UserTest (1).executor": "Run",
-    "JUnit.UserTest.executor": "Run",
-    "JUnit.UserTest.testUpdateBalanceInsufficientFunds.executor": "Run",
-    "JUnit.ValidationTest.executor": "Run",
-    "JUnit.ValidationTest.testValidateEmail.executor": "Run",
-    "Maven.auction-client [org.openjfx:javafx-maven-plugin:0.0.8:run].executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "junie.onboarding.icon.badge.shown": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/asus/Documents/GitHub/Online-Auction-System/auction-client/src/client/views",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "reference.projectsettings.compiler.excludes",
-    "to.speed.mode.migration.done": "true",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.ClientApp.executor&quot;: &quot;Run&quot;,
+    &quot;Application.ClientMain.executor&quot;: &quot;Run&quot;,
+    &quot;Application.Launcher.executor&quot;: &quot;Run&quot;,
+    &quot;Application.MainServer.executor&quot;: &quot;Run&quot;,
+    &quot;Application.ServerRocket.executor&quot;: &quot;Run&quot;,
+    &quot;Application.TestDB.executor&quot;: &quot;Run&quot;,
+    &quot;Application.client.networks.ClientMain.executor&quot;: &quot;Run&quot;,
+    &quot;Application.server.networks.ServerRocket.executor&quot;: &quot;Run&quot;,
+    &quot;Application.testItem.executor&quot;: &quot;Run&quot;,
+    &quot;Application.testUser.executor&quot;: &quot;Run&quot;,
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;JUnit.AuctionRoomTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuctionRoomTest.testAntiSnipingExtension.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuctionRoomTest.testAntiSnipingMaxLimit.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuctionRoomTest.testAutoBidAllIn.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuctionRoomTest.testAutoBidNormalStep.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuctionRoomTest.testAutoBid_TieBreaker (1).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuctionRoomTest.testAutoBid_TieBreaker.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuctionRoomTest.testAutoBid_Versus_AutoBid.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuctionServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuctionServiceTest.testAutoUpdateStatuses (1).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuctionServiceTest.testAutoUpdateStatuses.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserTest (1).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserTest.testUpdateBalanceInsufficientFunds.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ValidationTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ValidationTest.testValidateEmail.executor&quot;: &quot;Run&quot;,
+    &quot;Maven.auction-client [org.openjfx:javafx-maven-plugin:0.0.8:run].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/asus/Documents/GitHub/Online-Auction-System/auction-client/src/client/views&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.excludes&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\asus\Documents\GitHub\Online-Auction-System\auction-client\src\client\views" />

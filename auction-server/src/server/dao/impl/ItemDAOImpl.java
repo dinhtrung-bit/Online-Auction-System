@@ -13,7 +13,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ItemDAOimpl implements ItemDAO {
+public class ItemDAOImpl implements ItemDAO {
 
     @Override
     public void insert( Item item) throws Exception {
@@ -24,7 +24,7 @@ public class ItemDAOimpl implements ItemDAO {
         String sql = "INSERT INTO items (seller_id, name, description, CategoryInfo, startingPrice) " +
                 "VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(
                      sql,
                      java.sql.Statement.RETURN_GENERATED_KEYS
@@ -52,7 +52,7 @@ public class ItemDAOimpl implements ItemDAO {
     public void update(Item item) throws Exception {
         String sql = "UPDATE items SET seller_id = ?, name = ?, description = ?, CategoryInfo = ?, startingPrice = ? WHERE item_id = ?";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, item.getSeller().getUserId());
@@ -69,7 +69,7 @@ public class ItemDAOimpl implements ItemDAO {
     public void delete(int id) throws Exception {
         String sql = "DELETE FROM items WHERE item_id = ?";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, id);
@@ -82,7 +82,7 @@ public class ItemDAOimpl implements ItemDAO {
         List<Item> itemlist = new ArrayList<>();
         String sql = "SELECT * FROM items WHERE seller_id = ?";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, sellerId);
@@ -100,7 +100,7 @@ public class ItemDAOimpl implements ItemDAO {
         List<Item> itemList = new ArrayList<>();
         String sql = "SELECT item_id, name, startingPrice, description, CategoryInfo FROM items";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
 
@@ -126,7 +126,7 @@ public class ItemDAOimpl implements ItemDAO {
     public Item findById(int id) throws Exception {
         String sql = "SELECT * FROM items WHERE item_id = ?";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getInstance();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);

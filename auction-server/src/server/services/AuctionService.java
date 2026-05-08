@@ -1,10 +1,10 @@
 package server.services;
 
 import server.dao.impl.AuctionRoomDAOImpl;
-import server.dao.impl.AutoBidDAOimpl;
+import server.dao.impl.AutoBidDAOImpl;
 import server.dao.impl.BidMessageDAOImpl;
-import server.dao.impl.ItemDAOimpl;
-import server.dao.impl.UserDAOimpl;
+import server.dao.impl.ItemDAOImpl;
+import server.dao.impl.UserDAOImpl;
 import server.dao.interfaces.AuctionRoomDAO;
 import server.dao.interfaces.AutoBidDAO;
 import server.dao.interfaces.BidMessageDAO;
@@ -30,10 +30,10 @@ public class AuctionService {
     private static AuctionService instance;
 
     private final AuctionRoomDAO roomDAO = new AuctionRoomDAOImpl();
-    private final ItemDAO itemDAO = new ItemDAOimpl();
+    private final ItemDAO itemDAO = new ItemDAOImpl();
     private final BidMessageDAO bidDAO = new BidMessageDAOImpl();
-    private final UserDAO userDAO = new UserDAOimpl();
-    private final AutoBidDAO autoBidDAO = new AutoBidDAOimpl();
+    private final UserDAO userDAO = new UserDAOImpl();
+    private final AutoBidDAO autoBidDAO = new AutoBidDAOImpl();
 
     private ConcurrentHashMap<Long, AuctionRoom> activeRooms;
 
@@ -120,6 +120,20 @@ public class AuctionService {
         return "SUCCESS";
     }
 
+    /**
+     * Public API: kích hoạt vòng auto-bid ngay lập tức cho 1 phòng.
+     * Dùng khi user vừa SET_AUTO_BID xong — để bot tự cạnh tranh ngay
+     * thay vì phải đợi có người bid thủ công.
+     *
+     * @param roomId  id phòng cần kích hoạt
+     * @param trigger người vừa thiết lập auto-bid (để bỏ qua chính họ trong vòng đầu)
+     */
+    public void triggerAutoBidsForRoom(long roomId, Bidder trigger) {
+        AuctionRoom room = activeRooms.get(roomId);
+        if (room == null) return;
+        processAutoBids(room, trigger);
+    }
+
     private void processAutoBids(AuctionRoom room, Bidder lastBidder) {
         try {
             List<AutoBidConfig> autoBids = autoBidDAO.getAutoBidsByAuctionId(room.getId());
@@ -155,7 +169,8 @@ public class AuctionService {
                 BigDecimal oldPrice = room.getCurrentPrice();
 
                 synchronized (room) {
-                    room.placeBid(fullBidder, nextBid);
+                    // Dùng placeAutoBid (không trigger processAutoBids in-room) để tránh đệ quy kép
+                    room.placeAutoBid(fullBidder, nextBid);
                 }
 
                 // Lưu DB
@@ -198,33 +213,29 @@ public class AuctionService {
                                     String.valueOf(room.getId()))
                     ));
                 } else if (room.getStatus() == AuctionStatus.RUNNING && room.isExpired()) {
+                    // Phòng đang chạy & hết giờ -> kết thúc, xử lý thanh toán, broadcast và xóa khỏi RAM
                     room.setStatus(AuctionStatus.FINISHED);
                     processAuctionSettlement(room);
                     updateRoomInDB(room);
 
+                    // Broadcast một lần duy nhất
                     ClientHandler.broadcast(new com.google.gson.Gson().toJson(
                             new server.networks.dto.MessageDTO("AUCTION_FINISHED",
                                     String.valueOf(room.getId()))
                     ));
-                } else if (room.getStatus() == AuctionStatus.RUNNING && room.isExpired()) {
-                room.setStatus(AuctionStatus.FINISHED);
-                processAuctionSettlement(room);
-                updateRoomInDB(room);
 
-                // Xóa khỏi RAM sau 30 giây để giảm tải
-                long roomIdToRemove = room.getId();
-                CompletableFuture.runAsync(() -> {
-                    try {
-                        Thread.sleep(30000); // Chờ 30 giây
-                        activeRooms.remove(roomIdToRemove);
-                        System.out.println(">>> [Manager] Đã xóa Room " + roomIdToRemove + " khỏi RAM.");
-                    } catch (Exception e) { }
-                });
-
-                ClientHandler.broadcast(new com.google.gson.Gson().toJson(
-                        new server.networks.dto.MessageDTO("AUCTION_FINISHED", String.valueOf(room.getId()))
-                ));
-            }
+                    // Xóa khỏi RAM sau 30 giây để giảm tải bộ nhớ
+                    long roomIdToRemove = room.getId();
+                    CompletableFuture.runAsync(() -> {
+                        try {
+                            Thread.sleep(30_000);
+                            activeRooms.remove(roomIdToRemove);
+                            System.out.println(">>> [Manager] Đã xóa Room " + roomIdToRemove + " khỏi RAM.");
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    });
+                }
             }
         });
     }

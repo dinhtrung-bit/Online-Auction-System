@@ -1,6 +1,6 @@
 package server.models.users;
 
-import server.dao.impl.UserDAOimpl;
+import server.dao.impl.UserDAOImpl;
 import server.services.PasswordUtil;
 
 public class CreateAdmin {
@@ -9,7 +9,7 @@ public class CreateAdmin {
 
         admin.setPasswordHash(PasswordUtil.hash("123456"));
 
-        new UserDAOimpl().insert(admin);
+        new UserDAOImpl().insert(admin);
 
         System.out.println("Tạo admin thành công");
     }

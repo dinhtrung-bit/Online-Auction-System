@@ -9,7 +9,7 @@ public abstract class User implements Serializable {
     protected String username;
     protected String role;
 
-    public User(String userId, String username, String role) {
+    public User(int id, String userId, String username, String role) {
         this.userId = userId;
         this.username = username;
         this.role = role;

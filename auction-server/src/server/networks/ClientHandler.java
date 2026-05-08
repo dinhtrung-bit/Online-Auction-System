@@ -4,10 +4,10 @@ import com.google.gson.Gson;
 import server.models.users.Seller;
 import server.networks.dto.MessageDTO;
 import server.dao.impl.AuctionRoomDAOImpl;
-import server.dao.impl.AutoBidDAOimpl;
+import server.dao.impl.AutoBidDAOImpl;
 import server.dao.impl.BidMessageDAOImpl;
-import server.dao.impl.ItemDAOimpl;
-import server.dao.impl.UserDAOimpl;
+import server.dao.impl.ItemDAOImpl;
+import server.dao.impl.UserDAOImpl;
 import server.dao.interfaces.AuctionRoomDAO;
 import server.dao.interfaces.AutoBidDAO;
 import server.dao.interfaces.BidMessageDAO;
@@ -38,11 +38,11 @@ public class ClientHandler implements Runnable {
     private static final CopyOnWriteArrayList<ClientHandler> activeClients = new CopyOnWriteArrayList<>();
     private final Socket clientSocket;
     private final Gson gson = new Gson();
-    private final UserDAO userDAO = new UserDAOimpl();
-    private final ItemDAO itemDAO = new ItemDAOimpl();
+    private final UserDAO userDAO = new UserDAOImpl();
+    private final ItemDAO itemDAO = new ItemDAOImpl();
     private final AuctionRoomDAO auctionDAO = new AuctionRoomDAOImpl();
     private final BidMessageDAO bidMessageDAO = new BidMessageDAOImpl();
-    private final AutoBidDAO autoBidDAO = new AutoBidDAOimpl();
+    private final AutoBidDAO autoBidDAO = new AutoBidDAOImpl();
     private PrintWriter out;
     private User loggedInUser = null;
 
@@ -99,6 +99,7 @@ public class ClientHandler implements Runnable {
             return new MessageDTO("ERROR", "Lỗi: " + e.getMessage());
         }
     }
+
     private MessageDTO handleGetBalance(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
@@ -134,46 +135,59 @@ public class ClientHandler implements Runnable {
 
     // ===================== ITEMS =====================
 
-    private MessageDTO handleAddItem(MessageDTO request) {
+    // ===================== ROLE GUARDS =====================
+    /** Trả về null nếu user là Seller, ngược lại trả về MessageDTO lỗi. */
+    private MessageDTO requireSeller() {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
+        if (!(loggedInUser instanceof Seller)) {
+            return new MessageDTO("ERROR", "Chỉ Seller mới được thực hiện hành động này!");
+        }
+        return null;
+    }
+
+    private MessageDTO requireBidder() {
+        if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
+        if (!(loggedInUser instanceof Bidder)) {
+            return new MessageDTO("ERROR", "Chỉ Bidder mới được thực hiện hành động này!");
+        }
+        return null;
+    }
+
+    private MessageDTO handleAddItem(MessageDTO request) {
+        MessageDTO err = requireSeller();
+        if (err != null) return err;
 
         try {
-            System.out.println(">>> SERVER nhận ADD_ITEM, payload: " + request.getPayload());
-            System.out.println(">>> loggedInUser: " + loggedInUser.getUsername()
-                    + " | role: " + loggedInUser.getRole()
-                    + " | id: " + loggedInUser.getUserId());
-
             Map<String, Object> data = gson.fromJson(request.getPayload(), Map.class);
 
-            String name = data.get("name") != null ? data.get("name").toString() : "";
+            String name        = data.get("name") != null ? data.get("name").toString() : "";
             String description = data.get("description") != null ? data.get("description").toString() : "";
-            BigDecimal price = new BigDecimal(data.get("startingPrice").toString());
-
-            String category = "ART";
-            if (data.get("category") != null) {
-                category = data.get("category").toString();
-            }
+            BigDecimal price   = new BigDecimal(data.get("startingPrice").toString());
+            String category    = data.get("category") != null ? data.get("category").toString() : "ART";
 
             Item newItem = ItemFactory.createItem(category, 0, name, price, description);
             itemDAO.insertWithSellerId(newItem, loggedInUser.getUserId());
 
-            System.out.println(">>> INSERT thành công! description = " + description);
-
+            System.out.println(">>> [ADD_ITEM] " + loggedInUser.getUsername() + " thêm: " + name);
             return new MessageDTO("ADD_ITEM_SUCCESS", "Thêm sản phẩm thành công!");
         } catch (Exception e) {
-            System.err.println(">>> ADD_ITEM lỗi: " + e.getMessage());
+            System.err.println(">>> [ADD_ITEM] Lỗi: " + e.getMessage());
             return new MessageDTO("ADD_ITEM_FAILED", "Lỗi: " + e.getMessage());
         }
     }
+
     private MessageDTO handleUpdateItem(MessageDTO request) {
-        if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
+        MessageDTO err = requireSeller();
+        if (err != null) return err;
         try {
-            String[] data  = request.getPayload().split(":");
-            int itemId     = Integer.parseInt(data[0]);
-            String name    = data[1];
-            String description = data[2];
-            String category = data[3];
-            BigDecimal price = new BigDecimal(data[4]);
+            // Client gửi gson.toJson(item map) — parse JSON thay vì split(":")
+            // để tránh vỡ khi name/description chứa ký tự ':'
+            Map<String, Object> data = gson.fromJson(request.getPayload(), Map.class);
+            int itemId          = (int) Double.parseDouble(data.get("itemId").toString());
+            String name         = data.get("name") != null ? data.get("name").toString() : "";
+            String description  = data.get("description") != null ? data.get("description").toString() : "";
+            String category     = data.get("category") != null ? data.get("category").toString() : "ART";
+            BigDecimal price    = new BigDecimal(data.get("startingPrice").toString());
 
             Item item = ItemFactory.createItem(category, itemId, name, price, description);
             item.setSeller((Seller) loggedInUser);
@@ -185,7 +199,8 @@ public class ClientHandler implements Runnable {
     }
 
     private MessageDTO handleDeleteItem(MessageDTO request) {
-        if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
+        MessageDTO err = requireSeller();
+        if (err != null) return err;
         try {
             int itemId = (int) Double.parseDouble(request.getPayload().trim());
             itemDAO.delete(itemId);
@@ -217,7 +232,8 @@ public class ClientHandler implements Runnable {
     // ===================== AUCTIONS =====================
 
     private MessageDTO handleCreateAuction(MessageDTO request) {
-        if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
+        MessageDTO err = requireSeller();
+        if (err != null) return err;
         try {
             String[] data = request.getPayload().split(":");
             int itemId = (int) Double.parseDouble(data[0]);
@@ -226,6 +242,13 @@ public class ClientHandler implements Runnable {
 
             Item item = itemDAO.findById(itemId);
             if (item == null) return new MessageDTO("ERROR", "Không tìm thấy sản phẩm!");
+
+            // Đảm bảo seller chỉ tạo auction cho item của chính mình
+            if (item.getSeller() != null
+                    && item.getSeller().getUserId() != loggedInUser.getUserId()) {
+                return new MessageDTO("ERROR",
+                        "Bạn không có quyền tạo phiên đấu giá cho sản phẩm này!");
+            }
 
             LocalDateTime startDateTime = LocalDateTime.parse(startTime,
                     java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
@@ -246,7 +269,8 @@ public class ClientHandler implements Runnable {
     }
 
     private MessageDTO handleDeleteAuction(MessageDTO request) {
-        if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
+        MessageDTO err = requireSeller();
+        if (err != null) return err;
         try {
             int auctionId = Integer.parseInt(request.getPayload().trim());
             auctionDAO.delete(auctionId);
@@ -260,6 +284,9 @@ public class ClientHandler implements Runnable {
 
     private MessageDTO handleSetAutoBid(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
+        if (!(loggedInUser instanceof Bidder)) {
+            return new MessageDTO("SET_AUTO_BID_FAILED", "Chỉ Bidder mới được đặt auto-bid!");
+        }
         try {
             String[] data = request.getPayload().split(":");
             int auctionId  = Integer.parseInt(data[0]);
@@ -276,6 +303,10 @@ public class ClientHandler implements Runnable {
             config.setIncrement(step);
 
             autoBidDAO.insert(config);
+
+            // Kích hoạt ngay vòng đấu giá tự động — không phải đợi người khác bid
+            AuctionService.getInstance().triggerAutoBidsForRoom(auctionId, (Bidder) loggedInUser);
+
             return new MessageDTO("SET_AUTO_BID_SUCCESS", "Đặt auto bid thành công!");
         } catch (Exception e) {
             return new MessageDTO("SET_AUTO_BID_FAILED", "Lỗi: " + e.getMessage());
@@ -336,11 +367,28 @@ public class ClientHandler implements Runnable {
 
     private MessageDTO handleRegister(MessageDTO request) {
         try {
-            String[] data = request.getPayload().split(":");
-            User newUser = UserFactory.createUser(data[2], 0, data[0]);
-            newUser.setPasswordHash(PasswordUtil.hash(data[1]));
+            // Client gửi: "username:password:role:fullName"
+            String[] data = request.getPayload().split(":", 4); // tối đa 4 phần
+            if (data.length < 3) {
+                return new MessageDTO("REGISTER_FAILED", "Dữ liệu đăng ký không đủ!");
+            }
+            String username = data[0].trim();
+            String password = data[1];
+            String role     = data[2].trim();
+            // fullName (data[3]) hiện chưa lưu vào DB — để dành mở rộng sau
+
+            // Validate cơ bản
+            server.utils.Validation.validateUsername(username);
+            server.utils.Validation.validatePassword(password);
+
+            User newUser = UserFactory.createUser(role, 0, username);
+            newUser.setPasswordHash(PasswordUtil.hash(password));
             userDAO.insert(newUser);
             return new MessageDTO("REGISTER_SUCCESS", "Đăng ký thành công!");
+        } catch (server.exceptions.DuplicateDataException e) {
+            return new MessageDTO("REGISTER_FAILED", "Tên đăng nhập đã tồn tại!");
+        } catch (IllegalArgumentException e) {
+            return new MessageDTO("REGISTER_FAILED", e.getMessage());
         } catch (Exception e) {
             return new MessageDTO("REGISTER_FAILED", "Lỗi đăng ký: " + e.getMessage());
         }
@@ -511,11 +559,11 @@ public class ClientHandler implements Runnable {
     }
 
     public static void broadcast(String json) {
-        activeClients.forEach(c -> { if (c.out != null) c.out.println(json); });
+        ClientHandler.activeClients.forEach(c -> { if (c.out != null) c.out.println(json); });
     }
 
     private void cleanup() {
-        activeClients.remove(this);
+        ClientHandler.activeClients.remove(this);
         try {
             if (clientSocket != null && !clientSocket.isClosed()) clientSocket.close();
         } catch (IOException e) {

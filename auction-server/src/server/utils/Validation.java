@@ -1,5 +1,6 @@
-package server.exceptions;
+package server.utils;
 
+import server.exceptions.InvalidBidException;
 import server.models.auction.AuctionStatus;
 import server.models.users.User;
 

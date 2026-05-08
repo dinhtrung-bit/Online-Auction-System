@@ -54,6 +54,7 @@ public class MainServer {
             System.out.println(">>> [Hệ thống] Đang dừng Server an toàn...");
             isRunning = false;
             scheduler.shutdown();
+            server.dao.core.DBConnection.closePool();
         }));
     }
 }

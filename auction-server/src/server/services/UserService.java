@@ -1,13 +1,13 @@
 package server.services;
 
-import server.dao.impl.UserDAOimpl;
+import server.dao.impl.UserDAOImpl;
 import server.dao.interfaces.UserDAO;
 import server.models.users.User;
 import server.models.users.UserFactory;
 
 public class UserService {
 
-    private final UserDAO userDAO = new UserDAOimpl();
+    private final UserDAO userDAO = new UserDAOImpl();
 
     public void register(String username, String password, String role) throws Exception {
         User user = UserFactory.createUser(role, 0, username);

@@ -1,8 +1,8 @@
-
+package test.java;
 
 import org.junit.jupiter.api.Test;
 import server.exceptions.InvalidBidException;
-import server.exceptions.Validation;
+import server.utils.Validation;
 import server.models.auction.AuctionStatus;
 import server.models.users.Bidder;
 

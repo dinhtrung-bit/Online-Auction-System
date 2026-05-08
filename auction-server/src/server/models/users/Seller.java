@@ -8,12 +8,6 @@ public class Seller extends User {
     private double sellerRating; // Đánh giá sao (vd: 4.8/5.0)
     private int totalItemsSold;  // Số sản phẩm đã bán thành công
 
-    public Seller(int i, String j) {
-        super();
-        this.sellerRating = 5.0;
-        this.totalItemsSold = 0;
-    }
-
     public Seller(int userId, String username, String passwordHash, String email, BigDecimal accountBalance) {
         super(userId, username, passwordHash, email, accountBalance);
         this.sellerRating = 5.0;
