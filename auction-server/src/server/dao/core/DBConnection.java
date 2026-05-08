@@ -10,8 +10,10 @@ public class DBConnection {
     private static DBConnection instance;
     private Connection connection;
 
-    private static final String URL = "jdbc:mysql://localhost:3306/daugia";
-    private static final String USER = "root";
+    private static final String URL =
+            "jdbc:mysql://mysql-24b3aff1-vnu-8ca6.k.aivencloud.com:15190/daugia?sslMode=REQUIRED";
+
+    private static final String USER = "avnadmin";
     private static final String PASSWORD = "";
 
     private DBConnection() {
