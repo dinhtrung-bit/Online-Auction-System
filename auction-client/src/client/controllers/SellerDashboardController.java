@@ -1,7 +1,7 @@
 package client.controllers;
 
-import client.models.item.Item;
 import client.models.item.Art;
+import client.models.item.Item;
 import client.networks.ClientMain;
 import client.networks.MessageDTO;
 import com.google.gson.Gson;
@@ -20,6 +20,9 @@ import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -30,9 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.Priority;
 
 public class SellerDashboardController {
 
@@ -124,6 +124,7 @@ public class SellerDashboardController {
         colStatus.setCellValueFactory(cellData -> {
             Item item = cellData.getValue();
             Map<String, Object> auction = auctionMap.get(item.getItemId());
+
             String status = auction != null && auction.get("status") != null
                     ? auction.get("status").toString()
                     : "NONE";
@@ -211,6 +212,7 @@ public class SellerDashboardController {
 
                             Item item = new Art(itemId, name, price, categoryInfo);
                             item.setDescription(description);
+
                             if (m.get("bidIncrement") != null) {
                                 item.setBidIncrement(Double.parseDouble(m.get("bidIncrement").toString()));
                             }
@@ -234,7 +236,9 @@ public class SellerDashboardController {
             }
         });
 
-        new Thread(() -> ClientMain.send(gson.toJson(new MessageDTO("GET_MY_ITEMS", "")))).start();
+        new Thread(() ->
+                ClientMain.send(gson.toJson(new MessageDTO("GET_MY_ITEMS", "")))
+        ).start();
     }
 
     private void loadMyAuctionsFromServer() {
@@ -266,7 +270,9 @@ public class SellerDashboardController {
             }
         });
 
-        new Thread(() -> ClientMain.send(gson.toJson(new MessageDTO("GET_MY_AUCTIONS", "")))).start();
+        new Thread(() ->
+                ClientMain.send(gson.toJson(new MessageDTO("GET_MY_AUCTIONS", "")))
+        ).start();
     }
 
     @FXML
@@ -329,32 +335,32 @@ public class SellerDashboardController {
         VBox root = new VBox(18);
         root.setPadding(new javafx.geometry.Insets(25));
         root.setStyle("""
-            -fx-background-color: white;
-            -fx-background-radius: 18;
-            """);
+                -fx-background-color: white;
+                -fx-background-radius: 18;
+                """);
 
         VBox header = new VBox(6);
         Label title = new Label("Tạo phiên đấu giá");
         title.setStyle("""
-            -fx-font-size: 24px;
-            -fx-font-weight: bold;
-            -fx-text-fill: #0f172a;
-            """);
+                -fx-font-size: 24px;
+                -fx-font-weight: bold;
+                -fx-text-fill: #0f172a;
+                """);
 
         Label subTitle = new Label("Thiết lập thời gian bắt đầu và thời lượng phiên đấu giá");
         subTitle.setStyle("""
-            -fx-font-size: 13px;
-            -fx-text-fill: #64748b;
-            """);
+                -fx-font-size: 13px;
+                -fx-text-fill: #64748b;
+                """);
 
         Label productName = new Label("📦 Sản phẩm: " + selectedItem.getName());
         productName.setStyle("""
-            -fx-background-color: #eff6ff;
-            -fx-text-fill: #1d4ed8;
-            -fx-font-weight: bold;
-            -fx-padding: 10 14;
-            -fx-background-radius: 10;
-            """);
+                -fx-background-color: #eff6ff;
+                -fx-text-fill: #1d4ed8;
+                -fx-font-weight: bold;
+                -fx-padding: 10 14;
+                -fx-background-radius: 10;
+                """);
 
         header.getChildren().addAll(title, subTitle, productName);
 
@@ -377,13 +383,13 @@ public class SellerDashboardController {
         txtDuration.setMaxWidth(Double.MAX_VALUE);
 
         String inputStyle = """
-            -fx-background-color: #f8fafc;
-            -fx-border-color: #cbd5e1;
-            -fx-border-radius: 10;
-            -fx-background-radius: 10;
-            -fx-padding: 10;
-            -fx-font-size: 14px;
-            """;
+                -fx-background-color: #f8fafc;
+                -fx-border-color: #cbd5e1;
+                -fx-border-radius: 10;
+                -fx-background-radius: 10;
+                -fx-padding: 10;
+                -fx-font-size: 14px;
+                """;
 
         datePicker.setStyle(inputStyle);
         txtTime.setStyle(inputStyle);
@@ -414,42 +420,42 @@ public class SellerDashboardController {
         Label note = new Label("Gợi ý: thời gian nên đặt sau hiện tại vài phút để bidder kịp tham gia.");
         note.setWrapText(true);
         note.setStyle("""
-            -fx-background-color: #fefce8;
-            -fx-text-fill: #854d0e;
-            -fx-padding: 10 14;
-            -fx-background-radius: 10;
-            -fx-font-size: 12px;
-            """);
+                -fx-background-color: #fefce8;
+                -fx-text-fill: #854d0e;
+                -fx-padding: 10 14;
+                -fx-background-radius: 10;
+                -fx-font-size: 12px;
+                """);
 
         root.getChildren().addAll(header, grid, note);
 
         dialog.getDialogPane().setContent(root);
         dialog.getDialogPane().setPrefWidth(520);
         dialog.getDialogPane().setStyle("""
-            -fx-background-color: white;
-            -fx-background-radius: 18;
-            """);
+                -fx-background-color: white;
+                -fx-background-radius: 18;
+                """);
 
         Button okButton = (Button) dialog.getDialogPane().lookupButton(btnOk);
         okButton.setStyle("""
-            -fx-background-color: #10b981;
-            -fx-text-fill: white;
-            -fx-font-weight: bold;
-            -fx-background-radius: 10;
-            -fx-padding: 10 22;
-            -fx-cursor: hand;
-            """);
+                -fx-background-color: #10b981;
+                -fx-text-fill: white;
+                -fx-font-weight: bold;
+                -fx-background-radius: 10;
+                -fx-padding: 10 22;
+                -fx-cursor: hand;
+                """);
 
         Button cancelButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
         cancelButton.setText("Hủy bỏ");
         cancelButton.setStyle("""
-            -fx-background-color: #f1f5f9;
-            -fx-text-fill: #475569;
-            -fx-font-weight: bold;
-            -fx-background-radius: 10;
-            -fx-padding: 10 22;
-            -fx-cursor: hand;
-            """);
+                -fx-background-color: #f1f5f9;
+                -fx-text-fill: #475569;
+                -fx-font-weight: bold;
+                -fx-background-radius: 10;
+                -fx-padding: 10 22;
+                -fx-cursor: hand;
+                """);
 
         dialog.setResultConverter(btn -> {
             if (btn == btnOk) {
@@ -481,22 +487,23 @@ public class SellerDashboardController {
                     Platform.runLater(() -> showAlert("Lỗi", "Tạo phiên thất bại: " + p));
                 });
 
-                new Thread(() -> ClientMain.send(gson.toJson(
-                        new MessageDTO("CREATE_AUCTION", payload)
-                ))).start();
+                new Thread(() ->
+                        ClientMain.send(gson.toJson(new MessageDTO("CREATE_AUCTION", payload)))
+                ).start();
 
             } catch (Exception e) {
                 showAlert("Lỗi nhập liệu", "Vui lòng nhập đúng định dạng giờ HH:mm và thời gian là số phút.");
             }
         });
     }
+
     private Label createAuctionLabel(String text) {
         Label label = new Label(text);
         label.setStyle("""
-            -fx-font-weight: bold;
-            -fx-text-fill: #334155;
-            -fx-font-size: 13px;
-            """);
+                -fx-font-weight: bold;
+                -fx-text-fill: #334155;
+                -fx-font-size: 13px;
+                """);
         return label;
     }
 

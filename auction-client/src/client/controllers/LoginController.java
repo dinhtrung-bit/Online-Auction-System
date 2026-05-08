@@ -1,6 +1,8 @@
 package client.controllers;
 
 import client.models.user.UserSession;
+import client.networks.ClientMain;
+import client.networks.MessageDTO;
 import com.google.gson.Gson;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -15,12 +17,13 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 public class LoginController {
+
     @FXML private Button btnAdmin, btnSeller, btnBidder;
     @FXML private TextField txtUsername;
     @FXML private PasswordField txtPassword;
 
     private String selectedRole = "Bidder";
-    private Gson gson = new Gson();
+    private final Gson gson = new Gson();
 
     private final String IDLE_STYLE =
             "-fx-background-color: white;" +
@@ -47,9 +50,24 @@ public class LoginController {
                     "-fx-padding: 0;" +
                     "-fx-min-height: 44;" +
                     "-fx-pref-height: 44;";
-    @FXML void selectAdmin(ActionEvent event) { selectedRole = "Admin"; updateButtonStyles(); }
-    @FXML void selectSeller(ActionEvent event) { selectedRole = "Seller"; updateButtonStyles(); }
-    @FXML void selectBidder(ActionEvent event) { selectedRole = "Bidder"; updateButtonStyles(); }
+
+    @FXML
+    void selectAdmin(ActionEvent event) {
+        selectedRole = "Admin";
+        updateButtonStyles();
+    }
+
+    @FXML
+    void selectSeller(ActionEvent event) {
+        selectedRole = "Seller";
+        updateButtonStyles();
+    }
+
+    @FXML
+    void selectBidder(ActionEvent event) {
+        selectedRole = "Bidder";
+        updateButtonStyles();
+    }
 
     private void updateButtonStyles() {
         btnAdmin.setStyle(selectedRole.equals("Admin") ? ACTIVE_STYLE : IDLE_STYLE);
@@ -63,7 +81,9 @@ public class LoginController {
             Parent root = FXMLLoader.load(getClass().getResource("/client/views/register.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.getScene().setRoot(root);
-        } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -79,9 +99,10 @@ public class LoginController {
         Node loginBtn = (Node) event.getSource();
         loginBtn.setDisable(true);
 
-        client.networks.ClientMain.registerListener("LOGIN_SUCCESS", payload -> {
-            client.networks.ClientMain.unregisterListener("LOGIN_SUCCESS");
-            client.networks.ClientMain.unregisterListener("LOGIN_FAILED");
+        ClientMain.registerListener("LOGIN_SUCCESS", payload -> {
+            ClientMain.unregisterListener("LOGIN_SUCCESS");
+            ClientMain.unregisterListener("LOGIN_FAILED");
+
             Platform.runLater(() -> {
                 loginBtn.setDisable(false);
                 UserSession.username = username;
@@ -90,9 +111,10 @@ public class LoginController {
             });
         });
 
-        client.networks.ClientMain.registerListener("LOGIN_FAILED", payload -> {
-            client.networks.ClientMain.unregisterListener("LOGIN_SUCCESS");
-            client.networks.ClientMain.unregisterListener("LOGIN_FAILED");
+        ClientMain.registerListener("LOGIN_FAILED", payload -> {
+            ClientMain.unregisterListener("LOGIN_SUCCESS");
+            ClientMain.unregisterListener("LOGIN_FAILED");
+
             Platform.runLater(() -> {
                 loginBtn.setDisable(false);
                 showAlert(Alert.AlertType.ERROR, "Lỗi đăng nhập", "Sai thông tin: " + payload);
@@ -100,24 +122,33 @@ public class LoginController {
         });
 
         CompletableFuture.runAsync(() -> {
-            client.networks.ClientMain.connectToServer();
+            ClientMain.connectToServer();
+
             String payload = selectedRole + ":" + username + ":" + password;
-            client.networks.ClientMain.send(gson.toJson(
-                    new client.networks.MessageDTO("LOGIN", payload)
+
+            ClientMain.send(gson.toJson(
+                    new MessageDTO("LOGIN", payload)
             ));
         });
     }
 
     private void switchScene(Node node) {
         try {
-            String fxmlPath = selectedRole.equals("Bidder") ? "/client/views/auction-list.fxml" :
-                    selectedRole.equals("Seller") ? "/client/views/seller-dashboard.fxml" :
-                            "/client/views/admin-dashboard.fxml";
+            String fxmlPath = selectedRole.equals("Bidder")
+                    ? "/client/views/auction-list.fxml"
+                    : selectedRole.equals("Seller")
+                    ? "/client/views/seller-dashboard.fxml"
+                    : "/client/views/admin-dashboard.fxml";
+
             Parent root = FXMLLoader.load(getClass().getResource(fxmlPath));
+
             Stage stage = (Stage) node.getScene().getWindow();
             stage.getScene().setRoot(root);
             stage.setMaximized(true);
-        } catch (IOException e) { e.printStackTrace(); }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {
@@ -127,6 +158,7 @@ public class LoginController {
         alert.setContentText(content);
         alert.showAndWait();
     }
+
     @FXML
     public void initialize() {
         updateButtonStyles();

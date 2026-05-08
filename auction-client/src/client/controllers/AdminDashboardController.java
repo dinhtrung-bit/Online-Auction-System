@@ -9,10 +9,12 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+import com.google.gson.Gson;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -37,7 +39,7 @@ public class AdminDashboardController implements Initializable {
             java.lang.reflect.Type listType =
                     new com.google.gson.reflect.TypeToken<java.util.ArrayList<UserViewModel>>(){}.getType();
             java.util.List<UserViewModel> serverList =
-                    new com.google.gson.Gson().fromJson(payload, listType);
+                    new Gson().fromJson(payload, listType);
             javafx.application.Platform.runLater(() -> {
                 ObservableList<UserViewModel> list =
                         FXCollections.observableArrayList(serverList);
@@ -48,7 +50,7 @@ public class AdminDashboardController implements Initializable {
         // Gửi request
         client.networks.MessageDTO req =
                 new client.networks.MessageDTO("GET_ALL_USERS", "");
-        client.networks.ClientMain.send(new com.google.gson.Gson().toJson(req));
+        client.networks.ClientMain.send(new Gson().toJson(req));
     }
 
     @FXML

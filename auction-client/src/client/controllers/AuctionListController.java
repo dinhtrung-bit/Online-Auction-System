@@ -30,13 +30,13 @@ public class AuctionListController implements Initializable {
 
     @FXML private VBox auctionContainer;
     @FXML private ToggleButton btnTabLive, btnTabWon;
-    @FXML private ComboBox<String> cmbStatus; // ✅ THÊM: ComboBox chọn trạng thái
+    @FXML private ComboBox<String> cmbStatus;
     @FXML private Label lblBalance;
 
     private ToggleGroup tabGroup;
-    private List<AuctionViewModel> allAuctions = new ArrayList<>(); // Lưu cache từ Server
+    private List<AuctionViewModel> allAuctions = new ArrayList<>();
     private String currentTab = "LIVE";
-    private String currentStatusFilter = "ALL"; // ✅ THÊM: Lưu trạng thái lọc hiện tại
+    private String currentStatusFilter = "ALL";
 
     private final Gson gson = new Gson();
     private static final NumberFormat VND = NumberFormat.getInstance(new Locale("vi", "VN"));
@@ -46,40 +46,32 @@ public class AuctionListController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         this.myUsername = UserSession.username;
 
-        // Nhóm 2 nút Toggle lại thành 1 Tab menu
         tabGroup = new ToggleGroup();
-        if(btnTabLive != null) btnTabLive.setToggleGroup(tabGroup);
-        if(btnTabWon != null) btnTabWon.setToggleGroup(tabGroup);
+        if (btnTabLive != null) btnTabLive.setToggleGroup(tabGroup);
+        if (btnTabWon != null) btnTabWon.setToggleGroup(tabGroup);
 
-        // ✅ THÊM: Setup ComboBox chọn trạng thái
         if (cmbStatus != null) {
             cmbStatus.setValue("TẤT CẢ");
         }
 
-        // Đăng ký nhận danh sách đấu giá
         ClientMain.registerListener("AUCTION_LIST", payload -> {
-            Type listType = new TypeToken<List<AuctionViewModel>>(){}.getType();
+            Type listType = new TypeToken<List<AuctionViewModel>>() {}.getType();
             allAuctions = gson.fromJson(payload, listType);
             Platform.runLater(this::applyFilterAndRender);
         });
 
-        // ✅ THÊM: Đăng ký lắng nghe danh sách lọc theo trạng thái từ Server
         ClientMain.registerListener("AUCTION_LIST_BY_STATUS", payload -> {
-            Type listType = new TypeToken<List<AuctionViewModel>>(){}.getType();
+            Type listType = new TypeToken<List<AuctionViewModel>>() {}.getType();
             List<AuctionViewModel> filteredAuctions = gson.fromJson(payload, listType);
-            Platform.runLater(() -> {
-                applyTabFilterAndRender(filteredAuctions);
-            });
+            Platform.runLater(() -> applyTabFilterAndRender(filteredAuctions));
         });
 
-        // THÊM: Đăng ký lắng nghe tin nhắn chứa Số dư (BALANCE_DATA) từ Server
         ClientMain.registerListener("BALANCE_DATA", payload -> {
             Platform.runLater(() -> {
                 try {
                     double balanceVal = Double.parseDouble(payload);
-                    // Lưu vào Session để màn hình Đặt giá (AuctionDetail) có thể dùng để kiểm tra
                     UserSession.balance = balanceVal;
-                    // Hiển thị lên giao diện
+
                     if (lblBalance != null) {
                         lblBalance.setText("💳 Số dư: " + VND.format(balanceVal) + " đ");
                     }
@@ -89,100 +81,82 @@ public class AuctionListController implements Initializable {
             });
         });
 
-        // Đăng ký lắng nghe kho vật phẩm đã thắng từ Server
-        ClientMain.registerListener("WON_AUCTIONS", payload -> {
-            try {
-                java.lang.reflect.Type listType =
-                        new com.google.gson.reflect.TypeToken<
-                                java.util.List<java.util.Map<String, Object>>>(){}.getType();
-                java.util.List<java.util.Map<String, Object>> wonList =
-                        gson.fromJson(payload, listType);
-                Platform.runLater(() -> renderWonAuctionCards(wonList));
-            } catch (Exception e) {
-                System.err.println("Lỗi parse WON_AUCTIONS: " + e.getMessage());
-            }
-        });
-
-        // Tải danh sách đấu giá
         loadAuctionsFromServer();
 
-        new Thread(() -> {
-            ClientMain.send(gson.toJson(new MessageDTO("GET_BALANCE", "")));
-        }).start();
+        new Thread(() ->
+                ClientMain.send(gson.toJson(new MessageDTO("GET_BALANCE", "")))
+        ).start();
     }
 
     @FXML
     void switchTab(ActionEvent event) {
         if (btnTabWon != null && btnTabWon.isSelected()) {
             currentTab = "WON";
-            // Gửi request lấy kho vật phẩm đã thắng từ Server
-            new Thread(() -> ClientMain.send(
-                    gson.toJson(new MessageDTO("GET_MY_WON_AUCTIONS", "")))).start();
         } else {
             currentTab = "LIVE";
-            applyFilterAndRender();
         }
+
+        applyFilterAndRender();
     }
 
-    // ✅ THÊM: Handler cho ComboBox chọn trạng thái
     @FXML
     void handleFilterByStatus(ActionEvent event) {
         String selectedStatus = cmbStatus.getValue();
 
         if (selectedStatus == null || selectedStatus.equals("TẤT CẢ")) {
-            // Hiển thị tất cả
             currentStatusFilter = "ALL";
             applyFilterAndRender();
         } else {
-            // Gửi yêu cầu lọc đến Server
             currentStatusFilter = selectedStatus;
-            new Thread(() -> {
-                ClientMain.send(gson.toJson(new MessageDTO("GET_AUCTIONS_BY_STATUS", selectedStatus)));
-            }).start();
+            new Thread(() ->
+                    ClientMain.send(gson.toJson(new MessageDTO("GET_AUCTIONS_BY_STATUS", selectedStatus)))
+            ).start();
         }
     }
 
     private void applyFilterAndRender() {
-        // Nếu có lọc theo trạng thái, bỏ qua lọc này
         if (!currentStatusFilter.equals("ALL")) {
-            return; // Để applyTabFilterAndRender xử lý
+            return;
         }
 
         List<AuctionViewModel> filtered = new ArrayList<>();
 
         for (AuctionViewModel a : allAuctions) {
             if ("WON".equals(currentTab)) {
-                // Chỉ lấy đồ đã KẾT THÚC và người thắng LÀ MÌNH
-                if ("FINISHED".equalsIgnoreCase(a.getStatus()) && myUsername.equals(a.getCurrentWinner())) {
+                if ("FINISHED".equalsIgnoreCase(a.getStatus())
+                        && myUsername != null
+                        && myUsername.equals(a.getCurrentWinner())) {
                     filtered.add(a);
                 }
             } else {
-                // Đang diễn ra hoặc sắp bắt đầu
-                if (!"FINISHED".equalsIgnoreCase(a.getStatus()) && !"CANCELED".equalsIgnoreCase(a.getStatus())) {
+                if (!"FINISHED".equalsIgnoreCase(a.getStatus())
+                        && !"CANCELED".equalsIgnoreCase(a.getStatus())) {
                     filtered.add(a);
                 }
             }
         }
+
         renderAuctionCards(filtered);
     }
 
-    // ✅ THÊM: Method áp dụng lọc Tab cho danh sách đã lọc theo trạng thái
     private void applyTabFilterAndRender(List<AuctionViewModel> statusFilteredList) {
         List<AuctionViewModel> filtered = new ArrayList<>();
 
         for (AuctionViewModel a : statusFilteredList) {
             if ("WON".equals(currentTab)) {
-                // Chỉ lấy đồ đã KẾT THÚC và người thắng LÀ MÌNH
-                if ("FINISHED".equalsIgnoreCase(a.getStatus()) && myUsername.equals(a.getCurrentWinner())) {
+                if ("FINISHED".equalsIgnoreCase(a.getStatus())
+                        && myUsername != null
+                        && myUsername.equals(a.getCurrentWinner())) {
                     filtered.add(a);
                 }
             } else {
-                // Đang diễn ra hoặc sắp bắt đầu
-                if (!"FINISHED".equalsIgnoreCase(a.getStatus()) && !"CANCELED".equalsIgnoreCase(a.getStatus())) {
+                if (!"FINISHED".equalsIgnoreCase(a.getStatus())
+                        && !"CANCELED".equalsIgnoreCase(a.getStatus())) {
                     filtered.add(a);
                 }
             }
         }
+
         renderAuctionCards(filtered);
     }
 
@@ -191,139 +165,183 @@ public class AuctionListController implements Initializable {
             auctionContainer.getChildren().clear();
             auctionContainer.getChildren().add(new Label("Đang tải dữ liệu..."));
         });
-        new Thread(() -> ClientMain.send(gson.toJson(new MessageDTO("GET_AVAILABLE_AUCTIONS", "")))).start();
+
+        new Thread(() ->
+                ClientMain.send(gson.toJson(new MessageDTO("GET_AVAILABLE_AUCTIONS", "")))
+        ).start();
     }
 
     private void renderAuctionCards(List<AuctionViewModel> list) {
         auctionContainer.getChildren().clear();
+
         if (list == null || list.isEmpty()) {
-            Label empty = new Label(currentTab.equals("WON")
-                    ? "Bạn chưa trúng đấu giá vật phẩm nào."
-                    : "Hiện không có phiên đấu giá nào đang mở.");
+            Label empty = new Label(
+                    currentTab.equals("WON")
+                            ? "Bạn chưa trúng đấu giá vật phẩm nào."
+                            : "Hiện không có phiên đấu giá nào đang mở."
+            );
             empty.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 14px;");
             auctionContainer.getChildren().add(empty);
             return;
         }
+
         for (AuctionViewModel auction : list) {
             auctionContainer.getChildren().add(buildCard(auction));
         }
     }
 
-    /** Render kho vật phẩm đã trúng đấu giá — dữ liệu thật từ Server */
-    private void renderWonAuctionCards(java.util.List<java.util.Map<String, Object>> wonList) {
-        auctionContainer.getChildren().clear();
-
-        if (wonList == null || wonList.isEmpty()) {
-            Label empty = new Label("🎁 Kho vật phẩm trống. Hãy tham gia đấu giá và giành chiến thắng!");
-            empty.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 14px; -fx-font-style: italic;");
-            auctionContainer.getChildren().add(empty);
-            return;
-        }
-
-        // Tiêu đề kho
-        Label title = new Label("🏆 Kho vật phẩm đã trúng đấu giá (" + wonList.size() + " vật phẩm)");
-        title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #0c4a6e;");
-        auctionContainer.getChildren().add(title);
-
-        for (java.util.Map<String, Object> item : wonList) {
-            auctionContainer.getChildren().add(buildWonCard(item));
-        }
-    }
-
-    private HBox buildWonCard(java.util.Map<String, Object> item) {
-        // Icon
-        Label icon = new Label("🏅");
-        icon.setStyle("-fx-font-size: 36px;");
-
-        // Tên vật phẩm
-        Label lblName = new Label(String.valueOf(item.get("itemName")));
-        lblName.setStyle("-fx-font-weight: bold; -fx-font-size: 15px;");
-
-        // Badge trạng thái
-        String status = String.valueOf(item.getOrDefault("status", "PAID"));
-        Label lblBadge = new Label("PAID".equals(status) ? "💰 Đã thanh toán" : "✅ Đã kết thúc");
-        lblBadge.setStyle("-fx-background-color: #dbeafe; -fx-text-fill: #1e3a8a; "
-                + "-fx-padding: 2 8; -fx-background-radius: 4; -fx-font-size: 11px; -fx-font-weight: bold;");
-
-        HBox nameRow = new HBox(10, lblName, lblBadge);
-        nameRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-
-        // Giá cuối
-        double finalPrice = ((Number) item.getOrDefault("finalPrice", 0)).doubleValue();
-        VBox colPrice = metaCol("💰 Giá trúng",
-                VND.format((long) finalPrice) + " đ");
-        ((Label) colPrice.getChildren().get(1))
-                .setStyle("-fx-font-weight: bold; -fx-text-fill: #059669;");
-
-        // Thời gian kết thúc
-        String endTime = String.valueOf(item.getOrDefault("endTime", ""));
-        String endTimeShort = endTime.length() >= 16 ? endTime.substring(0, 16).replace("T", " ") : endTime;
-        VBox colTime = metaCol("🕐 Kết thúc lúc", endTimeShort);
-
-        // ID phiên
-        VBox colId = metaCol("🔖 Phiên #",
-                String.valueOf(item.getOrDefault("auctionId", "")));
-
-        HBox metaRow = new HBox(40, colPrice, colTime, colId);
-        metaRow.setPadding(new Insets(8, 0, 0, 0));
-
-        VBox info = new VBox(5, nameRow, metaRow);
-        HBox.setHgrow(info, Priority.ALWAYS);
-
-        // Card container
-        HBox card = new HBox(16, icon, info);
-        card.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        card.setPadding(new Insets(16));
-        card.setStyle("-fx-background-color: #f0fdf4; -fx-background-radius: 10; "
-                + "-fx-border-color: #86efac; -fx-border-radius: 10; -fx-border-width: 1.5;");
-        return card;
-    }
-
     private HBox buildCard(AuctionViewModel auction) {
-        Label icon = new Label(iconFor(auction.getStatus()));
-        icon.setStyle("-fx-font-size: 40px; -fx-text-fill: #94a3b8;");
+        VBox imageBox = new VBox();
+        imageBox.setPrefSize(90, 90);
+        imageBox.setMinSize(90, 90);
+        imageBox.setMaxSize(90, 90);
+        imageBox.setAlignment(javafx.geometry.Pos.CENTER);
+        imageBox.setStyle("""
+                -fx-background-color: linear-gradient(to bottom right, #eff6ff, #dbeafe);
+                -fx-background-radius: 18;
+                -fx-border-radius: 18;
+                -fx-border-color: #bfdbfe;
+                """);
+
+        String iconText = switch (auction.getStatus().toUpperCase()) {
+            case "RUNNING" -> "🔥";
+            case "OPEN" -> "⏳";
+            case "FINISHED" -> "🏆";
+            default -> "📦";
+        };
+
+        Label icon = new Label(iconText);
+        icon.setStyle("-fx-font-size: 34px;");
+        imageBox.getChildren().add(icon);
+
         Label lblName = new Label(auction.getItemName());
-        lblName.setStyle("-fx-font-weight: bold; -fx-font-size: 16px;");
-        Label lblBadge = new Label(badgeTextFor(auction.getStatus()));
-        lblBadge.setStyle(badgeStyleFor(auction.getStatus()));
-        HBox nameRow = new HBox(10, lblName, lblBadge);
-        nameRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        Label lblSub = new Label("ID: " + auction.getId());
-        lblSub.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 12px;");
-        VBox colWinner = metaCol("👤 Người dẫn đầu", auction.getCurrentWinner());
-        VBox colPrice = metaCol("💰 Giá hiện tại", VND.format((long) auction.getCurrentPrice()) + " đ");
-        ((Label) colPrice.getChildren().get(1)).setStyle("-fx-font-weight: bold; -fx-text-fill: #ef4444;");
-        HBox metaRow = new HBox(40, colWinner, colPrice);
-        metaRow.setPadding(new Insets(10, 0, 0, 0));
-        VBox info = new VBox(5, nameRow, lblSub, metaRow);
-        HBox.setHgrow(info, Priority.ALWAYS);
-        Button btnDetail = new Button("🔍 Chi tiết");
-        btnDetail.setStyle("-fx-background-color: transparent; -fx-border-color: #e2e8f0; -fx-border-radius: 6; -fx-background-radius: 6; -fx-cursor: hand;");
-        btnDetail.setPrefHeight(40);
+        lblName.setStyle("""
+                -fx-font-size: 22px;
+                -fx-font-weight: bold;
+                -fx-text-fill: #0f172a;
+                """);
+
+        Label lblId = new Label("Mã phiên #" + auction.getId());
+        lblId.setStyle("""
+                -fx-text-fill: #94a3b8;
+                -fx-font-size: 13px;
+                """);
+
+        Label lblStatus = new Label(badgeTextFor(auction.getStatus()));
+        lblStatus.setStyle(badgeStyleFor(auction.getStatus()));
+
+        VBox titleBox = new VBox(6, lblName, lblId, lblStatus);
+
+        VBox colPrice = new VBox(
+                new Label("💰 Giá hiện tại"),
+                new Label(VND.format((long) auction.getCurrentPrice()) + " đ")
+        );
+
+        ((Label) colPrice.getChildren().get(0)).setStyle("""
+                -fx-text-fill: #94a3b8;
+                -fx-font-size: 13px;
+                """);
+
+        ((Label) colPrice.getChildren().get(1)).setStyle("""
+                -fx-text-fill: #ef4444;
+                -fx-font-size: 24px;
+                -fx-font-weight: bold;
+                """);
+
+        VBox colWinner = new VBox(
+                new Label("👤 Người dẫn đầu"),
+                new Label(
+                        auction.getCurrentWinner() == null || auction.getCurrentWinner().isBlank()
+                                ? "Chưa có"
+                                : auction.getCurrentWinner()
+                )
+        );
+
+        ((Label) colWinner.getChildren().get(0)).setStyle("""
+                -fx-text-fill: #94a3b8;
+                -fx-font-size: 13px;
+                """);
+
+        ((Label) colWinner.getChildren().get(1)).setStyle("""
+                -fx-text-fill: #0f172a;
+                -fx-font-size: 15px;
+                -fx-font-weight: bold;
+                """);
+
+        HBox infoBottom = new HBox(45, colPrice, colWinner);
+        VBox infoBox = new VBox(12, titleBox, infoBottom);
+        HBox.setHgrow(infoBox, Priority.ALWAYS);
+
+        Button btnDetail = new Button("🔍 Xem chi tiết");
+        btnDetail.setStyle("""
+                -fx-background-color: linear-gradient(to right, #3b82f6, #2563eb);
+                -fx-text-fill: white;
+                -fx-font-weight: bold;
+                -fx-font-size: 14px;
+                -fx-background-radius: 12;
+                -fx-cursor: hand;
+                -fx-padding: 12 22;
+                """);
+
+        btnDetail.setOnMouseEntered(e ->
+                btnDetail.setStyle("""
+                        -fx-background-color: linear-gradient(to right, #2563eb, #1d4ed8);
+                        -fx-text-fill: white;
+                        -fx-font-weight: bold;
+                        -fx-font-size: 14px;
+                        -fx-background-radius: 12;
+                        -fx-cursor: hand;
+                        -fx-padding: 12 22;
+                        """)
+        );
+
+        btnDetail.setOnMouseExited(e ->
+                btnDetail.setStyle("""
+                        -fx-background-color: linear-gradient(to right, #3b82f6, #2563eb);
+                        -fx-text-fill: white;
+                        -fx-font-weight: bold;
+                        -fx-font-size: 14px;
+                        -fx-background-radius: 12;
+                        -fx-cursor: hand;
+                        -fx-padding: 12 22;
+                        """)
+        );
+
         btnDetail.setUserData(String.valueOf(auction.getId()));
         btnDetail.setOnAction(this::viewDetail);
-        HBox card = new HBox(20, icon, info, btnDetail);
+
+        HBox card = new HBox(25, imageBox, infoBox, btnDetail);
         card.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        card.setPadding(new Insets(16));
-        card.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-border-color: #e2e8f0; -fx-border-radius: 10;");
+        card.setPadding(new Insets(22));
+        card.setStyle("""
+                -fx-background-color: white;
+                -fx-background-radius: 22;
+                -fx-border-radius: 22;
+                -fx-border-color: #e2e8f0;
+                -fx-effect: dropshadow(three-pass-box, rgba(15,23,42,0.08), 18, 0, 0, 4);
+                """);
+
+        card.setOnMouseEntered(e ->
+                card.setStyle("""
+                        -fx-background-color: white;
+                        -fx-background-radius: 22;
+                        -fx-border-radius: 22;
+                        -fx-border-color: #cbd5e1;
+                        -fx-effect: dropshadow(three-pass-box, rgba(37,99,235,0.15), 28, 0, 0, 8);
+                        """)
+        );
+
+        card.setOnMouseExited(e ->
+                card.setStyle("""
+                        -fx-background-color: white;
+                        -fx-background-radius: 22;
+                        -fx-border-radius: 22;
+                        -fx-border-color: #e2e8f0;
+                        -fx-effect: dropshadow(three-pass-box, rgba(15,23,42,0.08), 18, 0, 0, 4);
+                        """)
+        );
+
         return card;
-    }
-
-    private VBox metaCol(String label, String value) {
-        Label lbl = new Label(label);
-        lbl.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 12px;");
-        Label val = new Label(value);
-        val.setStyle("-fx-font-weight: bold;");
-        return new VBox(2, lbl, val);
-    }
-
-    private String iconFor(String status) {
-        return status == null ? "📦" : switch (status.toUpperCase()) {
-            case "RUNNING" -> "🔴";
-            case "FINISHED" -> "✅";
-            case "CANCELED" -> "❌";
-            default -> "🕐";
-        };
     }
 
     private String badgeTextFor(String status) {
@@ -339,6 +357,7 @@ public class AuctionListController implements Initializable {
 
     private String badgeStyleFor(String status) {
         String base = "-fx-padding: 2 8; -fx-background-radius: 4; -fx-font-size: 11px; -fx-font-weight: bold;";
+
         return status == null ? base : switch (status.toUpperCase()) {
             case "RUNNING" -> base + " -fx-background-color: #dcfce7; -fx-text-fill: #166534;";
             case "FINISHED" -> base + " -fx-background-color: #f1f5f9; -fx-text-fill: #64748b;";
@@ -352,77 +371,228 @@ public class AuctionListController implements Initializable {
     void viewDetail(ActionEvent event) {
         Button btn = (Button) event.getSource();
         String auctionId = btn.getUserData() != null ? btn.getUserData().toString() : btn.getId();
+
         try {
             ClientMain.unregisterListener("AUCTION_LIST");
             ClientMain.unregisterListener("BALANCE_DATA");
             ClientMain.unregisterListener("AUCTION_LIST_BY_STATUS");
-            ClientMain.unregisterListener("WON_AUCTIONS");
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/auction-detail.fxml"));
             Parent root = loader.load();
+
             AuctionDetailController dc = loader.getController();
             dc.setRoomId(auctionId);
+
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.getScene().setRoot(root);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
     @FXML
     void handleDeposit(ActionEvent event) {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Nạp tiền");
-        dialog.setHeaderText("Nhập số tiền muốn nạp vào ví");
-        dialog.setContentText("Số tiền (VNĐ):");
+        Dialog<Double> dialog = new Dialog<>();
+        dialog.setTitle("Nạp tiền vào ví");
+        dialog.setHeaderText(null);
 
-        dialog.showAndWait().ifPresent(input -> {
-            try {
-                double amount = Double.parseDouble(input.replaceAll("[^\\d]", ""));
-                if (amount <= 0) {
-                    showSimpleAlert("Số tiền phải lớn hơn 0!");
-                    return;
-                }
+        DialogPane pane = dialog.getDialogPane();
 
-                ClientMain.registerListener("DEPOSIT_SUCCESS", payload -> {
-                    ClientMain.unregisterListener("DEPOSIT_SUCCESS");
-                    ClientMain.unregisterListener("DEPOSIT_FAILED");
-                    Platform.runLater(() -> {
-                        UserSession.balance += amount;
-                        if (lblBalance != null) {
-                            lblBalance.setText("💳 Số dư: " + VND.format((long) UserSession.balance) + " đ");
-                        }
-                        showSimpleAlert("Nạp tiền thành công! Số dư mới: " + VND.format((long) UserSession.balance) + " đ");
-                    });
-                });
+        pane.setStyle("""
+                -fx-background-color: white;
+                -fx-padding: 25;
+                -fx-background-radius: 20;
+                """);
 
-                ClientMain.registerListener("DEPOSIT_FAILED", payload -> {
-                    ClientMain.unregisterListener("DEPOSIT_SUCCESS");
-                    ClientMain.unregisterListener("DEPOSIT_FAILED");
-                    Platform.runLater(() -> showSimpleAlert("Nạp tiền thất bại: " + payload));
-                });
+        ButtonType depositBtnType = new ButtonType("💳 Nạp tiền", ButtonBar.ButtonData.OK_DONE);
+        pane.getButtonTypes().addAll(depositBtnType, ButtonType.CANCEL);
 
-                new Thread(() -> ClientMain.send(gson.toJson(
-                        new MessageDTO("DEPOSIT", String.valueOf(amount))
-                ))).start();
+        VBox root = new VBox(18);
+        root.setStyle("-fx-background-color: white;");
 
-            } catch (NumberFormatException e) {
-                showSimpleAlert("Số tiền không hợp lệ!");
+        Label title = new Label("💰 Nạp tiền vào tài khoản");
+        title.setStyle("""
+                -fx-font-size: 24px;
+                -fx-font-weight: bold;
+                -fx-text-fill: #0f172a;
+                """);
+
+        Label subtitle = new Label("Nhập số tiền bạn muốn thêm vào ví đấu giá");
+        subtitle.setStyle("""
+                -fx-text-fill: #64748b;
+                -fx-font-size: 14px;
+                """);
+
+        VBox inputBox = new VBox(8);
+
+        Label lblInput = new Label("Số tiền (VNĐ)");
+        lblInput.setStyle("""
+                -fx-font-size: 14px;
+                -fx-font-weight: bold;
+                -fx-text-fill: #334155;
+                """);
+
+        TextField txtAmount = new TextField();
+        txtAmount.setPromptText("Ví dụ: 1000000");
+        txtAmount.setPrefHeight(48);
+        txtAmount.setStyle("""
+                -fx-background-radius: 14;
+                -fx-border-radius: 14;
+                -fx-border-color: #cbd5e1;
+                -fx-padding: 0 15;
+                -fx-font-size: 15px;
+                -fx-background-color: #f8fafc;
+                """);
+
+        Label lblError = new Label();
+        lblError.setStyle("""
+                -fx-text-fill: #ef4444;
+                -fx-font-size: 13px;
+                -fx-font-weight: bold;
+                """);
+
+        txtAmount.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.matches("\\d*")) {
+                txtAmount.setText(newVal.replaceAll("[^\\d]", ""));
+                lblError.setText("❌ Chỉ được nhập số!");
+            } else {
+                lblError.setText("");
             }
+        });
+
+        inputBox.getChildren().addAll(lblInput, txtAmount, lblError);
+
+        VBox infoBox = new VBox(10);
+        infoBox.setStyle("""
+                -fx-background-color: #eff6ff;
+                -fx-background-radius: 14;
+                -fx-padding: 15;
+                """);
+
+        Label info1 = new Label("✔ Giao dịch xử lý ngay lập tức");
+        Label info2 = new Label("✔ Hệ thống bảo mật tuyệt đối");
+        Label info3 = new Label("✔ Hỗ trợ mọi mức nạp");
+
+        info1.setStyle("-fx-text-fill: #2563eb;");
+        info2.setStyle("-fx-text-fill: #2563eb;");
+        info3.setStyle("-fx-text-fill: #2563eb;");
+
+        infoBox.getChildren().addAll(info1, info2, info3);
+        root.getChildren().addAll(title, subtitle, inputBox, infoBox);
+
+        pane.setContent(root);
+
+        Button depositBtn = (Button) pane.lookupButton(depositBtnType);
+        Button cancelBtn = (Button) pane.lookupButton(ButtonType.CANCEL);
+
+        depositBtn.setStyle("""
+                -fx-background-color: linear-gradient(to right, #10b981, #059669);
+                -fx-text-fill: white;
+                -fx-font-weight: bold;
+                -fx-font-size: 14px;
+                -fx-background-radius: 12;
+                -fx-cursor: hand;
+                -fx-padding: 10 20;
+                """);
+
+        cancelBtn.setStyle("""
+                -fx-background-color: #f1f5f9;
+                -fx-text-fill: #334155;
+                -fx-font-weight: bold;
+                -fx-font-size: 14px;
+                -fx-background-radius: 12;
+                -fx-cursor: hand;
+                -fx-padding: 10 20;
+                """);
+
+        depositBtn.addEventFilter(ActionEvent.ACTION, e -> {
+            String text = txtAmount.getText().trim();
+
+            if (text.isEmpty()) {
+                lblError.setText("❌ Vui lòng nhập số tiền!");
+                e.consume();
+                return;
+            }
+
+            try {
+                double amount = Double.parseDouble(text);
+
+                if (amount <= 0) {
+                    lblError.setText("❌ Số tiền phải lớn hơn 0!");
+                    e.consume();
+                }
+            } catch (Exception ex) {
+                lblError.setText("❌ Dữ liệu không hợp lệ!");
+                e.consume();
+            }
+        });
+
+        dialog.setResultConverter(button -> {
+            if (button == depositBtnType) {
+                return Double.parseDouble(txtAmount.getText());
+            }
+
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(amount -> {
+            ClientMain.registerListener("DEPOSIT_SUCCESS", payload -> {
+                ClientMain.unregisterListener("DEPOSIT_SUCCESS");
+                ClientMain.unregisterListener("DEPOSIT_FAILED");
+
+                Platform.runLater(() -> {
+                    UserSession.balance += amount;
+
+                    if (lblBalance != null) {
+                        lblBalance.setText(
+                                "💳 Số dư: "
+                                        + VND.format((long) UserSession.balance)
+                                        + " đ"
+                        );
+                    }
+
+                    Alert success = new Alert(Alert.AlertType.INFORMATION);
+                    success.setTitle("Thành công");
+                    success.setHeaderText(null);
+                    success.setContentText(
+                            "🎉 Nạp tiền thành công!\n\n"
+                                    + "Số dư mới: "
+                                    + VND.format((long) UserSession.balance)
+                                    + " đ"
+                    );
+                    success.showAndWait();
+                });
+            });
+
+            ClientMain.registerListener("DEPOSIT_FAILED", payload -> {
+                ClientMain.unregisterListener("DEPOSIT_SUCCESS");
+                ClientMain.unregisterListener("DEPOSIT_FAILED");
+
+                Platform.runLater(() -> {
+                    Alert fail = new Alert(Alert.AlertType.ERROR);
+                    fail.setTitle("Lỗi");
+                    fail.setHeaderText(null);
+                    fail.setContentText("❌ Nạp tiền thất bại!\n\n" + payload);
+                    fail.showAndWait();
+                });
+            });
+
+            new Thread(() ->
+                    ClientMain.send(
+                            gson.toJson(
+                                    new MessageDTO("DEPOSIT", String.valueOf(amount))
+                            )
+                    )
+            ).start();
         });
     }
 
-    private void showSimpleAlert(String msg) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Thông báo");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
-    }
     @FXML
     void handleLogout(ActionEvent event) {
         ClientMain.unregisterListener("AUCTION_LIST");
         ClientMain.unregisterListener("BALANCE_DATA");
         ClientMain.unregisterListener("AUCTION_LIST_BY_STATUS");
-        ClientMain.unregisterListener("WON_AUCTIONS");
+
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/client/views/login.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
