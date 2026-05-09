@@ -18,10 +18,9 @@ import java.sql.SQLException;
  */
 public class DBConnection {
 
-    private static final String URL      = "jdbc:mysql://localhost:3306/daugia"
-            + "?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true";
-    private static final String DB_USER  = "root";
-    private static final String PASSWORD = "";
+    private static final String URL      = "jdbc:mysql://mysql-24b3aff1-vnu-8ca6.k.aivencloud.com:15190/daugia?sslMode=REQUIRED&serverTimezone=Asia/Ho_Chi_Minh";
+    private static final String DB_USER  = "avnadmin";
+    private static final String PASSWORD = "AVNS_z7YUU9pQJHKGFnNqf8-";
 
     private static volatile HikariDataSource dataSource;
 

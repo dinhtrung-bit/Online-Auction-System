@@ -102,7 +102,7 @@ public class AuctionService {
 
         CompletableFuture.runAsync(() -> {
             try {
-                roomDAO.update(room, oldPrice);
+                roomDAO.updateWithOptimisticLock(room, oldPrice);
 
                 BidMessage bid = new BidMessage(0, bidder.getUserId(), roomId.intValue(), bidAmount);
                 bidDAO.insert(bid);
@@ -174,7 +174,7 @@ public class AuctionService {
                 }
 
                 // Lưu DB
-                roomDAO.update(room, oldPrice);
+                roomDAO.updateWithOptimisticLock(room, oldPrice);
                 bidDAO.insert(new BidMessage(0, fullBidder.getUserId(), room.getId(), nextBid));
 
                 // Broadcast giá mới cho tất cả client
@@ -277,7 +277,7 @@ public class AuctionService {
         BigDecimal currentPrice = room.getCurrentPrice();
         CompletableFuture.runAsync(() -> {
             try {
-                roomDAO.update(room, currentPrice);
+                roomDAO.updateWithOptimisticLock(room, currentPrice);
             } catch (Exception e) {
                 System.err.println(">>> [Lỗi DB] Update status thất bại: " + e.getMessage());
             }
