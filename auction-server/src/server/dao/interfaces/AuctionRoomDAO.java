@@ -11,5 +11,5 @@ public interface AuctionRoomDAO extends GenericDAO<AuctionRoom> {
     List<AuctionRoom> findByStatus(String status) throws Exception;
 
     // Hàm update chuyên dụng hỗ trợ Optimistic Lock
-    void update(AuctionRoom room, BigDecimal oldPrice) throws Exception;
+    void updateWithOptimisticLock(AuctionRoom room, BigDecimal oldPrice) throws Exception;
 }

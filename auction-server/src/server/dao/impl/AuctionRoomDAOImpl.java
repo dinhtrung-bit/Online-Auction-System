@@ -32,7 +32,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
     public void insert(AuctionRoom room) throws Exception {
         String sql = "INSERT INTO auctions (item_id, start_price, current_highest_price, start_time, end_time, status, winner_id, seller_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, room.getItem().getItemId());
             pstmt.setBigDecimal(2, room.getStartPrice());
@@ -54,11 +54,11 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
 
     @Override
     public void update(AuctionRoom room) throws Exception {
-        this.update(room, room.getCurrentPrice());
+        this.updateWithOptimisticLock(room, room.getCurrentPrice());
     }
 
     @Override
-    public void update(AuctionRoom room, BigDecimal oldPrice) throws Exception {
+    public void updateWithOptimisticLock(AuctionRoom room, BigDecimal oldPrice) throws Exception {
         String sql;
         if (oldPrice == null) {
             sql = "UPDATE auctions SET current_highest_price = ?, winner_id = ?, end_time = ?, status = ? " +
@@ -68,7 +68,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
                     "WHERE auction_id = ? AND current_highest_price = ?";
         }
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setBigDecimal(1, room.getCurrentPrice());
@@ -97,7 +97,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
     public void delete(int id) throws Exception {
         String sql = "DELETE FROM auctions WHERE auction_id = ?";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             pstmt.executeUpdate();
@@ -110,7 +110,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
         String sql = "SELECT * FROM auctions";
 
         // BƯỚC 1: Đọc hết dữ liệu thô từ ResultSet rồi đóng lại
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
 
@@ -133,7 +133,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
         String sql = "SELECT * FROM auctions WHERE status = ?";
 
         // BƯỚC 1: Đọc hết dữ liệu thô
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, status.toUpperCase());
@@ -144,7 +144,6 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
             }
         } // ResultSet đã đóng ở đây
 
-        // BƯỚC 2: Fetch item/user sau khi RS đóng
         List<AuctionRoom> rooms = new ArrayList<>();
         for (AuctionRoomRaw raw : rawList) {
             rooms.add(buildFromRaw(raw));
@@ -158,7 +157,7 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
         AuctionRoomRaw raw = null;
 
         // BƯỚC 1: Đọc dữ liệu thô rồi đóng RS
-        try (Connection conn = DBConnection.getInstance().getConnection();
+        try (Connection conn = DBConnection.getInstance();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);
