@@ -62,6 +62,8 @@ public class ClientHandler implements Runnable {
         processors.put("GET_AVAILABLE_AUCTIONS", this::handleGetAvailableAuctions);
         processors.put("GET_ALL_AUCTIONS",       this::handleGetAllAuctions);
         processors.put("GET_ALL_USERS",          this::handleGetAllUsers);
+        processors.put("GET_ADMIN_STATS", this::handleGetAdminStats);
+        processors.put("ADMIN_CANCEL_AUCTION", this::handleAdminCancelAuction);
         processors.put("GET_BALANCE",            this::handleGetBalance);
         processors.put("ADD_ITEM",               this::handleAddItem);
         processors.put("UPDATE_ITEM",            this::handleUpdateItem);
@@ -75,6 +77,67 @@ public class ClientHandler implements Runnable {
         processors.put("GET_MY_AUCTIONS",        this::handleGetMyAuctions);
         processors.put("GET_BID_HISTORY",        this::handleGetBidHistory);
         processors.put("GET_MY_WON_AUCTIONS",    this::handleGetMyWonAuctions);
+    }
+    private MessageDTO handleAdminCancelAuction(MessageDTO request) {
+        if (loggedInUser == null || !loggedInUser.getRole().equalsIgnoreCase("ADMIN")) {
+            return new MessageDTO("ADMIN_CANCEL_AUCTION_FAILED", "Không có quyền Admin!");
+        }
+
+        try {
+            int auctionId = Integer.parseInt(request.getPayload().trim());
+
+            AuctionRoom room = AuctionService.getInstance().getActiveRooms()
+                    .stream()
+                    .filter(r -> r.getId() == auctionId)
+                    .findFirst()
+                    .orElse(null);
+
+            if (room == null) {
+                return new MessageDTO("ADMIN_CANCEL_AUCTION_FAILED", "Không tìm thấy phiên đấu giá!");
+            }
+
+            if (room.getStatus() == AuctionStatus.PAID) {
+                return new MessageDTO("ADMIN_CANCEL_AUCTION_FAILED",
+                        "Phiên đã thanh toán, không thể hủy!");
+            }
+
+            room.setStatus(AuctionStatus.CANCELED);
+            auctionDAO.update(room);
+            AuctionService.getInstance().reloadFromDatabase();
+
+            broadcast(gson.toJson(new MessageDTO("AUCTION_CANCELED", String.valueOf(auctionId))));
+
+            return new MessageDTO("ADMIN_CANCEL_AUCTION_SUCCESS",
+                    "Đã hủy phiên đấu giá #" + auctionId);
+        } catch (Exception e) {
+            return new MessageDTO("ADMIN_CANCEL_AUCTION_FAILED",
+                    "Lỗi hủy phiên: " + e.getMessage());
+        }
+    }
+    private MessageDTO handleGetAdminStats(MessageDTO request) {
+        if (loggedInUser == null || !loggedInUser.getRole().equalsIgnoreCase("ADMIN")) {
+            return new MessageDTO("ERROR", "Không có quyền truy cập!");
+        }
+
+        try {
+            int totalUsers = userDAO.findAll().size();
+            int totalItems = itemDAO.findAll().size();
+
+            BigDecimal revenue = AuctionService.getInstance().getActiveRooms()
+                    .stream()
+                    .filter(r -> r.getStatus() == AuctionStatus.PAID)
+                    .map(r -> r.getCurrentPrice() != null ? r.getCurrentPrice() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            Map<String, Object> stats = new LinkedHashMap<>();
+            stats.put("totalUsers", totalUsers);
+            stats.put("totalItems", totalItems);
+            stats.put("revenue", revenue.longValue());
+
+            return new MessageDTO("ADMIN_STATS", gson.toJson(stats));
+        } catch (Exception e) {
+            return new MessageDTO("ERROR", "Lỗi lấy thống kê admin: " + e.getMessage());
+        }
     }
 
     // ===================== BALANCE =====================
