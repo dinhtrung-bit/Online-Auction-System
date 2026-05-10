@@ -156,6 +156,11 @@ public class ClientHandler implements Runnable {
                         m.put("currentPrice", r.getCurrentPrice() != null
                                 ? r.getCurrentPrice().doubleValue() : 0);
                         m.put("status",       r.getStatus().name());
+                        // Bổ sung: Seller cần biết người thắng và thời điểm kết thúc
+                        m.put("currentWinner", r.getCurrentWinner() != null
+                                ? r.getCurrentWinner().getUsername() : "");
+                        m.put("endTime",       r.getEndTime() != null
+                                ? r.getEndTime().toString() : "");
                         return m;
                     }).collect(Collectors.toList());
             return new MessageDTO("MY_AUCTIONS", gson.toJson(result));

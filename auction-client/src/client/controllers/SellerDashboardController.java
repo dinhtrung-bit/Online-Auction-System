@@ -64,6 +64,11 @@ public class SellerDashboardController {
     private final Gson gson = new Gson();
     private final Map<String, Map<String, Object>> auctionMap = new HashMap<>();
 
+    // Hàng đợi roomId các phiên đấu giá vừa kết thúc — chờ MY_AUCTIONS reload xong
+    // để biết ai thắng và bao nhiêu rồi mới hiện thông báo cho Seller.
+    private final java.util.Queue<Long> pendingFinishedNotifications =
+            new java.util.concurrent.ConcurrentLinkedQueue<>();
+
     @FXML
     public void initialize() {
         itemList = FXCollections.observableArrayList();
@@ -151,8 +156,41 @@ public class SellerDashboardController {
         ClientMain.registerListener("AUCTION_STARTED", payload ->
                 Platform.runLater(this::loadMyAuctionsFromServer));
 
-        ClientMain.registerListener("AUCTION_FINISHED", payload ->
-                Platform.runLater(this::loadMyAuctionsFromServer));
+        // Khi phòng đấu giá của Seller kết thúc — broadcast payload chỉ là roomId.
+        // Reload danh sách rồi tìm phòng đó để show thông báo chi tiết (ai thắng, giá cuối).
+        ClientMain.registerListener("AUCTION_FINISHED", payload -> {
+            try {
+                long finishedRoomId = Long.parseLong(payload.trim());
+                pendingFinishedNotifications.add(finishedRoomId);
+            } catch (Exception ignored) {}
+            Platform.runLater(this::loadMyAuctionsFromServer);
+        });
+
+        // Khi Admin hủy phòng của Seller — cũng cần reload + thông báo
+        ClientMain.registerListener("AUCTION_CANCELED", payload -> {
+            try {
+                long canceledRoomId = Long.parseLong(payload.trim());
+                Platform.runLater(() -> {
+                    Alert a = new Alert(Alert.AlertType.WARNING);
+                    a.setTitle("Phiên đấu giá bị hủy");
+                    a.setHeaderText(null);
+                    a.setContentText("⚠️ Phiên đấu giá #" + canceledRoomId + " đã bị quản trị viên hủy.");
+                    a.showAndWait();
+                });
+            } catch (Exception ignored) {}
+            Platform.runLater(this::loadMyAuctionsFromServer);
+        });
+
+        // Bắt mọi lỗi chung từ server
+        ClientMain.registerListener("ERROR", payload ->
+                Platform.runLater(() -> {
+                    Alert a = new Alert(Alert.AlertType.ERROR);
+                    a.setTitle("Lỗi từ máy chủ");
+                    a.setHeaderText(null);
+                    a.setContentText(payload);
+                    a.showAndWait();
+                })
+        );
 
         loadMyItemsFromServer();
     }
@@ -252,10 +290,18 @@ public class SellerDashboardController {
                 Platform.runLater(() -> {
                     auctionMap.clear();
 
+                    // Index theo cả itemId (cho table) lẫn auctionId (để tra notify)
+                    Map<Long, Map<String, Object>> byAuctionId = new HashMap<>();
                     if (list != null) {
                         for (Map<String, Object> a : list) {
                             String itemId = a.get("itemId") != null ? a.get("itemId").toString() : "";
                             auctionMap.put(itemId, a);
+                            if (a.get("auctionId") != null) {
+                                try {
+                                    long aid = ((Number) a.get("auctionId")).longValue();
+                                    byAuctionId.put(aid, a);
+                                } catch (Exception ignored) {}
+                            }
                         }
                     }
 
@@ -263,6 +309,15 @@ public class SellerDashboardController {
 
                     if (reportView != null && reportView.isVisible()) {
                         updateReport();
+                    }
+
+                    // Xử lý notification cho các phiên vừa kết thúc
+                    Long finishedId;
+                    while ((finishedId = pendingFinishedNotifications.poll()) != null) {
+                        Map<String, Object> room = byAuctionId.get(finishedId);
+                        if (room != null) {
+                            showAuctionFinishedNotification(finishedId, room);
+                        }
                     }
                 });
             } catch (Exception e) {
@@ -273,6 +328,38 @@ public class SellerDashboardController {
         new Thread(() ->
                 ClientMain.send(gson.toJson(new MessageDTO("GET_MY_AUCTIONS", "")))
         ).start();
+    }
+
+    /**
+     * Hiển thị thông báo cho Seller khi phiên đấu giá của họ kết thúc.
+     * Phân biệt 2 trường hợp: bán được (có winner) và không có ai bid (CANCELED).
+     */
+    private void showAuctionFinishedNotification(long roomId, Map<String, Object> room) {
+        String itemName = room.get("itemName") != null ? room.get("itemName").toString() : "?";
+        String winner   = room.get("currentWinner") != null ? room.get("currentWinner").toString() : "";
+        String status   = room.get("status") != null ? room.get("status").toString() : "";
+        double price    = room.get("currentPrice") != null
+                ? ((Number) room.get("currentPrice")).doubleValue() : 0;
+
+        Alert a;
+        if ("CANCELED".equalsIgnoreCase(status) || winner.isEmpty()) {
+            a = new Alert(Alert.AlertType.WARNING);
+            a.setTitle("Phiên đấu giá kết thúc");
+            a.setContentText(
+                    "😔 Phiên #" + roomId + " (" + itemName + ") đã kết thúc nhưng không có người mua.\n\n" +
+                            "Bạn có thể tạo lại phiên đấu giá mới."
+            );
+        } else {
+            a = new Alert(Alert.AlertType.INFORMATION);
+            a.setTitle("Bán hàng thành công!");
+            a.setContentText(
+                    "🎉 Phiên #" + roomId + " (" + itemName + ") đã kết thúc!\n\n" +
+                            "Người thắng: " + winner + "\n" +
+                            "Giá cuối:    " + formatVND(price)
+            );
+        }
+        a.setHeaderText(null);
+        a.show();
     }
 
     @FXML
@@ -671,6 +758,8 @@ public class SellerDashboardController {
     private void handleLogout() {
         ClientMain.unregisterListener("AUCTION_STARTED");
         ClientMain.unregisterListener("AUCTION_FINISHED");
+        ClientMain.unregisterListener("AUCTION_CANCELED");
+        ClientMain.unregisterListener("ERROR");
 
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/login.fxml"));

@@ -274,6 +274,20 @@ public class AuctionDetailController implements Initializable {
                 Platform.runLater(() -> showAlert(Alert.AlertType.WARNING, "Đặt giá thất bại", payload))
         );
 
+        // Server xác nhận bid thành công (server đã broadcast UPDATE_PRICE cho mọi người,
+        // nhưng người đặt cần một feedback rõ ràng).
+        ClientMain.registerListener("BID_SUCCESS", payload ->
+                Platform.runLater(() -> {
+                    // Hiển thị toast nhỏ, không block bằng showAndWait
+                    showToast("✅ Đặt giá thành công!");
+                })
+        );
+
+        // Bắt mọi lỗi chung từ server (chưa đăng nhập, hết quyền, lỗi DB, v.v.)
+        ClientMain.registerListener("ERROR", payload ->
+                Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Lỗi từ máy chủ", payload))
+        );
+
         // Cập nhật số dư sau khi bid thành công (sync từ server)
         ClientMain.registerListener("BALANCE_DATA", payload -> {
             try {
@@ -435,6 +449,8 @@ public class AuctionDetailController implements Initializable {
         ClientMain.unregisterListener("AUCTION_FINISHED");
         ClientMain.unregisterListener("AUCTION_CANCELED");
         ClientMain.unregisterListener("BID_FAILED");
+        ClientMain.unregisterListener("BID_SUCCESS");
+        ClientMain.unregisterListener("ERROR");
         ClientMain.unregisterListener("AUTO_BID_EXCEEDED");
         ClientMain.unregisterListener("BID_HISTORY");
         ClientMain.unregisterListener("WON_AUCTIONS");
@@ -463,5 +479,42 @@ public class AuctionDetailController implements Initializable {
     private void showAlert(Alert.AlertType t, String title, String content) {
         Alert a = new Alert(t); a.setTitle(title); a.setHeaderText(null);
         a.setContentText(content); a.showAndWait();
+    }
+
+    /**
+     * Hiển thị toast notification ngắn (3 giây), không block UI.
+     * Dùng cho các phản hồi nhanh như BID_SUCCESS — không nên dùng dialog modal.
+     */
+    private void showToast(String message) {
+        try {
+            javafx.stage.Window window = lblCurrentPrice.getScene().getWindow();
+            if (window == null) return;
+
+            javafx.stage.Popup popup = new javafx.stage.Popup();
+            Label toast = new Label(message);
+            toast.setStyle(
+                    "-fx-background-color: rgba(16, 185, 129, 0.95);" +
+                            "-fx-text-fill: white;" +
+                            "-fx-padding: 12 24;" +
+                            "-fx-background-radius: 10;" +
+                            "-fx-font-size: 14px;" +
+                            "-fx-font-weight: bold;"
+            );
+            popup.getContent().add(toast);
+            popup.setAutoHide(true);
+
+            // Đặt toast ở góc dưới-phải cửa sổ
+            double x = window.getX() + window.getWidth()  - 280;
+            double y = window.getY() + window.getHeight() - 100;
+            popup.show(window, x, y);
+
+            // Tự đóng sau 2.5 giây
+            javafx.animation.PauseTransition delay =
+                    new javafx.animation.PauseTransition(javafx.util.Duration.seconds(2.5));
+            delay.setOnFinished(e -> popup.hide());
+            delay.play();
+        } catch (Exception ignored) {
+            // Nếu vì lý do gì không show được toast, im lặng — đã có UPDATE_PRICE feedback rồi
+        }
     }
 }

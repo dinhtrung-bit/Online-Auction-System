@@ -21,10 +21,7 @@ import javafx.stage.Stage;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class AuctionListController implements Initializable {
 
@@ -35,6 +32,7 @@ public class AuctionListController implements Initializable {
 
     private ToggleGroup tabGroup;
     private List<AuctionViewModel> allAuctions = new ArrayList<>();
+    private List<AuctionViewModel> wonAuctions = new ArrayList<>();
     private String currentTab = "LIVE";
     private String currentStatusFilter = "ALL";
 
@@ -66,6 +64,39 @@ public class AuctionListController implements Initializable {
             Platform.runLater(() -> applyTabFilterAndRender(filteredAuctions));
         });
 
+        // Lắng nghe danh sách phiên đã thắng — server trả về list với fields:
+        // auctionId, itemName, finalPrice, endTime, status. Cần adapt sang AuctionViewModel.
+        ClientMain.registerListener("WON_AUCTIONS", payload -> {
+            try {
+                Type mapListType =
+                        new TypeToken<List<Map<String, Object>>>() {}.getType();
+                List<Map<String, Object>> raw = gson.fromJson(payload, mapListType);
+                List<AuctionViewModel> wonList = new ArrayList<>();
+                if (raw != null) {
+                    for (Map<String, Object> r : raw) {
+                        int id = r.get("auctionId") != null
+                                ? ((Number) r.get("auctionId")).intValue() : 0;
+                        String itemName = r.get("itemName") != null
+                                ? r.get("itemName").toString() : "";
+                        double price = r.get("finalPrice") != null
+                                ? ((Number) r.get("finalPrice")).doubleValue() : 0;
+                        String status = r.get("status") != null
+                                ? r.get("status").toString() : "FINISHED";
+                        wonList.add(new AuctionViewModel(
+                                id, itemName, price, myUsername, status));
+                    }
+                }
+                wonAuctions = wonList;
+                Platform.runLater(() -> {
+                    if ("WON".equals(currentTab)) {
+                        renderAuctionCards(wonAuctions);
+                    }
+                });
+            } catch (Exception e) {
+                System.err.println("Lỗi parse WON_AUCTIONS: " + e.getMessage());
+            }
+        });
+
         // Khi có phòng chuyển OPEN → RUNNING: reload để badge trạng thái đúng
         ClientMain.registerListener("AUCTION_STARTED", payload ->
                 Platform.runLater(this::loadAuctionsFromServer)
@@ -91,6 +122,17 @@ public class AuctionListController implements Initializable {
             });
         });
 
+        // Bắt mọi lỗi chung từ server (chưa đăng nhập, hết quyền, lỗi DB, v.v.)
+        ClientMain.registerListener("ERROR", payload ->
+                Platform.runLater(() -> {
+                    Alert a = new Alert(Alert.AlertType.ERROR);
+                    a.setTitle("Lỗi từ máy chủ");
+                    a.setHeaderText(null);
+                    a.setContentText(payload);
+                    a.showAndWait();
+                })
+        );
+
         loadAuctionsFromServer();
 
         new Thread(() ->
@@ -102,11 +144,23 @@ public class AuctionListController implements Initializable {
     void switchTab(ActionEvent event) {
         if (btnTabWon != null && btnTabWon.isSelected()) {
             currentTab = "WON";
+            // Tab "Vật phẩm đã trúng" — fetch riêng từ server để có cả phiên FINISHED/PAID
+            // (GET_AVAILABLE_AUCTIONS chỉ trả về OPEN + RUNNING nên không thể lọc client-side)
+            new Thread(() ->
+                    ClientMain.send(gson.toJson(new MessageDTO("GET_MY_WON_AUCTIONS", "")))
+            ).start();
+
+            // Hiển thị placeholder loading trong khi chờ
+            Platform.runLater(() -> {
+                auctionContainer.getChildren().clear();
+                Label loading = new Label("Đang tải phiên đã thắng...");
+                loading.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 14px;");
+                auctionContainer.getChildren().add(loading);
+            });
         } else {
             currentTab = "LIVE";
+            applyFilterAndRender();
         }
-
-        applyFilterAndRender();
     }
 
     @FXML
@@ -129,20 +183,18 @@ public class AuctionListController implements Initializable {
             return;
         }
 
-        List<AuctionViewModel> filtered = new ArrayList<>();
+        // Tab "Vật phẩm đã trúng" — render từ danh sách won đã fetch riêng
+        if ("WON".equals(currentTab)) {
+            renderAuctionCards(wonAuctions);
+            return;
+        }
 
+        // Tab "Đang diễn ra" — lọc từ allAuctions (loại trừ FINISHED/CANCELED)
+        List<AuctionViewModel> filtered = new ArrayList<>();
         for (AuctionViewModel a : allAuctions) {
-            if ("WON".equals(currentTab)) {
-                if ("FINISHED".equalsIgnoreCase(a.getStatus())
-                        && myUsername != null
-                        && myUsername.equals(a.getCurrentWinner())) {
-                    filtered.add(a);
-                }
-            } else {
-                if (!"FINISHED".equalsIgnoreCase(a.getStatus())
-                        && !"CANCELED".equalsIgnoreCase(a.getStatus())) {
-                    filtered.add(a);
-                }
+            if (!"FINISHED".equalsIgnoreCase(a.getStatus())
+                    && !"CANCELED".equalsIgnoreCase(a.getStatus())) {
+                filtered.add(a);
             }
         }
 
@@ -150,24 +202,14 @@ public class AuctionListController implements Initializable {
     }
 
     private void applyTabFilterAndRender(List<AuctionViewModel> statusFilteredList) {
-        List<AuctionViewModel> filtered = new ArrayList<>();
-
-        for (AuctionViewModel a : statusFilteredList) {
-            if ("WON".equals(currentTab)) {
-                if ("FINISHED".equalsIgnoreCase(a.getStatus())
-                        && myUsername != null
-                        && myUsername.equals(a.getCurrentWinner())) {
-                    filtered.add(a);
-                }
-            } else {
-                if (!"FINISHED".equalsIgnoreCase(a.getStatus())
-                        && !"CANCELED".equalsIgnoreCase(a.getStatus())) {
-                    filtered.add(a);
-                }
-            }
+        // Khi user lọc theo status combo box, áp dụng cho tab LIVE
+        // Tab WON luôn dùng dữ liệu từ GET_MY_WON_AUCTIONS, không bị ảnh hưởng combo
+        if ("WON".equals(currentTab)) {
+            renderAuctionCards(wonAuctions);
+            return;
         }
 
-        renderAuctionCards(filtered);
+        renderAuctionCards(statusFilteredList);
     }
 
     private void loadAuctionsFromServer() {
@@ -606,6 +648,8 @@ public class AuctionListController implements Initializable {
         ClientMain.unregisterListener("AUCTION_LIST_BY_STATUS");
         ClientMain.unregisterListener("AUCTION_STARTED");
         ClientMain.unregisterListener("AUCTION_CANCELED");
+        ClientMain.unregisterListener("ERROR");
+        ClientMain.unregisterListener("WON_AUCTIONS");
 
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/client/views/login.fxml"));
