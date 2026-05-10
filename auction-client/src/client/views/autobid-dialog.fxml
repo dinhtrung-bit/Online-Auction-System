@@ -30,14 +30,20 @@
             <!-- Chế độ AutoBid -->
             <VBox styleClass="card" spacing="12">
                 <Label text="Chế độ hoạt động" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #475569;"/>
+
+                <!-- FIX: Khai báo ToggleGroup đúng cách bằng fx:define -->
+                <fx:define>
+                    <ToggleGroup fx:id="modeGroup"/>
+                </fx:define>
+
                 <HBox spacing="8">
-                    <ToggleButton fx:id="btnModeStep" text="📈  Tăng dần" toggleGroup="#modeGroup"
+                    <ToggleButton fx:id="btnModeStep" text="📈  Tăng dần" toggleGroup="$modeGroup"
                                   maxWidth="Infinity" HBox.hgrow="ALWAYS" onAction="#handleModeChange"
                                   style="-fx-background-color: #10B981; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 10 0;"/>
-                    <ToggleButton fx:id="btnModeFixed" text="📌  Giá cố định" toggleGroup="#modeGroup"
+                    <ToggleButton fx:id="btnModeFixed" text="📌  Giá cố định" toggleGroup="$modeGroup"
                                   maxWidth="Infinity" HBox.hgrow="ALWAYS" onAction="#handleModeChange"
                                   style="-fx-background-color: white; -fx-text-fill: #475569; -fx-border-color: #CBD5E1; -fx-border-radius: 8; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 10 0;"/>
-                    <ToggleButton fx:id="btnModeSnipe" text="⚡  Snipe" toggleGroup="#modeGroup"
+                    <ToggleButton fx:id="btnModeSnipe" text="⚡  Snipe" toggleGroup="$modeGroup"
                                   maxWidth="Infinity" HBox.hgrow="ALWAYS" onAction="#handleModeChange"
                                   style="-fx-background-color: white; -fx-text-fill: #475569; -fx-border-color: #CBD5E1; -fx-border-radius: 8; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 10 0;"/>
                 </HBox>

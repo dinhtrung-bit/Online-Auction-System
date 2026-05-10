@@ -351,7 +351,7 @@ public class AuctionDetailController implements Initializable {
     void handleOpenAutoBidDialog(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/client/views/autobid-dialog.fxml"));
+                    getClass().getResource("../views/autobid-dialog.fxml"));
             Parent root = loader.load();
             AutoBidDialogController ctrl = loader.getController();
             ctrl.setup(currentRoomId, currentPriceVal, (mode, cfg) -> {
