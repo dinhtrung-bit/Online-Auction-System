@@ -164,12 +164,57 @@ public class AuctionDetailController implements Initializable {
                         showAlert(Alert.AlertType.WARNING, "Đặt giá thất bại", payload)
                 )
         );
+
+        // Load lịch sử đấu giá từ DB — hiển thị đầy đủ dù client vào muộn hay thoát rồi vào lại
+        ClientMain.registerListener("BID_HISTORY", payload -> {
+            try {
+                java.lang.reflect.Type listType =
+                        new com.google.gson.reflect.TypeToken<java.util.List<java.util.Map<String, Object>>>() {}.getType();
+                java.util.List<java.util.Map<String, Object>> bids = gson.fromJson(payload, listType);
+
+                Platform.runLater(() -> {
+                    historyList.getItems().clear();
+                    priceSeries.getData().clear();
+                    bidCount = 0;
+
+                    if (bids == null || bids.isEmpty()) return;
+
+                    for (java.util.Map<String, Object> bid : bids) {
+                        String username = bid.get("username") != null ? bid.get("username").toString() : "?";
+                        double amount   = bid.get("amount")   != null ? ((Number) bid.get("amount")).doubleValue() : 0;
+                        String time     = bid.get("time")     != null ? bid.get("time").toString() : "";
+
+                        // Cắt bỏ phần giây để hiển thị gọn
+                        if (time.length() > 16) time = time.substring(0, 16);
+
+                        historyList.getItems().add(0,
+                                username + " đặt " + formatPrice(String.valueOf((long) amount)) + " đ  [" + time + "]"
+                        );
+
+                        bidCount++;
+                        priceSeries.getData().add(new XYChart.Data<>("Lần " + bidCount, amount));
+
+                        // Cập nhật người dẫn đầu theo bid mới nhất (list ASC, thêm vào đầu → cuối vòng = mới nhất)
+                        lastWinner      = username;
+                        currentPriceVal = amount;
+                    }
+
+                    lblWinner.setText("👤 Người dẫn đầu: " + lastWinner);
+                });
+            } catch (Exception e) {
+                System.err.println("Lỗi parse BID_HISTORY: " + e.getMessage());
+            }
+        });
     }
 
     public void setRoomId(String id) {
         this.currentRoomId = id;
-        MessageDTO req = new MessageDTO("GET_AUCTION_DETAIL", id);
-        ClientMain.send(gson.toJson(req));
+
+        // Lấy thông tin chi tiết phòng (giá, trạng thái, thời gian còn lại)
+        ClientMain.send(gson.toJson(new MessageDTO("GET_AUCTION_DETAIL", id)));
+
+        // Lấy toàn bộ lịch sử đấu giá từ DB — đảm bảo không mất dữ liệu khi thoát/vào lại
+        ClientMain.send(gson.toJson(new MessageDTO("GET_BID_HISTORY", id)));
     }
 
     private void startTimer() {
@@ -311,6 +356,7 @@ public class AuctionDetailController implements Initializable {
         ClientMain.unregisterListener("AUCTION_FINISHED");
         ClientMain.unregisterListener("BID_FAILED");
         ClientMain.unregisterListener("AUTO_BID_EXCEEDED");
+        ClientMain.unregisterListener("BID_HISTORY");
 
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/client/views/auction-list.fxml"));
