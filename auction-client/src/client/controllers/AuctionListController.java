@@ -66,6 +66,16 @@ public class AuctionListController implements Initializable {
             Platform.runLater(() -> applyTabFilterAndRender(filteredAuctions));
         });
 
+        // Khi có phòng chuyển OPEN → RUNNING: reload để badge trạng thái đúng
+        ClientMain.registerListener("AUCTION_STARTED", payload ->
+                Platform.runLater(this::loadAuctionsFromServer)
+        );
+
+        // Khi Admin hủy phòng: reload ngay để phòng biến khỏi danh sách
+        ClientMain.registerListener("AUCTION_CANCELED", payload ->
+                Platform.runLater(this::loadAuctionsFromServer)
+        );
+
         ClientMain.registerListener("BALANCE_DATA", payload -> {
             Platform.runLater(() -> {
                 try {
@@ -376,6 +386,8 @@ public class AuctionListController implements Initializable {
             ClientMain.unregisterListener("AUCTION_LIST");
             ClientMain.unregisterListener("BALANCE_DATA");
             ClientMain.unregisterListener("AUCTION_LIST_BY_STATUS");
+            ClientMain.unregisterListener("AUCTION_STARTED");
+            ClientMain.unregisterListener("AUCTION_CANCELED");
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/auction-detail.fxml"));
             Parent root = loader.load();
@@ -592,6 +604,8 @@ public class AuctionListController implements Initializable {
         ClientMain.unregisterListener("AUCTION_LIST");
         ClientMain.unregisterListener("BALANCE_DATA");
         ClientMain.unregisterListener("AUCTION_LIST_BY_STATUS");
+        ClientMain.unregisterListener("AUCTION_STARTED");
+        ClientMain.unregisterListener("AUCTION_CANCELED");
 
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/client/views/login.fxml"));

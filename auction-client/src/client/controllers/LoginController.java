@@ -99,7 +99,26 @@ public class LoginController {
         Node loginBtn = (Node) event.getSource();
         loginBtn.setDisable(true);
 
+        // Timeout: nếu sau 10 giây không có response → tự cleanup + báo lỗi
+        java.util.concurrent.atomic.AtomicBoolean handled = new java.util.concurrent.atomic.AtomicBoolean(false);
+        java.util.Timer timeoutTimer = new java.util.Timer(true);
+        timeoutTimer.schedule(new java.util.TimerTask() {
+            @Override public void run() {
+                if (handled.compareAndSet(false, true)) {
+                    ClientMain.unregisterListener("LOGIN_SUCCESS");
+                    ClientMain.unregisterListener("LOGIN_FAILED");
+                    Platform.runLater(() -> {
+                        loginBtn.setDisable(false);
+                        showAlert(Alert.AlertType.ERROR, "Hết thời gian chờ",
+                                "Server không phản hồi. Kiểm tra kết nối và thử lại.");
+                    });
+                }
+            }
+        }, 10_000);
+
         ClientMain.registerListener("LOGIN_SUCCESS", payload -> {
+            if (!handled.compareAndSet(false, true)) return;
+            timeoutTimer.cancel();
             ClientMain.unregisterListener("LOGIN_SUCCESS");
             ClientMain.unregisterListener("LOGIN_FAILED");
 
@@ -112,6 +131,8 @@ public class LoginController {
         });
 
         ClientMain.registerListener("LOGIN_FAILED", payload -> {
+            if (!handled.compareAndSet(false, true)) return;
+            timeoutTimer.cancel();
             ClientMain.unregisterListener("LOGIN_SUCCESS");
             ClientMain.unregisterListener("LOGIN_FAILED");
 
@@ -123,12 +144,8 @@ public class LoginController {
 
         CompletableFuture.runAsync(() -> {
             ClientMain.connectToServer();
-
             String payload = selectedRole + ":" + username + ":" + password;
-
-            ClientMain.send(gson.toJson(
-                    new MessageDTO("LOGIN", payload)
-            ));
+            ClientMain.send(gson.toJson(new MessageDTO("LOGIN", payload)));
         });
     }
 

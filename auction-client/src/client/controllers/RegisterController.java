@@ -43,6 +43,10 @@ public class RegisterController {
 
     @FXML
     void goToLogin(ActionEvent event) {
+        // Cleanup listener nếu người dùng nhấn back giữa chừng
+        client.networks.ClientMain.unregisterListener("REGISTER_SUCCESS");
+        client.networks.ClientMain.unregisterListener("REGISTER_FAILED");
+
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/client/views/login.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
@@ -64,7 +68,26 @@ public class RegisterController {
         Node registerBtn = (Node) event.getSource();
         registerBtn.setDisable(true);
 
+        // Timeout: tự cleanup nếu sau 10 giây không có response
+        java.util.concurrent.atomic.AtomicBoolean handled = new java.util.concurrent.atomic.AtomicBoolean(false);
+        java.util.Timer timeoutTimer = new java.util.Timer(true);
+        timeoutTimer.schedule(new java.util.TimerTask() {
+            @Override public void run() {
+                if (handled.compareAndSet(false, true)) {
+                    client.networks.ClientMain.unregisterListener("REGISTER_SUCCESS");
+                    client.networks.ClientMain.unregisterListener("REGISTER_FAILED");
+                    Platform.runLater(() -> {
+                        registerBtn.setDisable(false);
+                        showAlert(Alert.AlertType.ERROR, "Hết thời gian chờ",
+                                "Server không phản hồi. Vui lòng thử lại.");
+                    });
+                }
+            }
+        }, 10_000);
+
         client.networks.ClientMain.registerListener("REGISTER_SUCCESS", payload -> {
+            if (!handled.compareAndSet(false, true)) return;
+            timeoutTimer.cancel();
             client.networks.ClientMain.unregisterListener("REGISTER_SUCCESS");
             client.networks.ClientMain.unregisterListener("REGISTER_FAILED");
             Platform.runLater(() -> {
@@ -75,6 +98,8 @@ public class RegisterController {
         });
 
         client.networks.ClientMain.registerListener("REGISTER_FAILED", payload -> {
+            if (!handled.compareAndSet(false, true)) return;
+            timeoutTimer.cancel();
             client.networks.ClientMain.unregisterListener("REGISTER_SUCCESS");
             client.networks.ClientMain.unregisterListener("REGISTER_FAILED");
             Platform.runLater(() -> {

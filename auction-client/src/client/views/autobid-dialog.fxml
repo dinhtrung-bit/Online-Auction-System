@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox xmlns="http://javafx.com/javafx/17.0.2-ea"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="client.controllers.AutoBidDialogController"
+      spacing="0" styleClass="main-bg" stylesheets="@app.css">
+    <padding><Insets top="0" right="0" bottom="0" left="0"/></padding>
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="12"
+          style="-fx-background-color: white; -fx-padding: 20 24 16 24; -fx-border-color: transparent transparent #E2E8F0 transparent; -fx-border-width: 1;">
+        <Label text="🤖" style="-fx-font-size: 22px;"/>
+        <VBox spacing="2">
+            <Label text="Cài đặt AutoBid" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+            <Label text="Hệ thống tự đặt giá theo cấu hình của bạn" style="-fx-font-size: 12px; -fx-text-fill: #64748B;"/>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="✕" onAction="#handleClose"
+                style="-fx-background-color: #F1F5F9; -fx-text-fill: #64748B; -fx-background-radius: 20; -fx-font-size: 14px; -fx-cursor: hand; -fx-min-width: 32; -fx-min-height: 32; -fx-padding: 0;"/>
+    </HBox>
+
+    <ScrollPane fitToWidth="true" style="-fx-background-color: #F8FAFC; -fx-background: #F8FAFC; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
+        <VBox spacing="16" style="-fx-background-color: #F8FAFC;">
+            <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+            <!-- Chế độ AutoBid -->
+            <VBox styleClass="card" spacing="12">
+                <Label text="Chế độ hoạt động" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #475569;"/>
+                <HBox spacing="8">
+                    <ToggleButton fx:id="btnModeStep" text="📈  Tăng dần" toggleGroup="#modeGroup"
+                                  maxWidth="Infinity" HBox.hgrow="ALWAYS" onAction="#handleModeChange"
+                                  style="-fx-background-color: #10B981; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 10 0;"/>
+                    <ToggleButton fx:id="btnModeFixed" text="📌  Giá cố định" toggleGroup="#modeGroup"
+                                  maxWidth="Infinity" HBox.hgrow="ALWAYS" onAction="#handleModeChange"
+                                  style="-fx-background-color: white; -fx-text-fill: #475569; -fx-border-color: #CBD5E1; -fx-border-radius: 8; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 10 0;"/>
+                    <ToggleButton fx:id="btnModeSnipe" text="⚡  Snipe" toggleGroup="#modeGroup"
+                                  maxWidth="Infinity" HBox.hgrow="ALWAYS" onAction="#handleModeChange"
+                                  style="-fx-background-color: white; -fx-text-fill: #475569; -fx-border-color: #CBD5E1; -fx-border-radius: 8; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 10 0;"/>
+                </HBox>
+                <Label fx:id="lblModeDesc"
+                       text="Tự động tăng giá mỗi khi có người vượt qua bạn, theo bước giá đã đặt."
+                       wrapText="true"
+                       style="-fx-font-size: 12px; -fx-text-fill: #64748B; -fx-background-color: #F0FDF4; -fx-background-radius: 6; -fx-padding: 8 12; -fx-border-color: #A7F3D0; -fx-border-radius: 6;"/>
+            </VBox>
+
+            <!-- Giá tối đa -->
+            <VBox styleClass="card" spacing="10">
+                <HBox alignment="CENTER_LEFT" spacing="6">
+                    <Label text="💰" style="-fx-font-size: 14px;"/>
+                    <Label text="Giá tối đa sẵn sàng trả" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #475569;"/>
+                </HBox>
+                <TextField fx:id="txtMaxBid" promptText="Nhập số tiền tối đa (VD: 20000000)"
+                           prefHeight="42"
+                           style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #CBD5E1; -fx-padding: 0 12;"/>
+                <HBox spacing="8">
+                    <Button text="+1tr" onAction="#handleQuickMax" userData="1000000" styleClass="btn-outline" style="-fx-font-size: 12px; -fx-padding: 5 14; -fx-cursor: hand;"/>
+                    <Button text="+5tr" onAction="#handleQuickMax" userData="5000000" styleClass="btn-outline" style="-fx-font-size: 12px; -fx-padding: 5 14; -fx-cursor: hand;"/>
+                    <Button text="+10tr" onAction="#handleQuickMax" userData="10000000" styleClass="btn-outline" style="-fx-font-size: 12px; -fx-padding: 5 14; -fx-cursor: hand;"/>
+                    <Button text="+20tr" onAction="#handleQuickMax" userData="20000000" styleClass="btn-outline" style="-fx-font-size: 12px; -fx-padding: 5 14; -fx-cursor: hand;"/>
+                </HBox>
+                <HBox spacing="16">
+                    <Label fx:id="lblCurrentPrice" text="Giá hiện tại: --" style="-fx-font-size: 12px; -fx-text-fill: #64748B;"/>
+                    <Label fx:id="lblBalance" text="Số dư: --" style="-fx-font-size: 12px; -fx-text-fill: #10B981; -fx-font-weight: bold;"/>
+                </HBox>
+            </VBox>
+
+            <!-- Bước giá (chỉ hiện khi mode = Tăng dần) -->
+            <VBox fx:id="panelStep" styleClass="card" spacing="10">
+                <HBox alignment="CENTER_LEFT" spacing="6">
+                    <Label text="📶" style="-fx-font-size: 14px;"/>
+                    <Label text="Bước giá mỗi lần tự động" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #475569;"/>
+                </HBox>
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <TextField fx:id="txtIncrement" promptText="VD: 500000" prefHeight="42" HBox.hgrow="ALWAYS"
+                               style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #CBD5E1; -fx-padding: 0 12;"/>
+                    <Button text="+100k" onAction="#handleQuickStep" userData="100000" styleClass="btn-outline" style="-fx-font-size: 12px; -fx-padding: 5 12; -fx-cursor: hand;"/>
+                    <Button text="+500k" onAction="#handleQuickStep" userData="500000" styleClass="btn-outline" style="-fx-font-size: 12px; -fx-padding: 5 12; -fx-cursor: hand;"/>
+                    <Button text="+1tr" onAction="#handleQuickStep" userData="1000000" styleClass="btn-outline" style="-fx-font-size: 12px; -fx-padding: 5 12; -fx-cursor: hand;"/>
+                </HBox>
+                <Label text="Tối thiểu 100.000 đ · Khuyến nghị 500.000 đ để tránh bid liên tục"
+                       style="-fx-font-size: 11px; -fx-text-fill: #94A3B8;"/>
+            </VBox>
+
+            <!-- Độ trễ -->
+            <VBox styleClass="card" spacing="10">
+                <HBox alignment="CENTER_LEFT" spacing="6">
+                    <Label text="⏱" style="-fx-font-size: 14px;"/>
+                    <Label text="Độ trễ giữa các lần bid (giây)" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #475569;"/>
+                </HBox>
+                <HBox spacing="12" alignment="CENTER_LEFT">
+                    <Slider fx:id="sliderDelay" min="0" max="10" value="2" showTickLabels="true" showTickMarks="true"
+                            majorTickUnit="2" minorTickCount="1" snapToTicks="true" HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="lblDelayVal" text="2 giây"
+                           style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #0F172A; -fx-min-width: 55;"/>
+                </HBox>
+                <Label text="0 = ngay lập tức · 2-5 giây trông tự nhiên hơn"
+                       style="-fx-font-size: 11px; -fx-text-fill: #94A3B8;"/>
+            </VBox>
+
+            <!-- Preview -->
+            <VBox fx:id="panelPreview" styleClass="card" spacing="10"
+                  style="-fx-background-color: white; -fx-border-color: #A7F3D0; -fx-border-radius: 12; -fx-border-width: 1.5;">
+                <Label text="Xem trước hoạt động" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #475569;"/>
+                <VBox spacing="6" style="-fx-background-color: #F0FDF4; -fx-background-radius: 8; -fx-padding: 12;">
+                    <HBox><Label text="Lần bid tiếp theo: " style="-fx-font-size: 13px; -fx-text-fill: #475569;"/><Region HBox.hgrow="ALWAYS"/><Label fx:id="lblNextBid" text="--" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #059669;"/></HBox>
+                    <HBox><Label text="Số lần tối đa còn lại: " style="-fx-font-size: 13px; -fx-text-fill: #475569;"/><Region HBox.hgrow="ALWAYS"/><Label fx:id="lblMaxTimes" text="--" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/></HBox>
+                    <HBox><Label text="Tổng tiêu tối đa: " style="-fx-font-size: 13px; -fx-text-fill: #475569;"/><Region HBox.hgrow="ALWAYS"/><Label fx:id="lblTotalMax" text="--" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/></HBox>
+                </VBox>
+            </VBox>
+
+        </VBox>
+    </ScrollPane>
+
+    <!-- Footer actions -->
+    <HBox spacing="12" alignment="CENTER_RIGHT"
+          style="-fx-background-color: white; -fx-padding: 16 24; -fx-border-color: #E2E8F0 transparent transparent transparent; -fx-border-width: 1;">
+        <Button text="Hủy" onAction="#handleClose" prefWidth="90" prefHeight="40"
+                style="-fx-background-color: white; -fx-border-color: #CBD5E1; -fx-border-radius: 8; -fx-background-radius: 8; -fx-text-fill: #475569; -fx-font-weight: bold; -fx-cursor: hand;"/>
+        <Button fx:id="btnActivate" text="🚀  Kích hoạt AutoBid" onAction="#handleActivate" prefHeight="40"
+                style="-fx-background-color: #10B981; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 0 24;"/>
+    </HBox>
+</VBox>

@@ -531,9 +531,26 @@ public class SellerDashboardController {
             Item updatedItem = controller.getResultItem();
 
             if (updatedItem != null) {
-                int index = itemList.indexOf(selectedItem);
-                itemList.set(index, updatedItem);
-                tableItems.refresh();
+                final Item finalUpdated = updatedItem;
+                final int  finalIndex   = itemList.indexOf(selectedItem);
+
+                ClientMain.registerListener("UPDATE_ITEM_SUCCESS", payload -> {
+                    ClientMain.unregisterListener("UPDATE_ITEM_SUCCESS");
+                    ClientMain.unregisterListener("UPDATE_ITEM_FAILED");
+                    Platform.runLater(() -> {
+                        itemList.set(finalIndex, finalUpdated);
+                        tableItems.refresh();
+                        showSuccess("Cập nhật sản phẩm thành công!");
+                    });
+                });
+
+                ClientMain.registerListener("UPDATE_ITEM_FAILED", payload -> {
+                    ClientMain.unregisterListener("UPDATE_ITEM_SUCCESS");
+                    ClientMain.unregisterListener("UPDATE_ITEM_FAILED");
+                    Platform.runLater(() ->
+                            showAlert("Cập nhật thất bại", "Server báo lỗi: " + payload)
+                    );
+                });
 
                 ClientMain.send(gson.toJson(new MessageDTO(
                         "UPDATE_ITEM",
@@ -563,14 +580,91 @@ public class SellerDashboardController {
         Optional<ButtonType> result = confirmDialog.showAndWait();
 
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            ClientMain.send(gson.toJson(new MessageDTO("DELETE_ITEM", selectedItem.getItemId())));
-            itemList.remove(selectedItem);
-            tableItems.refresh();
+            final Item toDelete = selectedItem;
 
-            if (reportView != null && reportView.isVisible()) {
-                updateReport();
-            }
+            ClientMain.registerListener("DELETE_ITEM_SUCCESS", payload -> {
+                ClientMain.unregisterListener("DELETE_ITEM_SUCCESS");
+                ClientMain.unregisterListener("DELETE_ITEM_FAILED");
+                Platform.runLater(() -> {
+                    itemList.remove(toDelete);
+                    tableItems.refresh();
+                    if (reportView != null && reportView.isVisible()) updateReport();
+                    showSuccess("Đã xóa sản phẩm \"" + toDelete.getName() + "\".");
+                });
+            });
+
+            ClientMain.registerListener("DELETE_ITEM_FAILED", payload -> {
+                ClientMain.unregisterListener("DELETE_ITEM_SUCCESS");
+                ClientMain.unregisterListener("DELETE_ITEM_FAILED");
+                Platform.runLater(() ->
+                        showAlert("Xóa thất bại", "Server báo lỗi: " + payload)
+                );
+            });
+
+            ClientMain.send(gson.toJson(new MessageDTO("DELETE_ITEM", selectedItem.getItemId())));
         }
+    }
+
+    @FXML
+    private void handleCancelAuction() {
+        Item selectedItem = tableItems.getSelectionModel().getSelectedItem();
+
+        if (selectedItem == null) {
+            showAlert("Nhắc nhở", "Vui lòng chọn sản phẩm có phiên đấu giá để hủy!");
+            return;
+        }
+
+        Map<String, Object> auction = auctionMap.get(selectedItem.getItemId());
+        if (auction == null || auction.get("auctionId") == null) {
+            showAlert("Không có phiên", "Sản phẩm này chưa có phiên đấu giá nào!");
+            return;
+        }
+
+        String status = auction.get("status") != null ? auction.get("status").toString() : "";
+        if (status.equals("PAID") || status.equals("FINISHED") || status.equals("CANCELED")) {
+            showAlert("Không thể hủy",
+                    "Phiên đấu giá đã ở trạng thái " + statusToText(status) + " — không thể hủy.");
+            return;
+        }
+
+        // Lấy auctionId an toàn (server trả về kiểu Number)
+        int auctionId;
+        try {
+            auctionId = ((Number) auction.get("auctionId")).intValue();
+        } catch (Exception e) {
+            showAlert("Lỗi dữ liệu", "Không đọc được ID phiên đấu giá.");
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Xác nhận hủy phiên");
+        confirm.setHeaderText("Hủy phiên đấu giá: " + selectedItem.getName());
+        confirm.setContentText(
+                "Phiên #" + auctionId + " sẽ bị hủy.\n"
+                        + "Lưu ý: nếu phiên đang chạy đã có người đặt giá, server sẽ từ chối.\n\n"
+                        + "Bạn chắc chắn chứ?");
+
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK) return;
+
+        ClientMain.registerListener("DELETE_AUCTION_SUCCESS", payload -> {
+            ClientMain.unregisterListener("DELETE_AUCTION_SUCCESS");
+            ClientMain.unregisterListener("DELETE_AUCTION_FAILED");
+            Platform.runLater(() -> {
+                showSuccess(payload);
+                loadMyAuctionsFromServer();
+            });
+        });
+
+        ClientMain.registerListener("DELETE_AUCTION_FAILED", payload -> {
+            ClientMain.unregisterListener("DELETE_AUCTION_SUCCESS");
+            ClientMain.unregisterListener("DELETE_AUCTION_FAILED");
+            Platform.runLater(() ->
+                    showAlert("Hủy phiên thất bại", "Server báo: " + payload)
+            );
+        });
+
+        ClientMain.send(gson.toJson(new MessageDTO("DELETE_AUCTION", String.valueOf(auctionId))));
     }
 
     @FXML
@@ -689,6 +783,14 @@ public class SellerDashboardController {
     private void showAlert(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    private void showSuccess(String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Thành công");
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();

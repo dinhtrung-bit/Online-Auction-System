@@ -75,8 +75,9 @@ public class ClientHandler implements Runnable {
         processors.put("CANCEL_AUTO_BID",        this::handleCancelAutoBid);
         processors.put("DEPOSIT",                this::handleDeposit);
         processors.put("GET_MY_AUCTIONS",        this::handleGetMyAuctions);
-        processors.put("GET_BID_HISTORY",        this::handleGetBidHistory);
-        processors.put("GET_MY_WON_AUCTIONS",    this::handleGetMyWonAuctions);
+        processors.put("GET_BID_HISTORY",          this::handleGetBidHistory);
+        processors.put("GET_MY_WON_AUCTIONS",      this::handleGetMyWonAuctions);
+        processors.put("GET_AUCTIONS_BY_STATUS",   this::handleGetAuctionsByStatus);
     }
     private MessageDTO handleAdminCancelAuction(MessageDTO request) {
         if (loggedInUser == null || !loggedInUser.getRole().equalsIgnoreCase("ADMIN")) {
@@ -336,8 +337,48 @@ public class ClientHandler implements Runnable {
         if (err != null) return err;
         try {
             int auctionId = Integer.parseInt(request.getPayload().trim());
-            auctionDAO.delete(auctionId);
-            return new MessageDTO("DELETE_AUCTION_SUCCESS", "Xóa phòng đấu giá thành công!");
+
+            // Tìm phòng trong RAM để check ownership + status
+            AuctionRoom room = AuctionService.getInstance().getActiveRooms()
+                    .stream()
+                    .filter(r -> r.getId() == auctionId)
+                    .findFirst()
+                    .orElse(null);
+
+            if (room == null) {
+                return new MessageDTO("DELETE_AUCTION_FAILED", "Không tìm thấy phiên đấu giá!");
+            }
+
+            // Chỉ chính chủ mới được hủy
+            if (room.getSellerID() != loggedInUser.getUserId()) {
+                return new MessageDTO("DELETE_AUCTION_FAILED",
+                        "Bạn không có quyền hủy phiên đấu giá này!");
+            }
+
+            // Phòng đã thanh toán hoặc đã kết thúc → không cho hủy
+            if (room.getStatus() == AuctionStatus.PAID
+                    || room.getStatus() == AuctionStatus.FINISHED) {
+                return new MessageDTO("DELETE_AUCTION_FAILED",
+                        "Phiên đã kết thúc/thanh toán, không thể hủy!");
+            }
+
+            // Phòng đang chạy đã có bid → không cho hủy (bảo vệ Bidder)
+            if (room.getStatus() == AuctionStatus.RUNNING
+                    && room.getCurrentWinner() != null) {
+                return new MessageDTO("DELETE_AUCTION_FAILED",
+                        "Phiên đang chạy đã có người đặt giá — không thể hủy!");
+            }
+
+            // Đánh dấu CANCELED thay vì xóa hẳn (để Bidder vẫn xem được lịch sử)
+            room.setStatus(AuctionStatus.CANCELED);
+            auctionDAO.update(room);
+            AuctionService.getInstance().reloadFromDatabase();
+
+            // Broadcast để Bidder đang xem được biết
+            broadcast(gson.toJson(new MessageDTO("AUCTION_CANCELED", String.valueOf(auctionId))));
+
+            return new MessageDTO("DELETE_AUCTION_SUCCESS",
+                    "Đã hủy phiên đấu giá #" + auctionId);
         } catch (Exception e) {
             return new MessageDTO("DELETE_AUCTION_FAILED", "Lỗi: " + e.getMessage());
         }
@@ -498,6 +539,39 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    private MessageDTO handleGetAuctionsByStatus(MessageDTO request) {
+        try {
+            String statusStr = request.getPayload() != null ? request.getPayload().trim().toUpperCase() : "";
+
+            // Hỗ trợ tên trạng thái tiếng Việt mà client ComboBox gửi lên
+            AuctionStatus targetStatus;
+            try {
+                targetStatus = AuctionStatus.valueOf(statusStr);
+            } catch (IllegalArgumentException e) {
+                // Client gửi nhãn tiếng Việt — map sang enum
+                targetStatus = switch (statusStr) {
+                    case "ĐANG CHẠY", "RUNNING"  -> AuctionStatus.RUNNING;
+                    case "SẮP MỞ",   "OPEN"      -> AuctionStatus.OPEN;
+                    case "KẾT THÚC", "FINISHED"  -> AuctionStatus.FINISHED;
+                    case "ĐÃ THANH TOÁN", "PAID"  -> AuctionStatus.PAID;
+                    case "ĐÃ HỦY",   "CANCELED"  -> AuctionStatus.CANCELED;
+                    default -> null;
+                };
+            }
+
+            final AuctionStatus filter = targetStatus;
+            List<Map<String, Object>> result = AuctionService.getInstance().getActiveRooms()
+                    .stream()
+                    .filter(r -> filter == null || r.getStatus() == filter)
+                    .map(this::roomToMap)
+                    .collect(Collectors.toList());
+
+            return new MessageDTO("AUCTION_LIST_BY_STATUS", gson.toJson(result));
+        } catch (Exception e) {
+            return new MessageDTO("ERROR", "Lỗi lọc danh sách: " + e.getMessage());
+        }
+    }
+
     private MessageDTO handleGetAllUsers(MessageDTO request) {
         if (loggedInUser == null || !loggedInUser.getRole().equalsIgnoreCase("ADMIN"))
             return new MessageDTO("ERROR", "Không có quyền truy cập!");
@@ -527,6 +601,8 @@ public class ClientHandler implements Runnable {
         m.put("currentWinner", room.getCurrentWinner() != null
                 ? room.getCurrentWinner().getUsername() : "Chưa có");
         m.put("status",       room.getStatus().name());
+        m.put("endTime",      room.getEndTime() != null ? room.getEndTime().toString() : "");
+        m.put("sellerID",     room.getSellerID());
         return m;
     }
 

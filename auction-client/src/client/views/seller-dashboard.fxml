@@ -91,6 +91,10 @@
                             text="🔨 Đấu giá"
                             styleClass="btn-warning"/>
 
+                    <Button onAction="#handleCancelAuction"
+                            text="🚫 Hủy phiên"
+                            styleClass="btn-danger"/>
+
                     <Button onAction="#showAddProductDialog"
                             text="+ Thêm Mới"
                             styleClass="btn-success"/>
