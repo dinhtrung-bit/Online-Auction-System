@@ -32,7 +32,7 @@ public class ClientMain {
         try {
             if (socket != null && !socket.isClosed()) return;
 
-            socket = new Socket("192.168.1.79", 8080);
+            socket = new Socket("localhost", 8080);
             out = new PrintWriter(socket.getOutputStream(), true);
             System.out.println("[Client] Đã kết nối tới Server!");
             startListenerThread(new BufferedReader(new InputStreamReader(socket.getInputStream())));
