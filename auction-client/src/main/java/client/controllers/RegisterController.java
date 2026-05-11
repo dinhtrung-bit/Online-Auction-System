@@ -110,7 +110,13 @@ public class RegisterController {
 
         CompletableFuture.runAsync(() -> {
             client.networks.ClientMain.connectToServer();
-            String payload = username + ":" + password + ":" + selectedRole + ":" + fullName;
+            // [Fix] JSON payload thay vì split(":") — an toàn khi dữ liệu chứa ":"
+            java.util.Map<String,String> regData = new java.util.LinkedHashMap<>();
+            regData.put("username", username);
+            regData.put("password", password);
+            regData.put("role",     selectedRole);
+            regData.put("fullName", fullName);
+            String payload = gson.toJson(regData);
             client.networks.ClientMain.send(gson.toJson(
                     new client.networks.MessageDTO("REGISTER", payload)
             ));

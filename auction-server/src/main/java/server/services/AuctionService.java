@@ -1,10 +1,5 @@
 package server.services;
 
-import server.dao.impl.AuctionRoomDAOImpl;
-import server.dao.impl.AutoBidDAOImpl;
-import server.dao.impl.BidMessageDAOImpl;
-import server.dao.impl.ItemDAOImpl;
-import server.dao.impl.UserDAOImpl;
 import server.dao.interfaces.AuctionRoomDAO;
 import server.dao.interfaces.AutoBidDAO;
 import server.dao.interfaces.BidMessageDAO;
@@ -29,23 +24,49 @@ import java.util.concurrent.CompletableFuture;
 public class AuctionService {
     private static AuctionService instance;
 
-    private final AuctionRoomDAO roomDAO = new AuctionRoomDAOImpl();
-    private final ItemDAO itemDAO = new ItemDAOImpl();
-    private final BidMessageDAO bidDAO = new BidMessageDAOImpl();
-    private final UserDAO userDAO = new UserDAOImpl();
-    private final AutoBidDAO autoBidDAO = new AutoBidDAOImpl();
+    private final AuctionRoomDAO roomDAO;
+    private final ItemDAO         itemDAO;
+    private final BidMessageDAO   bidDAO;
+    private final UserDAO         userDAO;
+    private final AutoBidDAO      autoBidDAO;
 
     private ConcurrentHashMap<Long, AuctionRoom> activeRooms;
 
-    private AuctionService() {
-        activeRooms = new ConcurrentHashMap<>();
+    /**
+     * Constructor Injection — MainServer truyền DAO vào.
+     * Singleton vẫn được giữ để scheduler và ClientHandler dùng chung 1 instance.
+     */
+    private AuctionService(AuctionRoomDAO roomDAO, ItemDAO itemDAO,
+                           BidMessageDAO bidDAO, UserDAO userDAO, AutoBidDAO autoBidDAO) {
+        this.roomDAO    = roomDAO;
+        this.itemDAO    = itemDAO;
+        this.bidDAO     = bidDAO;
+        this.userDAO    = userDAO;
+        this.autoBidDAO = autoBidDAO;
+        this.activeRooms = new ConcurrentHashMap<>();
         loadRoomsFromDatabase();
     }
 
-    public static synchronized AuctionService getInstance() {
+    /**
+     * Lấy (hoặc tạo) instance duy nhất với DAO được inject từ MainServer.
+     * Gọi lần đầu tại MainServer (Composition Root) để wiring đúng.
+     */
+    public static synchronized AuctionService getInstance(
+            AuctionRoomDAO roomDAO, ItemDAO itemDAO,
+            BidMessageDAO bidDAO, UserDAO userDAO, AutoBidDAO autoBidDAO) {
         if (instance == null) {
-            instance = new AuctionService();
+            instance = new AuctionService(roomDAO, itemDAO, bidDAO, userDAO, autoBidDAO);
         }
+        return instance;
+    }
+
+    /**
+     * Lấy instance đã được khởi tạo (dùng trong các class nội bộ nếu cần).
+     * Yêu cầu: getInstance(DAOs...) phải được gọi trước tại MainServer.
+     */
+    public static AuctionService getInstance() {
+        if (instance == null) throw new IllegalStateException(
+                "AuctionService chưa được khởi tạo — gọi getInstance(DAOs...) tại MainServer trước.");
         return instance;
     }
 
@@ -287,4 +308,110 @@ public class AuctionService {
     public List<AuctionRoom> getActiveRooms() {
         return new ArrayList<>(activeRooms.values());
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Các method public được thêm để handlers gọi thay vì gọi DAO trực tiếp
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Tìm phòng đấu giá theo id (dùng cho AuctionRequestHandler). */
+    public AuctionRoom findRoomById(long roomId) {
+        return activeRooms.get(roomId);
+    }
+
+    /**
+     * Tạo phiên đấu giá mới và lưu vào DB.
+     * Thay thế cho đoạn logic trước đây nằm trong ClientHandler.
+     */
+    public void createAuction(int sellerId, Item item,
+                              LocalDateTime startTime, LocalDateTime endTime) throws Exception {
+        AuctionRoom room = new AuctionRoom(0, sellerId, item, startTime, endTime);
+        room.setStatus(AuctionStatus.OPEN);
+        room.setCurrentPrice(item.getStartingPrice());
+        roomDAO.insert(room);
+        reloadFromDatabase();
+    }
+
+    /**
+     * Hủy phiên đấu giá do Seller yêu cầu.
+     * Trả về "SUCCESS" hoặc thông báo lỗi.
+     */
+    public String cancelAuctionBySeller(int auctionId, int sellerId) throws Exception {
+        AuctionRoom room = activeRooms.get((long) auctionId);
+        if (room == null)       return "Không tìm thấy phiên đấu giá!";
+        if (room.getSellerID() != sellerId) return "Bạn không có quyền hủy phiên đấu giá này!";
+        if (room.getStatus() == AuctionStatus.PAID
+                || room.getStatus() == AuctionStatus.FINISHED)
+            return "Phiên đã kết thúc/thanh toán, không thể hủy!";
+        if (room.getStatus() == AuctionStatus.RUNNING && room.getCurrentWinner() != null)
+            return "Phiên đang chạy đã có người đặt giá — không thể hủy!";
+
+        room.setStatus(AuctionStatus.CANCELED);
+        roomDAO.update(room);
+        reloadFromDatabase();
+        return "SUCCESS";
+    }
+
+    /**
+     * Hủy phiên đấu giá do Admin yêu cầu.
+     * Trả về "SUCCESS" hoặc thông báo lỗi.
+     */
+    public String cancelAuctionByAdmin(int auctionId) throws Exception {
+        AuctionRoom room = activeRooms.get((long) auctionId);
+        if (room == null) return "Không tìm thấy phiên đấu giá!";
+        if (room.getStatus() == AuctionStatus.PAID) return "Phiên đã thanh toán, không thể hủy!";
+
+        room.setStatus(AuctionStatus.CANCELED);
+        roomDAO.update(room);
+        reloadFromDatabase();
+        return "SUCCESS";
+    }
+
+    /**
+     * Đăng ký AutoBid cho một phòng và kích hoạt ngay.
+     * Thay thế cho đoạn logic trước đây nằm trong ClientHandler.
+     */
+    public void registerAutoBid(int auctionId, Bidder bidder,
+                                BigDecimal maxBid, BigDecimal step) throws Exception {
+        AuctionRoom room = new AuctionRoom();
+        room.setId(auctionId);
+
+        AutoBidConfig config = new AutoBidConfig();
+        config.setAuctionId(room);
+        config.setBidder(bidder);
+        config.setMaxBid(maxBid);
+        config.setIncrement(step);
+
+        autoBidDAO.insert(config);
+        triggerAutoBidsForRoom(auctionId, bidder);
+    }
+
+    /**
+     * Hủy AutoBid của một phòng (xóa tất cả config theo auctionId).
+     */
+    public void cancelAutoBid(int auctionId) throws Exception {
+        autoBidDAO.deleteByAuctionId(auctionId);
+    }
+
+    /**
+     * Trả lịch sử bid của một phòng kèm username (dùng cho AuctionRequestHandler).
+     */
+    public List<java.util.Map<String, Object>> getBidHistory(int roomId) throws Exception {
+        List<server.models.auction.BidMessage> bids =
+                bidDAO.getBidHistoryByAuctionRoomId(roomId);
+        List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
+        for (server.models.auction.BidMessage b : bids) {
+            java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+            String username = "Người dùng #" + b.getBidderId();
+            try {
+                User u = userDAO.findById(b.getBidderId());
+                if (u != null) username = u.getUsername();
+            } catch (Exception ignored) {}
+            m.put("username", username);
+            m.put("amount",   b.getBidAmount().doubleValue());
+            m.put("time",     b.getTimestamp() != null ? b.getTimestamp().toString() : "");
+            result.add(m);
+        }
+        return result;
+    }
+
 }

@@ -42,7 +42,7 @@ public class AuctionListController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        this.myUsername = UserSession.username;
+        this.myUsername = UserSession.getInstance().getUsername();
 
         tabGroup = new ToggleGroup();
         if (btnTabLive != null) btnTabLive.setToggleGroup(tabGroup);
@@ -111,7 +111,7 @@ public class AuctionListController implements Initializable {
             Platform.runLater(() -> {
                 try {
                     double balanceVal = Double.parseDouble(payload);
-                    UserSession.balance = balanceVal;
+                    UserSession.getInstance().setBalance(balanceVal);
 
                     if (lblBalance != null) {
                         lblBalance.setText("💳 Số dư: " + VND.format(balanceVal) + " đ");
@@ -595,12 +595,12 @@ public class AuctionListController implements Initializable {
                 ClientMain.unregisterListener("DEPOSIT_FAILED");
 
                 Platform.runLater(() -> {
-                    UserSession.balance += amount;
+                    UserSession.getInstance().addBalance(amount);
 
                     if (lblBalance != null) {
                         lblBalance.setText(
                                 "💳 Số dư: "
-                                        + VND.format((long) UserSession.balance)
+                                        + VND.format((long) UserSession.getInstance().getBalance())
                                         + " đ"
                         );
                     }
@@ -611,7 +611,7 @@ public class AuctionListController implements Initializable {
                     success.setContentText(
                             "🎉 Nạp tiền thành công!\n\n"
                                     + "Số dư mới: "
-                                    + VND.format((long) UserSession.balance)
+                                    + VND.format((long) UserSession.getInstance().getBalance())
                                     + " đ"
                     );
                     success.showAndWait();

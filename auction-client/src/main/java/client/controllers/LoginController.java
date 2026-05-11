@@ -124,8 +124,7 @@ public class LoginController {
 
             Platform.runLater(() -> {
                 loginBtn.setDisable(false);
-                UserSession.username = username;
-                UserSession.role = selectedRole;
+                UserSession.getInstance().login(username, selectedRole);
                 switchScene(loginBtn);
             });
         });
@@ -144,8 +143,12 @@ public class LoginController {
 
         CompletableFuture.runAsync(() -> {
             ClientMain.connectToServer();
-            String payload = selectedRole + ":" + username + ":" + password;
-            ClientMain.send(gson.toJson(new MessageDTO("LOGIN", payload)));
+            // [Fix] JSON payload thay vì split(":") — an toàn khi password chứa ":"
+            java.util.Map<String,String> loginData = new java.util.LinkedHashMap<>();
+            loginData.put("role",     selectedRole);
+            loginData.put("username", username);
+            loginData.put("password", password);
+            ClientMain.send(gson.toJson(new MessageDTO("LOGIN", gson.toJson(loginData))));
         });
     }
 

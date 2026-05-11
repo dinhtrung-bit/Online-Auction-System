@@ -1,41 +1,60 @@
 package client.networks;
 
+import com.google.gson.Gson;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
 
 /**
- * ClientMain: quản lý kết nối Socket duy nhất tới Server.
+ * ClientMain — quản lý kết nối Socket duy nhất tới Server.
+ *
+ * Thay đổi so với phiên bản cũ:
+ *
+ * [Fix 1] Dùng Gson parse thay vì extractAction/extractPayload thủ công.
+ *   Trước: manual string index → sai với JSON lồng nhau.
+ *   Sau  : Gson.fromJson(line, MessageDTO.class) → luôn đúng.
+ *
+ * [Fix 2] Multi-listener: Map<String, List<Consumer>> thay vì Map<String, Consumer>.
+ *   Trước: listener sau ghi đè listener trước cùng action.
+ *   Sau  : nhiều screen có thể cùng lắng nghe "ERROR", "AUCTION_CANCELED"...
+ *   unregisterListener(action, callback) xóa đúng callback, không xóa toàn bộ action.
  */
 public class ClientMain {
 
-    private static Socket socket;
-    private static PrintWriter out;
-    private static Thread listenerThread;
+    private static final Gson GSON = new Gson();
+
+    private static Socket       socket;
+    private static PrintWriter  out;
+    private static Thread       listenerThread;
     private static volatile boolean running = false;
 
-    // Map: action → callback. Dành cho các event thời gian thực (như UPDATE_PRICE)
-    private static final Map<String, Consumer<String>> listeners = new ConcurrentHashMap<>();
+    // [Fix 2] Multi-listener: mỗi action có thể có nhiều callback
+    private static final Map<String, List<Consumer<String>>> listeners =
+            new ConcurrentHashMap<>();
 
-    // Hàng đợi lưu các tin nhắn lẻ không có listener (Để phục vụ cho hàm receive() gọi đồng bộ)
-    private static final BlockingQueue<String> syncResponseQueue = new LinkedBlockingQueue<>();
+    // Queue cho receive() đồng bộ (Login, Register... không dùng listener)
+    private static final BlockingQueue<String> syncResponseQueue =
+            new LinkedBlockingQueue<>();
 
-    // ─── Kết nối ──────────────────────────────────────────────────────────────
+    // ── Kết nối ─────────────────────────────────────────────────────
 
     public static synchronized void connectToServer() {
         try {
             if (socket != null && !socket.isClosed()) return;
-
             socket = new Socket("localhost", 8080);
-            out = new PrintWriter(socket.getOutputStream(), true);
+            out    = new PrintWriter(socket.getOutputStream(), true);
             System.out.println("[Client] Đã kết nối tới Server!");
-            startListenerThread(new BufferedReader(new InputStreamReader(socket.getInputStream())));
+            startListenerThread(
+                    new BufferedReader(new InputStreamReader(socket.getInputStream())));
         } catch (Exception e) {
             System.err.println("[Client] Lỗi kết nối: " + e.getMessage());
         }
@@ -45,7 +64,7 @@ public class ClientMain {
         return socket != null && !socket.isClosed() && socket.isConnected();
     }
 
-    // ─── Gửi và Nhận message (Đồng bộ) ────────────────────────────────────────
+    // ── Gửi / Nhận ──────────────────────────────────────────────────
 
     public static void send(String jsonString) {
         if (out != null) {
@@ -56,25 +75,47 @@ public class ClientMain {
         }
     }
 
-    /**
-     * Chờ và nhận tin nhắn từ Server một cách đồng bộ (Block luồng cho đến khi có phản hồi).
-     * Phục vụ cho các tác vụ như Login, Register...
-     */
+    /** Chờ phản hồi đồng bộ (dùng cho Login, Register). */
     public static String receive() throws InterruptedException {
         return syncResponseQueue.take();
     }
 
-    // ─── Đăng ký / huỷ listener (Bất đồng bộ) ─────────────────────────────────
+    // ── Listener API — Multi-listener ───────────────────────────────
 
+    /**
+     * Đăng ký callback cho một action.
+     * Nhiều callback có thể đăng ký cùng action — không ghi đè nhau.
+     */
     public static void registerListener(String action, Consumer<String> callback) {
-        listeners.put(action, callback);
+        listeners.computeIfAbsent(action, k -> new CopyOnWriteArrayList<>())
+                .add(callback);
     }
 
+    /**
+     * Hủy đúng callback đã đăng ký — không ảnh hưởng các callback khác cùng action.
+     */
+    public static void unregisterListener(String action, Consumer<String> callback) {
+        List<Consumer<String>> list = listeners.get(action);
+        if (list != null) list.remove(callback);
+    }
+
+    /**
+     * Hủy toàn bộ listener của một action (dùng khi rời màn hình).
+     */
+    public static void unregisterAllListeners(String action) {
+        listeners.remove(action);
+    }
+
+    /**
+     * Alias 1-arg: hủy toàn bộ listener của action.
+     * Giữ lại để các Controller hiện tại không cần sửa.
+     * Nếu muốn xóa chính xác 1 callback, dùng unregisterListener(action, callback).
+     */
     public static void unregisterListener(String action) {
         listeners.remove(action);
     }
 
-    // ─── Background thread đọc message từ Server ──────────────────────────────
+    // ── Background listener thread ───────────────────────────────────
 
     private static void startListenerThread(BufferedReader in) {
         running = true;
@@ -83,18 +124,24 @@ public class ClientMain {
                 String line;
                 while (running && (line = in.readLine()) != null) {
                     final String json = line;
-                    String action = extractAction(json);
-                    String payload = extractPayload(json);
+
+                    // [Fix 1] Dùng Gson thay vì manual string parsing
+                    MessageDTO dto = GSON.fromJson(json, MessageDTO.class);
+                    if (dto == null) continue;
+
+                    String action  = dto.getAction()  != null ? dto.getAction()  : "";
+                    String payload = dto.getPayload()  != null ? dto.getPayload() : "";
 
                     System.out.println("[Client] Nhận: action=" + action);
 
-                    Consumer<String> cb = listeners.get(action);
-                    if (cb != null) {
-                        // Nếu có Controller đang lắng nghe action này (VD: màn hình AuctionList)
-                        cb.accept(payload);
+                    List<Consumer<String>> callbacks = listeners.get(action);
+                    if (callbacks != null && !callbacks.isEmpty()) {
+                        // [Fix 2] Gọi tất cả callback đã đăng ký cho action này
+                        for (Consumer<String> cb : callbacks) {
+                            cb.accept(payload);
+                        }
                     } else {
-                        // Nếu KHÔNG có ai lắng nghe (VD: Server trả về LOGIN_SUCCESS)
-                        // -> Đẩy vào Queue để hàm receive() nhặt lấy
+                        // Không có listener → đẩy vào queue để receive() nhặt
                         syncResponseQueue.offer(json);
                     }
                 }
@@ -104,33 +151,5 @@ public class ClientMain {
         }, "server-listener");
         listenerThread.setDaemon(true);
         listenerThread.start();
-    }
-
-    // Parse action từ JSON string
-    private static String extractAction(String json) {
-        try {
-            int i = json.indexOf("\"action\"");
-            if (i < 0) return "";
-            int q1 = json.indexOf('"', i + 9);
-            int q2 = json.indexOf('"', q1 + 1);
-            return json.substring(q1 + 1, q2);
-        } catch (Exception e) { return ""; }
-    }
-
-    // Parse payload từ JSON
-    private static String extractPayload(String json) {
-        try {
-            int i = json.indexOf("\"payload\"");
-            if (i < 0) return "";
-            int colon = json.indexOf(':', i + 9);
-            String after = json.substring(colon + 1).trim();
-            if (after.startsWith("\"")) {
-                int end = after.lastIndexOf('"');
-                return after.substring(1, end).replace("\\\"", "\"").replace("\\\\", "\\");
-            } else {
-                int end = after.lastIndexOf('}');
-                return end >= 0 ? after.substring(0, end).trim() : after.trim();
-            }
-        } catch (Exception e) { return ""; }
     }
 }

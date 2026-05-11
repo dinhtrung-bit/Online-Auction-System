@@ -76,7 +76,7 @@ public class AutoBidDialogController implements Initializable {
         btnModeStep.setSelected(true);
 
         // Hiển thị số dư từ session
-        lblBalance.setText("Số dư: " + formatVND(UserSession.balance));
+        lblBalance.setText("Số dư: " + formatVND(UserSession.getInstance().getBalance()));
     }
 
     // ── Public API: mở dialog từ bên ngoài ────────────────────────────────────
@@ -189,8 +189,8 @@ public class AutoBidDialogController implements Initializable {
             showError("Giá tối đa phải cao hơn giá hiện tại (" + formatVND(currentPrice) + ")!");
             return;
         }
-        if (max > UserSession.balance) {
-            showError("Giá tối đa vượt quá số dư ví (" + formatVND(UserSession.balance) + ")!");
+        if (max > UserSession.getInstance().getBalance()) {
+            showError("Giá tối đa vượt quá số dư ví (" + formatVND(UserSession.getInstance().getBalance()) + ")!");
             return;
         }
 

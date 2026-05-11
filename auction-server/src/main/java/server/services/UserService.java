@@ -1,6 +1,5 @@
 package server.services;
 
-import server.dao.impl.UserDAOImpl;
 import server.dao.interfaces.UserDAO;
 import server.models.users.User;
 import server.models.users.UserFactory;
@@ -14,7 +13,12 @@ import java.math.BigDecimal;
  */
 public class UserService {
 
-    private final UserDAO userDAO = new UserDAOImpl();
+    private final UserDAO userDAO;
+
+    /** Constructor Injection — MainServer truyền DAO vào, không tự new. */
+    public UserService(UserDAO userDAO) {
+        this.userDAO = userDAO;
+    }
 
     /**
      * Đăng ký tài khoản mới.
@@ -62,4 +66,10 @@ public class UserService {
     public User findByUsername(String username) throws Exception {
         return userDAO.findByUsername(username);
     }
+
+    /** Lấy toàn bộ danh sách user (dùng cho admin stats). */
+    public java.util.List<server.models.users.User> findAll() throws Exception {
+        return userDAO.findAll();
+    }
+
 }

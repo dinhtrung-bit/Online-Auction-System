@@ -61,7 +61,7 @@ public class AuctionDetailController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        myUsername = UserSession.username;
+        myUsername = UserSession.getInstance().getUsername();
         priceSeries = new XYChart.Series<>();
         priceSeries.setName("Diễn biến giá");
         if (bidHistoryChart != null) bidHistoryChart.getData().add(priceSeries);
@@ -72,12 +72,12 @@ public class AuctionDetailController implements Initializable {
     private void setupUserProfile() {
         String name = myUsername != null ? myUsername : "--";
         lblProfileName.setText(name);
-        lblProfileRole.setText(mapRoleLabel(UserSession.role));
+        lblProfileRole.setText(mapRoleLabel(UserSession.getInstance().getRole()));
         String initials = name.length() >= 2
                 ? (name.substring(0,1) + name.substring(1,2)).toUpperCase()
                 : name.toUpperCase();
         lblAvatar.setText(initials);
-        lblProfileBalance.setText(formatVND(UserSession.balance));
+        lblProfileBalance.setText(formatVND(UserSession.getInstance().getBalance()));
         lblProfileBidCount.setText("0");
         lblProfileWins.setText("--");
         lblProfileWinRate.setText("--");
@@ -292,7 +292,7 @@ public class AuctionDetailController implements Initializable {
         ClientMain.registerListener("BALANCE_DATA", payload -> {
             try {
                 double newBalance = Double.parseDouble(payload.trim());
-                UserSession.balance = newBalance;
+                UserSession.getInstance().setBalance(newBalance);
                 Platform.runLater(() ->
                         lblProfileBalance.setText(formatVND(newBalance))
                 );
@@ -335,7 +335,7 @@ public class AuctionDetailController implements Initializable {
         try { amount = Double.parseDouble(text); }
         catch (Exception e) { showAlert(Alert.AlertType.ERROR,"Lỗi","Số tiền không hợp lệ!"); return; }
         if (amount <= currentPriceVal) { showAlert(Alert.AlertType.WARNING,"Không hợp lệ","Giá đặt phải cao hơn giá hiện tại!"); return; }
-        if (amount > UserSession.balance) { showAlert(Alert.AlertType.WARNING,"Số dư không đủ","Số dư: "+formatVND(UserSession.balance)); return; }
+        if (amount > UserSession.getInstance().getBalance()) { showAlert(Alert.AlertType.WARNING,"Số dư không đủ","Số dư: "+formatVND(UserSession.getInstance().getBalance())); return; }
         ClientMain.send(gson.toJson(new MessageDTO("BID", currentRoomId+":"+myUsername+":"+amount)));
         txtBidAmount.clear();
     }
