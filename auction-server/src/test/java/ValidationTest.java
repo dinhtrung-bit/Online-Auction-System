@@ -1,4 +1,3 @@
-package test.java;
 
 import org.junit.jupiter.api.Test;
 import server.exceptions.InvalidBidException;
