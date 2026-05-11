@@ -80,7 +80,8 @@ public class AdminDashboardController implements Initializable {
         registerListeners();
 
         showOverview(null);
-        loadData();
+        // [Fix Lag] Defer network call sang sau khi UI render xong
+        Platform.runLater(this::loadData);
     }
 
     private void setupUserTable() {

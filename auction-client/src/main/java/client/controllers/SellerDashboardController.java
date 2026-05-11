@@ -274,9 +274,12 @@ public class SellerDashboardController {
             }
         });
 
-        new Thread(() ->
-                ClientMain.send(gson.toJson(new MessageDTO("GET_MY_ITEMS", "")))
-        ).start();
+        // [Fix Lag] Defer network call sang sau khi UI render xong
+        Platform.runLater(() ->
+                new Thread(() ->
+                        ClientMain.send(gson.toJson(new MessageDTO("GET_MY_ITEMS", "")))
+                ).start()
+        );
     }
 
     private void loadMyAuctionsFromServer() {

@@ -49,6 +49,8 @@ public class AuctionListController implements Initializable {
         if (btnTabWon != null) btnTabWon.setToggleGroup(tabGroup);
 
         if (cmbStatus != null) {
+            // [Fix] Populate ComboBox items trong code (FXML đã được tái cấu trúc)
+            cmbStatus.getItems().addAll("TẤT CẢ", "OPEN", "RUNNING");
             cmbStatus.setValue("TẤT CẢ");
         }
 

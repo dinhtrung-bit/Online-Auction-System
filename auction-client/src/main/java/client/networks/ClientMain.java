@@ -47,14 +47,23 @@ public class ClientMain {
 
     // ── Kết nối ─────────────────────────────────────────────────────
 
+    // [Fix Lag] Timeout kết nối: 5 giây thay vì block vô hạn (mặc định TCP ~75s)
+    private static final int CONNECT_TIMEOUT_MS = 5_000;
+
     public static synchronized void connectToServer() {
         try {
             if (socket != null && !socket.isClosed()) return;
-            socket = new Socket("localhost", 8080);
+            socket = new Socket();
+            socket.connect(
+                    new java.net.InetSocketAddress("localhost", 8080),
+                    CONNECT_TIMEOUT_MS
+            );
             out    = new PrintWriter(socket.getOutputStream(), true);
             System.out.println("[Client] Đã kết nối tới Server!");
             startListenerThread(
                     new BufferedReader(new InputStreamReader(socket.getInputStream())));
+        } catch (java.net.SocketTimeoutException e) {
+            System.err.println("[Client] Kết nối timeout sau " + CONNECT_TIMEOUT_MS + "ms: " + e.getMessage());
         } catch (Exception e) {
             System.err.println("[Client] Lỗi kết nối: " + e.getMessage());
         }

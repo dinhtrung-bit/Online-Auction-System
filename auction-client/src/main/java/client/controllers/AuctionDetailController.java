@@ -126,8 +126,28 @@ public class AuctionDetailController implements Initializable {
     }
 
     private void registerServerListeners() {
+        // [Fix Đơ] Timeout 8 giây: nếu server không gửi AUCTION_DETAIL_DATA thì thông báo lỗi
+        // thay vì màn hình đứng yên mãi với "---" và "Đang tải..."
+        java.util.concurrent.atomic.AtomicBoolean detailReceived =
+                new java.util.concurrent.atomic.AtomicBoolean(false);
+        java.util.Timer timeoutTimer = new java.util.Timer(true);
+        timeoutTimer.schedule(new java.util.TimerTask() {
+            @Override public void run() {
+                if (!detailReceived.get()) {
+                    Platform.runLater(() -> {
+                        lblTimer.setText("Lỗi kết nối");
+                        lblCurrentPrice.setText("Không tải được");
+                        showAlert(Alert.AlertType.ERROR, "Lỗi",
+                                "Server không phản hồi dữ liệu phòng đấu giá.\n" +
+                                        "Kiểm tra server đang chạy và thử lại.");
+                    });
+                }
+            }
+        }, 8_000);
 
         ClientMain.registerListener("AUCTION_DETAIL_DATA", payload -> {
+            detailReceived.set(true);
+            timeoutTimer.cancel();
             String[] data = payload.split(":");
             if (data.length < 3) return;
             Platform.runLater(() -> {
@@ -303,9 +323,13 @@ public class AuctionDetailController implements Initializable {
     public void setRoomId(String id) {
         this.currentRoomId = id;
         lblRoomId.setText("Phòng #" + id);
-        ClientMain.send(gson.toJson(new MessageDTO("GET_AUCTION_DETAIL",    id)));
-        ClientMain.send(gson.toJson(new MessageDTO("GET_BID_HISTORY",       id)));
-        ClientMain.send(gson.toJson(new MessageDTO("GET_MY_WON_AUCTIONS",   "")));
+        // [Fix Đơ] Gửi request trên background thread — tránh block JavaFX thread
+        // (out.println() là I/O có thể chờ nếu socket buffer đầy)
+        new Thread(() -> {
+            ClientMain.send(gson.toJson(new MessageDTO("GET_AUCTION_DETAIL",  id)));
+            ClientMain.send(gson.toJson(new MessageDTO("GET_BID_HISTORY",     id)));
+            ClientMain.send(gson.toJson(new MessageDTO("GET_MY_WON_AUCTIONS", "")));
+        }, "auction-detail-init").start();
     }
 
     private void startTimer() {
@@ -477,8 +501,10 @@ public class AuctionDetailController implements Initializable {
         catch (Exception e) { return 0; }
     }
     private void showAlert(Alert.AlertType t, String title, String content) {
+        // [Fix Đơ] Dùng show() thay showAndWait() — tránh block JavaFX thread
+        // showAndWait() trong Platform.runLater callback có thể gây deadlock với listeners khác
         Alert a = new Alert(t); a.setTitle(title); a.setHeaderText(null);
-        a.setContentText(content); a.showAndWait();
+        a.setContentText(content); a.show();
     }
 
     /**
