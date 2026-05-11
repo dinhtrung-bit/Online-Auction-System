@@ -22,6 +22,14 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Generate config.properties from GitHub Secrets
+        run: |
+          cat > auction-server/src/main/resources/config.properties << EOF
+          db.url=${{ secrets.DB_URL }}
+          db.user=${{ secrets.DB_USER }}
+          db.password=${{ secrets.DB_PASSWORD }}
+          EOF
+
       - name: Build & run JUnit tests (server)
         working-directory: auction-server
         env:

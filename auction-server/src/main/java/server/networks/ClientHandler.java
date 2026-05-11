@@ -21,9 +21,8 @@ import server.models.items.Item;
 import server.models.items.ItemFactory;
 import server.models.users.Bidder;
 import server.models.users.User;
-import server.models.users.UserFactory;
 import server.services.AuctionService;
-import server.services.PasswordUtil;
+import server.services.UserService;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -43,6 +42,7 @@ public class ClientHandler implements Runnable {
     private final AuctionRoomDAO auctionDAO = new AuctionRoomDAOImpl();
     private final BidMessageDAO bidMessageDAO = new BidMessageDAOImpl();
     private final AutoBidDAO autoBidDAO = new AutoBidDAOImpl();
+    private final UserService userService = new UserService();
     private PrintWriter out;
     private User loggedInUser = null;
 
@@ -172,7 +172,7 @@ public class ClientHandler implements Runnable {
     private MessageDTO handleGetBalance(MessageDTO request) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
-            User freshUser = userDAO.findByUsername(loggedInUser.getUsername());
+            User freshUser = userService.findByUsername(loggedInUser.getUsername());
             if (freshUser != null) {
                 this.loggedInUser = freshUser;
                 return new MessageDTO("BALANCE_DATA", freshUser.getAccountBalance().toPlainString());
@@ -189,14 +189,11 @@ public class ClientHandler implements Runnable {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
             double amount = Double.parseDouble(request.getPayload().trim());
-            if (amount <= 0) return new MessageDTO("DEPOSIT_FAILED", "Số tiền không hợp lệ!");
-
-            BigDecimal depositAmount = BigDecimal.valueOf(amount);
-            loggedInUser.updateBalance(depositAmount);
-            userDAO.update(loggedInUser);
-
+            BigDecimal newBalance = userService.deposit(loggedInUser, amount);
             System.out.println(">>> [Nạp tiền] " + loggedInUser.getUsername() + " nạp " + amount);
-            return new MessageDTO("DEPOSIT_SUCCESS", loggedInUser.getAccountBalance().toPlainString());
+            return new MessageDTO("DEPOSIT_SUCCESS", newBalance.toPlainString());
+        } catch (IllegalArgumentException e) {
+            return new MessageDTO("DEPOSIT_FAILED", e.getMessage());
         } catch (Exception e) {
             return new MessageDTO("DEPOSIT_FAILED", "Lỗi: " + e.getMessage());
         }
@@ -461,10 +458,8 @@ public class ClientHandler implements Runnable {
             String role     = credentials[0];
             String username = credentials[1];
             String password = credentials[2];
-            User user = userDAO.findByUsername(username);
-            if (user != null
-                    && PasswordUtil.verify(password, user.getPasswordHash())
-                    && user.getRole().equalsIgnoreCase(role)) {
+            User user = userService.login(username, password, role);
+            if (user != null) {
                 this.loggedInUser = user;
                 return new MessageDTO("LOGIN_SUCCESS", gson.toJson(user));
             }
@@ -477,22 +472,15 @@ public class ClientHandler implements Runnable {
     private MessageDTO handleRegister(MessageDTO request) {
         try {
             // Client gửi: "username:password:role:fullName"
-            String[] data = request.getPayload().split(":", 4); // tối đa 4 phần
+            String[] data = request.getPayload().split(":", 4);
             if (data.length < 3) {
                 return new MessageDTO("REGISTER_FAILED", "Dữ liệu đăng ký không đủ!");
             }
             String username = data[0].trim();
             String password = data[1];
             String role     = data[2].trim();
-            // fullName (data[3]) hiện chưa lưu vào DB — để dành mở rộng sau
-
-            // Validate cơ bản
-            server.utils.Validation.validateUsername(username);
-            server.utils.Validation.validatePassword(password);
-
-            User newUser = UserFactory.createUser(role, 0, username);
-            newUser.setPasswordHash(PasswordUtil.hash(password));
-            userDAO.insert(newUser);
+            // fullName (data[3]) chưa lưu vào DB — để dành mở rộng sau
+            userService.register(username, password, role);
             return new MessageDTO("REGISTER_SUCCESS", "Đăng ký thành công!");
         } catch (server.exceptions.DuplicateDataException e) {
             return new MessageDTO("REGISTER_FAILED", "Tên đăng nhập đã tồn tại!");

@@ -1,0 +1,6 @@
+# Database Configuration Template
+# Đổi tên file này thành config.properties và điền thông tin kết nối của bạn
+
+db.url=jdbc:mysql://<host>:<port>/<database>?sslMode=REQUIRED&serverTimezone=Asia/Ho_Chi_Minh
+db.user=<username>
+db.password=<password>

@@ -4,50 +4,67 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import server.exceptions.DatabaseConnectionException;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Properties;
 
 /**
  * DBConnection — Singleton wrapper cho HikariCP connection pool.
  *
- * Lý do thay thế single-Connection:
- *   - Single Connection cũ chia sẻ 1 object Connection cho nhiều Virtual Thread đồng thời
- *     → cursor state bị corrupt, dữ liệu sai, có thể NPE hoặc PSQLException.
- *   - HikariCP cấp mỗi thread 1 Connection độc lập từ pool, tự trả lại khi try-with-resources
- *     đóng, an toàn hoàn toàn với đa luồng.
+ * Credentials được đọc từ file config.properties trong classpath
+ * (src/main/resources/config.properties) thay vì hard-code trực tiếp,
+ * giúp tránh lộ thông tin nhạy cảm khi push lên GitHub.
+ *
+ * Lý do dùng HikariCP thay vì single-Connection:
+ *   - Single Connection chia sẻ 1 object cho nhiều Virtual Thread
+ *     → cursor state bị corrupt, dữ liệu sai, có thể NPE.
+ *   - HikariCP cấp mỗi thread 1 Connection độc lập từ pool,
+ *     tự trả lại khi try-with-resources đóng — an toàn hoàn toàn.
  */
 public class DBConnection {
-
-    private static final String URL      = "jdbc:mysql://mysql-24b3aff1-vnu-8ca6.k.aivencloud.com:15190/daugia?sslMode=REQUIRED&serverTimezone=Asia/Ho_Chi_Minh";
-    private static final String DB_USER  = "avnadmin";
-    private static final String PASSWORD = "AVNS_z7YUU9pQJHKGFnNqf8-";
 
     private static volatile HikariDataSource dataSource;
 
     private DBConnection() {} // utility class — không cho khởi tạo
+
+    /** Đọc config từ classpath:config.properties */
+    private static Properties loadConfig() {
+        Properties props = new Properties();
+        try (InputStream in = DBConnection.class
+                .getClassLoader()
+                .getResourceAsStream("config.properties")) {
+            if (in == null) {
+                throw new DatabaseConnectionException(
+                        "Không tìm thấy file config.properties trong resources. " +
+                                "Hãy copy config.properties.example thành config.properties và điền thông tin DB.", null);
+            }
+            props.load(in);
+        } catch (IOException e) {
+            throw new DatabaseConnectionException("Lỗi đọc file config.properties", e);
+        }
+        return props;
+    }
 
     /** Khởi tạo pool lần đầu (lazy, thread-safe). */
     public static HikariDataSource getDataSource() {
         if (dataSource == null) {
             synchronized (DBConnection.class) {
                 if (dataSource == null) {
+                    Properties props = loadConfig();
+
                     HikariConfig config = new HikariConfig();
-                    config.setJdbcUrl(URL);
-                    config.setUsername(DB_USER);
-                    config.setPassword(PASSWORD);
+                    config.setJdbcUrl(props.getProperty("db.url"));
+                    config.setUsername(props.getProperty("db.user"));
+                    config.setPassword(props.getProperty("db.password"));
                     config.setDriverClassName("com.mysql.cj.jdbc.Driver");
 
-                    // Pool size: 10 connection thường trực, tối đa 20
                     config.setMinimumIdle(5);
                     config.setMaximumPoolSize(20);
-
-                    // Timeout lấy connection từ pool: 30s
                     config.setConnectionTimeout(30_000);
-                    // Giữ idle connection tối đa 10 phút
                     config.setIdleTimeout(600_000);
-                    // Connection sống tối đa 30 phút
                     config.setMaxLifetime(1_800_000);
-
                     config.setPoolName("AuctionDB-Pool");
 
                     dataSource = new HikariDataSource(config);

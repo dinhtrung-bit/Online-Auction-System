@@ -11,3 +11,13 @@ build/
 # System files
 .DS_Store
 Thumbs.db
+
+# IntelliJ out folder
+out/
+
+# Database file local
+data.db
+
+# Cấu hình DB — chứa credentials nhạy cảm, KHÔNG commit lên Git
+# Hãy commit file config.properties.example (template không có thông tin thật)
+auction-server/src/main/resources/config.propertiess.db
