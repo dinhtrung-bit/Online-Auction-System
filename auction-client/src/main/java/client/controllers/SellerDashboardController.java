@@ -3,6 +3,7 @@ package client.controllers;
 import client.models.item.Art;
 import client.models.item.Item;
 import client.networks.ClientMain;
+import client.models.user.UserSession;
 import client.networks.MessageDTO;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -13,6 +14,8 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
@@ -20,6 +23,8 @@ import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
@@ -27,12 +32,15 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class SellerDashboardController {
 
@@ -51,6 +59,17 @@ public class SellerDashboardController {
     @FXML private VBox reportView;
     @FXML private Button btnInventory;
     @FXML private Button btnReport;
+    @FXML private Button btnEditProduct;
+    @FXML private Button btnDeleteProduct;
+    @FXML private Button btnStartAuction;
+    @FXML private Button btnCancelAuction;
+
+    @FXML private TextField txtProductSearch;
+    @FXML private ComboBox<String> cmbProductStatusFilter;
+    @FXML private Label lblSellerName;
+    @FXML private Label lblSellerItemsCount;
+    @FXML private Label lblSellerRunningCount;
+    @FXML private Label lblSellerRevenueMini;
 
     @FXML private Label lblTotalItems;
     @FXML private Label lblRunningAuctions;
@@ -59,6 +78,20 @@ public class SellerDashboardController {
 
     @FXML private BarChart<String, Number> revenueBarChart;
     @FXML private PieChart statusPieChart;
+
+    @FXML private ImageView sellerProductImage;
+    @FXML private VBox sellerProductImagePlaceholder;
+    @FXML private Label lblSelectedProductName;
+    @FXML private Label lblSelectedProductId;
+    @FXML private Label lblSelectedProductCategory;
+    @FXML private Label lblSelectedProductDescription;
+    @FXML private Label lblSelectedProductPrice;
+    @FXML private Label lblSelectedAuctionStatus;
+    @FXML private Label lblSelectedAuctionPrice;
+    @FXML private Label lblSelectedAuctionWinner;
+    @FXML private Label lblSelectedAuctionEndTime;
+    @FXML private Button btnOpenAuctionRoom;
+    @FXML private Button btnQuickStartAuction;
 
     private ObservableList<Item> itemList;
     private final Gson gson = new Gson();
@@ -74,9 +107,33 @@ public class SellerDashboardController {
         itemList = FXCollections.observableArrayList();
         tableItems.setItems(itemList);
 
+        if (lblSellerName != null) {
+            String username = UserSession.getInstance().getUsername();
+            lblSellerName.setText(username == null || username.isBlank() ? "Seller" : username);
+        }
+
+        if (cmbProductStatusFilter != null) {
+            cmbProductStatusFilter.getItems().setAll(
+                    "TẤT CẢ", "Chưa đăng", "Sắp bắt đầu", "Đang đấu giá",
+                    "Kết thúc", "Đã thanh toán", "Đã hủy"
+            );
+            cmbProductStatusFilter.setValue("TẤT CẢ");
+        }
+
         Label emptyLabel = new Label("Kho hàng đang trống. Hãy thêm sản phẩm mới!");
         emptyLabel.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 14px; -fx-font-style: italic;");
         tableItems.setPlaceholder(emptyLabel);
+        tableItems.getSelectionModel().selectedItemProperty().addListener((obs, oldItem, newItem) -> {
+            updateActionButtons();
+            updateSelectedProductPanel(newItem);
+        });
+        tableItems.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case DELETE -> handleDeleteProduct();
+                case F5 -> handleRefreshInventory();
+                default -> { }
+            }
+        });
 
         colId.setCellValueFactory(new PropertyValueFactory<>("itemId"));
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -152,6 +209,19 @@ public class SellerDashboardController {
                 setGraphic(badge);
             }
         });
+
+        tableItems.setRowFactory(tv -> {
+            TableRow<Item> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                    handleEditProduct();
+                }
+            });
+            return row;
+        });
+
+        updateActionButtons();
+        updateSelectedProductPanel(null);
 
         ClientMain.registerListener("AUCTION_STARTED", payload ->
                 Platform.runLater(this::loadMyAuctionsFromServer));
@@ -242,13 +312,18 @@ public class SellerDashboardController {
                                 categoryInfo = m.get("categoryInfo").toString();
                             } else if (m.get("CategoryInfo") != null) {
                                 categoryInfo = m.get("CategoryInfo").toString();
+                            } else if (m.get("category") != null) {
+                                categoryInfo = m.get("category").toString();
                             }
 
                             double price = m.get("startingPrice") != null
                                     ? Double.parseDouble(m.get("startingPrice").toString())
                                     : 0;
 
-                            Item item = new Art(itemId, name, price, categoryInfo);
+                            Item item = categoryInfo != null && categoryInfo.toUpperCase().contains("ELECT")
+                                    ? new client.models.item.Electronics(itemId, name, price, 0)
+                                    : new Art(itemId, name, price, categoryInfo);
+                            item.setCategory(categoryInfo == null || categoryInfo.isBlank() ? "ART" : categoryInfo);
                             item.setDescription(description);
 
                             if (m.get("bidIncrement") != null) {
@@ -263,6 +338,8 @@ public class SellerDashboardController {
                         }
                     }
 
+                    applyProductFilters();
+                    updateMiniStats();
                     loadMyAuctionsFromServer();
 
                     if (reportView != null && reportView.isVisible()) {
@@ -308,7 +385,9 @@ public class SellerDashboardController {
                         }
                     }
 
-                    tableItems.refresh();
+                    applyProductFilters();
+                    updateMiniStats();
+                    updateSelectedProductPanel(tableItems.getSelectionModel().getSelectedItem());
 
                     if (reportView != null && reportView.isVisible()) {
                         updateReport();
@@ -629,7 +708,8 @@ public class SellerDashboardController {
                     ClientMain.unregisterListener("UPDATE_ITEM_FAILED");
                     Platform.runLater(() -> {
                         itemList.set(finalIndex, finalUpdated);
-                        tableItems.refresh();
+                        applyProductFilters();
+                        updateMiniStats();
                         showSuccess("Cập nhật sản phẩm thành công!");
                     });
                 });
@@ -677,7 +757,8 @@ public class SellerDashboardController {
                 ClientMain.unregisterListener("DELETE_ITEM_FAILED");
                 Platform.runLater(() -> {
                     itemList.remove(toDelete);
-                    tableItems.refresh();
+                    applyProductFilters();
+                    updateMiniStats();
                     if (reportView != null && reportView.isVisible()) updateReport();
                     showSuccess("Đã xóa sản phẩm \"" + toDelete.getName() + "\".");
                 });
@@ -764,6 +845,8 @@ public class SellerDashboardController {
         ClientMain.unregisterListener("AUCTION_CANCELED");
         ClientMain.unregisterListener("ERROR");
 
+        UserSession.getInstance().logout();
+
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/login.fxml"));
             Parent root = loader.load();
@@ -792,8 +875,7 @@ public class SellerDashboardController {
         reportView.setVisible(false);
         reportView.setManaged(false);
 
-        btnInventory.getStyleClass().add("sidebar-btn-active");
-        btnReport.getStyleClass().remove("sidebar-btn-active");
+        setSellerNavActive(btnInventory);
     }
 
     @FXML
@@ -804,8 +886,7 @@ public class SellerDashboardController {
         reportView.setVisible(true);
         reportView.setManaged(true);
 
-        btnReport.getStyleClass().add("sidebar-btn-active");
-        btnInventory.getStyleClass().remove("sidebar-btn-active");
+        setSellerNavActive(btnReport);
 
         updateReport();
     }
@@ -815,6 +896,321 @@ public class SellerDashboardController {
         loadMyItemsFromServer();
         loadMyAuctionsFromServer();
         updateReport();
+    }
+
+    @FXML
+    private void handleRefreshInventory() {
+        loadMyItemsFromServer();
+        loadMyAuctionsFromServer();
+    }
+
+    @FXML
+    private void handleProductSearch() {
+        applyProductFilters();
+    }
+
+    @FXML
+    private void handleClearProductFilter(ActionEvent event) {
+        if (txtProductSearch != null) txtProductSearch.clear();
+        if (cmbProductStatusFilter != null) cmbProductStatusFilter.setValue("TẤT CẢ");
+        applyProductFilters();
+    }
+
+    private void applyProductFilters() {
+        if (itemList == null || tableItems == null) return;
+
+        String keyword = txtProductSearch == null ? "" : txtProductSearch.getText().trim().toLowerCase();
+        String filter = cmbProductStatusFilter == null || cmbProductStatusFilter.getValue() == null
+                ? "TẤT CẢ"
+                : cmbProductStatusFilter.getValue();
+
+        ObservableList<Item> filtered = FXCollections.observableArrayList();
+        for (Item item : itemList) {
+            String statusText = statusToText(getRawAuctionStatus(item));
+            boolean matchKeyword = keyword.isEmpty()
+                    || safe(item.getItemId()).toLowerCase().contains(keyword)
+                    || safe(item.getName()).toLowerCase().contains(keyword)
+                    || safe(item.getDescription()).toLowerCase().contains(keyword)
+                    || safe(item.getDetails()).toLowerCase().contains(keyword);
+            boolean matchStatus = "TẤT CẢ".equals(filter) || statusText.toLowerCase().contains(filter.toLowerCase());
+
+            if (matchKeyword && matchStatus) filtered.add(item);
+        }
+
+        tableItems.setItems(filtered);
+        tableItems.refresh();
+        updateActionButtons();
+    }
+
+    private String getRawAuctionStatus(Item item) {
+        if (item == null) return "NONE";
+        Map<String, Object> auction = auctionMap.get(item.getItemId());
+        return auction != null && auction.get("status") != null
+                ? auction.get("status").toString()
+                : "NONE";
+    }
+
+    private void updateActionButtons() {
+        Item selectedItem = tableItems == null ? null : tableItems.getSelectionModel().getSelectedItem();
+        boolean hasSelection = selectedItem != null;
+        String status = hasSelection ? getRawAuctionStatus(selectedItem) : "NONE";
+        boolean canStart = hasSelection && ("NONE".equals(status) || "CANCELED".equals(status) || "FINISHED".equals(status) || "PAID".equals(status));
+        boolean canCancel = hasSelection && ("OPEN".equals(status) || "RUNNING".equals(status));
+
+        if (btnEditProduct != null) btnEditProduct.setDisable(!hasSelection);
+        if (btnDeleteProduct != null) btnDeleteProduct.setDisable(!hasSelection);
+        if (btnStartAuction != null) btnStartAuction.setDisable(!canStart);
+        if (btnQuickStartAuction != null) btnQuickStartAuction.setDisable(!canStart);
+        if (btnCancelAuction != null) btnCancelAuction.setDisable(!canCancel);
+        if (btnOpenAuctionRoom != null) btnOpenAuctionRoom.setDisable(!hasSelection || auctionMap.get(selectedItem.getItemId()) == null);
+    }
+
+    private void updateSelectedProductPanel(Item item) {
+        if (item == null) {
+            if (lblSelectedProductName != null) lblSelectedProductName.setText("Chưa chọn sản phẩm");
+            if (lblSelectedProductId != null) lblSelectedProductId.setText("ID: --");
+            if (lblSelectedProductCategory != null) lblSelectedProductCategory.setText("--");
+            if (lblSelectedProductDescription != null) lblSelectedProductDescription.setText("Chọn một sản phẩm để xem mô tả, trạng thái phiên và thao tác nhanh.");
+            if (lblSelectedProductPrice != null) lblSelectedProductPrice.setText("--");
+            if (lblSelectedAuctionStatus != null) lblSelectedAuctionStatus.setText("--");
+            if (lblSelectedAuctionPrice != null) lblSelectedAuctionPrice.setText("--");
+            if (lblSelectedAuctionWinner != null) lblSelectedAuctionWinner.setText("--");
+            if (lblSelectedAuctionEndTime != null) lblSelectedAuctionEndTime.setText("--");
+            showSellerImagePlaceholder();
+            return;
+        }
+
+        Map<String, Object> auction = auctionMap.get(item.getItemId());
+        String category = normalizeCategory(item.getCategory());
+        if (lblSelectedProductName != null) lblSelectedProductName.setText(item.getName());
+        if (lblSelectedProductId != null) lblSelectedProductId.setText("ID: " + item.getItemId());
+        if (lblSelectedProductCategory != null) lblSelectedProductCategory.setText(category);
+        if (lblSelectedProductDescription != null) {
+            String desc = safe(item.getDescription());
+            lblSelectedProductDescription.setText(desc.isBlank() ? "Chưa có mô tả." : desc);
+        }
+        if (lblSelectedProductPrice != null) lblSelectedProductPrice.setText(formatVND(item.getStartingPrice()));
+
+        if (auction != null) {
+            String status = auction.get("status") != null ? auction.get("status").toString() : "NONE";
+            double price = auction.get("currentPrice") != null
+                    ? Double.parseDouble(auction.get("currentPrice").toString())
+                    : item.getStartingPrice();
+            String winner = auction.get("currentWinner") != null ? auction.get("currentWinner").toString() : "--";
+            String endTime = auction.get("endTime") != null ? auction.get("endTime").toString() : "";
+            if (lblSelectedAuctionStatus != null) lblSelectedAuctionStatus.setText(statusToText(status));
+            if (lblSelectedAuctionPrice != null) lblSelectedAuctionPrice.setText(formatVND(price));
+            if (lblSelectedAuctionWinner != null) lblSelectedAuctionWinner.setText(winner == null || winner.isBlank() ? "Chưa có" : winner);
+            if (lblSelectedAuctionEndTime != null) lblSelectedAuctionEndTime.setText(formatDateTime(endTime));
+        } else {
+            if (lblSelectedAuctionStatus != null) lblSelectedAuctionStatus.setText("📦 Chưa đăng");
+            if (lblSelectedAuctionPrice != null) lblSelectedAuctionPrice.setText(formatVND(item.getStartingPrice()));
+            if (lblSelectedAuctionWinner != null) lblSelectedAuctionWinner.setText("Chưa có");
+            if (lblSelectedAuctionEndTime != null) lblSelectedAuctionEndTime.setText("--");
+        }
+        loadSellerProductImage(item.getImagePath());
+    }
+
+    private void loadSellerProductImage(String path) {
+        try {
+            if (path != null && !path.isBlank() && sellerProductImage != null) {
+                Image img = new Image(path.startsWith("file:") || path.startsWith("http") ? path : new File(path).toURI().toString(), true);
+                sellerProductImage.setImage(img);
+                if (!img.isError()) {
+                    if (sellerProductImagePlaceholder != null) {
+                        sellerProductImagePlaceholder.setVisible(false);
+                        sellerProductImagePlaceholder.setManaged(false);
+                    }
+                    return;
+                }
+            }
+        } catch (Exception ignored) { }
+        showSellerImagePlaceholder();
+    }
+
+    private void showSellerImagePlaceholder() {
+        if (sellerProductImage != null) sellerProductImage.setImage(null);
+        if (sellerProductImagePlaceholder != null) {
+            sellerProductImagePlaceholder.setVisible(true);
+            sellerProductImagePlaceholder.setManaged(true);
+        }
+    }
+
+    private String normalizeCategory(String category) {
+        if (category == null || category.isBlank()) return "--";
+        return switch (category.toUpperCase()) {
+            case "ART" -> "Nghệ thuật";
+            case "ELECTRONIC", "ELECTRONICS" -> "Đồ điện tử";
+            case "VEHICLE" -> "Phương tiện";
+            default -> category;
+        };
+    }
+
+    private String formatDateTime(String value) {
+        if (value == null || value.isBlank()) return "--";
+        try {
+            return LocalDateTime.parse(value).format(DateTimeFormatter.ofPattern("HH:mm · dd/MM/yyyy"));
+        } catch (Exception e) {
+            return value.replace('T', ' ');
+        }
+    }
+
+    @FXML
+    private void handleOpenAuctionRoom() {
+        Item selectedItem = tableItems.getSelectionModel().getSelectedItem();
+        if (selectedItem == null) {
+            showAlert("Nhắc nhở", "Vui lòng chọn sản phẩm có phiên đấu giá!");
+            return;
+        }
+        Map<String, Object> auction = auctionMap.get(selectedItem.getItemId());
+        if (auction == null || auction.get("auctionId") == null) {
+            showAlert("Không có phiên", "Sản phẩm này chưa có phòng đấu giá để xem.");
+            return;
+        }
+        try {
+            int auctionId = ((Number) auction.get("auctionId")).intValue();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/auction-detail.fxml"));
+            Parent root = loader.load();
+            AuctionDetailController controller = loader.getController();
+            controller.setRoomId(String.valueOf(auctionId));
+            Scene currentScene = tableItems.getScene();
+            currentScene.setRoot(root);
+            Stage stage = (Stage) currentScene.getWindow();
+            stage.setTitle("Phòng đấu giá #" + auctionId + " - AuctionVN");
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Lỗi hệ thống", "Không thể mở phòng đấu giá.");
+        }
+    }
+
+    @FXML
+    private void handleShowSelectedProductDetail() {
+        Item selectedItem = tableItems == null ? null : tableItems.getSelectionModel().getSelectedItem();
+        if (selectedItem == null) {
+            showAlert("Chưa chọn sản phẩm", "Hãy chọn một sản phẩm trong bảng để xem thông tin đầy đủ.");
+            return;
+        }
+
+        Map<String, Object> auction = auctionMap.get(selectedItem.getItemId());
+        VBox content = new VBox(16);
+        content.setPadding(new Insets(4));
+
+        Label title = new Label(safe(selectedItem.getName()).isBlank() ? "Sản phẩm" : selectedItem.getName());
+        title.getStyleClass().add("popup-main-title");
+        Label subtitle = new Label("Thông tin chi tiết dành cho Seller — có thể cuộn để đọc mô tả dài.");
+        subtitle.getStyleClass().add("popup-subtitle");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(14);
+        grid.setVgap(10);
+        addInfoRow(grid, 0, "Mã sản phẩm", safe(selectedItem.getItemId()));
+        addInfoRow(grid, 1, "Danh mục", normalizeCategory(selectedItem.getCategory()));
+        addInfoRow(grid, 2, "Giá khởi điểm", formatVND(selectedItem.getStartingPrice()));
+        addInfoRow(grid, 3, "Bước giá", selectedItem.getBidIncrement() > 0 ? formatVND(selectedItem.getBidIncrement()) : "--");
+        addInfoRow(grid, 4, "Trạng thái phiên", auction == null ? "📦 Chưa đăng" : statusToText(String.valueOf(auction.getOrDefault("status", "NONE"))));
+        addInfoRow(grid, 5, "Giá hiện tại", auction == null ? formatVND(selectedItem.getStartingPrice()) : formatVND(numberFrom(auction.get("currentPrice"), selectedItem.getStartingPrice())));
+        addInfoRow(grid, 6, "Người dẫn đầu", auction == null ? "Chưa có" : safe(String.valueOf(auction.getOrDefault("currentWinner", "Chưa có"))));
+        addInfoRow(grid, 7, "Thời gian kết thúc", auction == null ? "--" : formatDateTime(String.valueOf(auction.getOrDefault("endTime", ""))));
+        addInfoRow(grid, 8, "Mã phiên", auction == null ? "--" : String.valueOf(auction.getOrDefault("auctionId", "--")));
+
+        Label descTitle = new Label("Mô tả sản phẩm");
+        descTitle.getStyleClass().add("section-title");
+        TextArea descArea = readonlyTextArea(safe(selectedItem.getDescription()).isBlank() ? "Chưa có mô tả." : selectedItem.getDescription(), 220);
+
+        Label hint = new Label("Mẹo thao tác: có thể double-click sản phẩm trong bảng để sửa, phím Delete để xóa, F5 để làm mới kho hàng.");
+        hint.setWrapText(true);
+        hint.getStyleClass().add("popup-hint");
+
+        content.getChildren().addAll(title, subtitle, grid, descTitle, descArea, hint);
+        showCustomDialog("Chi tiết sản phẩm", content, 760, 650);
+    }
+
+    @FXML
+    private void handleShowSelectedProductImage() {
+        Item selectedItem = tableItems == null ? null : tableItems.getSelectionModel().getSelectedItem();
+        if (selectedItem == null) {
+            showAlert("Chưa chọn sản phẩm", "Hãy chọn một sản phẩm để xem ảnh lớn.");
+            return;
+        }
+
+        Image image = sellerProductImage == null ? null : sellerProductImage.getImage();
+        if (image == null && selectedItem.getImagePath() != null && !selectedItem.getImagePath().isBlank()) {
+            try {
+                image = new Image(selectedItem.getImagePath().startsWith("file:") || selectedItem.getImagePath().startsWith("http")
+                        ? selectedItem.getImagePath()
+                        : new File(selectedItem.getImagePath()).toURI().toString(), true);
+            } catch (Exception ignored) { }
+        }
+
+        if (image == null) {
+            showAlert("Ảnh sản phẩm", "Sản phẩm này chưa có ảnh hoặc đường dẫn ảnh không đọc được.");
+            return;
+        }
+
+        VBox content = new VBox(14);
+        content.setAlignment(Pos.CENTER);
+        Label title = new Label(safe(selectedItem.getName()).isBlank() ? "Ảnh sản phẩm" : selectedItem.getName());
+        title.getStyleClass().add("popup-main-title");
+        ImageView preview = new ImageView(image);
+        preview.setFitWidth(760);
+        preview.setFitHeight(520);
+        preview.setPreserveRatio(true);
+        preview.setSmooth(true);
+        preview.getStyleClass().add("popup-image-preview");
+        Label path = new Label(safe(selectedItem.getImagePath()).isBlank() ? "Không có đường dẫn ảnh." : selectedItem.getImagePath());
+        path.setWrapText(true);
+        path.getStyleClass().add("popup-subtitle");
+        content.getChildren().addAll(title, preview, path);
+        showCustomDialog("Xem ảnh sản phẩm", content, 860, 720);
+    }
+
+    private void updateMiniStats() {
+        int totalItems = itemList == null ? 0 : itemList.size();
+        int running = 0;
+        int finished = 0;
+        double totalRevenue = 0;
+
+        if (itemList != null) {
+            for (Item item : itemList) {
+                Map<String, Object> auction = auctionMap.get(item.getItemId());
+                if (auction == null) continue;
+
+                String status = auction.get("status") != null ? auction.get("status").toString() : "NONE";
+                double price = auction.get("currentPrice") != null
+                        ? Double.parseDouble(auction.get("currentPrice").toString())
+                        : item.getStartingPrice();
+
+                if ("RUNNING".equals(status)) running++;
+                if ("FINISHED".equals(status) || "PAID".equals(status)) {
+                    finished++;
+                    totalRevenue += price;
+                }
+            }
+        }
+
+        if (lblSellerItemsCount != null) lblSellerItemsCount.setText(String.valueOf(totalItems));
+        if (lblSellerRunningCount != null) lblSellerRunningCount.setText(String.valueOf(running));
+        if (lblSellerRevenueMini != null) lblSellerRevenueMini.setText(formatVND(totalRevenue));
+        if (lblTotalItems != null) lblTotalItems.setText(String.valueOf(totalItems));
+        if (lblRunningAuctions != null) lblRunningAuctions.setText(String.valueOf(running));
+        if (lblFinishedAuctions != null) lblFinishedAuctions.setText(String.valueOf(finished));
+        if (lblTotalRevenue != null) lblTotalRevenue.setText(formatVND(totalRevenue));
+    }
+
+    private void setSellerNavActive(Button active) {
+        for (Button button : java.util.List.of(btnInventory, btnReport)) {
+            if (button == null) continue;
+            button.getStyleClass().remove("nav-button-active");
+            if (!button.getStyleClass().contains("nav-button")) button.getStyleClass().add("nav-button");
+        }
+        if (active != null) {
+            active.getStyleClass().remove("nav-button");
+            if (!active.getStyleClass().contains("nav-button-active")) active.getStyleClass().add("nav-button-active");
+        }
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value;
     }
 
     private void updateReport() {
@@ -876,7 +1272,13 @@ public class SellerDashboardController {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);
         alert.setHeaderText(null);
-        alert.setContentText(content);
+        if (content != null && content.length() > 180) {
+            TextArea area = readonlyTextArea(content, 220);
+            area.setPrefWidth(520);
+            alert.getDialogPane().setContent(area);
+        } else {
+            alert.setContentText(content);
+        }
         alert.showAndWait();
     }
 
@@ -884,7 +1286,65 @@ public class SellerDashboardController {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Thành công");
         alert.setHeaderText(null);
-        alert.setContentText(content);
+        if (content != null && content.length() > 180) {
+            TextArea area = readonlyTextArea(content, 220);
+            area.setPrefWidth(520);
+            alert.getDialogPane().setContent(area);
+        } else {
+            alert.setContentText(content);
+        }
         alert.showAndWait();
+    }
+
+    private void addInfoRow(GridPane grid, int row, String label, String value) {
+        Label left = new Label(label);
+        left.getStyleClass().add("spec-label");
+        Label right = new Label(value == null || value.isBlank() || "null".equalsIgnoreCase(value) ? "--" : value);
+        right.setWrapText(true);
+        right.getStyleClass().add("spec-value");
+        grid.add(left, 0, row);
+        grid.add(right, 1, row);
+    }
+
+    private TextArea readonlyTextArea(String text, double prefHeight) {
+        TextArea area = new TextArea(text == null ? "" : text);
+        area.setWrapText(true);
+        area.setEditable(false);
+        area.setPrefHeight(prefHeight);
+        area.getStyleClass().add("readonly-area");
+        return area;
+    }
+
+    private void showCustomDialog(String title, VBox content, double width, double height) {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle(title);
+        dialog.getDialogPane().getStyleClass().add("modern-dialog-pane");
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+
+        ScrollPane scroll = new ScrollPane(content);
+        scroll.setFitToWidth(true);
+        scroll.setPannable(true);
+        scroll.setPrefViewportWidth(width);
+        scroll.setPrefViewportHeight(height);
+        scroll.getStyleClass().addAll("clean-scroll", "popup-scroll");
+
+        dialog.getDialogPane().setContent(scroll);
+        dialog.getDialogPane().setPrefWidth(width + 40);
+        dialog.getDialogPane().setPrefHeight(height + 120);
+        if (tableItems != null && tableItems.getScene() != null) {
+            dialog.initOwner(tableItems.getScene().getWindow());
+        }
+        Button close = (Button) dialog.getDialogPane().lookupButton(ButtonType.CLOSE);
+        if (close != null) {
+            close.setText("Đóng");
+            close.getStyleClass().add("btn-primary");
+        }
+        dialog.showAndWait();
+    }
+
+    private double numberFrom(Object value, double fallback) {
+        if (value instanceof Number n) return n.doubleValue();
+        try { return value == null ? fallback : Double.parseDouble(value.toString()); }
+        catch (Exception e) { return fallback; }
     }
 }

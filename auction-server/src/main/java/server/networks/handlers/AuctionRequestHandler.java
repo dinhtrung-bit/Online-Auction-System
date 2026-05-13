@@ -70,13 +70,48 @@ public class AuctionRequestHandler {
             long roomId = Long.parseLong(request.getPayload().trim());
             AuctionRoom room = auctionService.findRoomById(roomId);
             if (room == null) return new MessageDTO("ERROR", "Không tìm thấy phòng: " + roomId);
+
             long secondsLeft = Math.max(0,
                     Duration.between(LocalDateTime.now(), room.getEndTime()).getSeconds());
-            String price = room.getCurrentPrice() != null
-                    ? room.getCurrentPrice().toPlainString()
-                    : room.getItem().getStartingPrice().toPlainString();
-            return new MessageDTO("AUCTION_DETAIL_DATA",
-                    price + ":" + secondsLeft + ":" + room.getStatus().name());
+
+            Item item = room.getItem();
+            java.math.BigDecimal currentPrice = room.getCurrentPrice() != null
+                    ? room.getCurrentPrice()
+                    : (item != null ? item.getStartingPrice() : java.math.BigDecimal.ZERO);
+
+            Map<String, Object> detail = new LinkedHashMap<>();
+            detail.put("auctionId", room.getId());
+            detail.put("status", room.getStatus() != null ? room.getStatus().name() : "UNKNOWN");
+            detail.put("secondsLeft", secondsLeft);
+            detail.put("startTime", room.getStarttime() != null ? room.getStarttime().toString() : "");
+            detail.put("endTime", room.getEndTime() != null ? room.getEndTime().toString() : "");
+            detail.put("sellerID", room.getSellerID());
+            detail.put("currentPrice", currentPrice.doubleValue());
+            detail.put("currentWinner", room.getCurrentWinner() != null
+                    ? room.getCurrentWinner().getUsername() : "");
+            detail.put("bidCount", room.getBidHistory() != null ? room.getBidHistory().size() : 0);
+
+            if (item != null) {
+                detail.put("itemId", item.getItemId());
+                detail.put("itemName", item.getName());
+                detail.put("name", item.getName());
+                detail.put("description", item.getDescription());
+                detail.put("category", item.getCategoryInfo());
+                detail.put("categoryInfo", item.getCategoryInfo());
+                detail.put("startingPrice", item.getStartingPrice() != null
+                        ? item.getStartingPrice().doubleValue() : 0);
+                detail.put("imagePath", item.getImagePath());
+                detail.put("bidIncrement", item.getBidIncrement() != null
+                        ? item.getBidIncrement().doubleValue() : 0);
+            } else {
+                detail.put("itemId", 0);
+                detail.put("itemName", "N/A");
+                detail.put("description", "");
+                detail.put("category", "");
+                detail.put("startingPrice", 0);
+            }
+
+            return new MessageDTO("AUCTION_DETAIL_DATA", gson.toJson(detail));
         } catch (Exception e) {
             return new MessageDTO("ERROR", "Lỗi lấy chi tiết: " + e.getMessage());
         }
@@ -193,22 +228,91 @@ public class AuctionRequestHandler {
         }
     }
 
-    public MessageDTO handleGetAdminStats(MessageDTO request, User loggedInUser, int totalUsers) {
+    public MessageDTO handleGetAdminStats(MessageDTO request, User loggedInUser, int totalUsers, int pendingDeposits) {
         if (loggedInUser == null || !loggedInUser.getRole().equalsIgnoreCase("ADMIN"))
             return new MessageDTO("ERROR", "Không có quyền truy cập!");
         try {
-            java.math.BigDecimal revenue = auctionService.getActiveRooms().stream()
+            java.math.BigDecimal grossSales = auctionService.getActiveRooms().stream()
                     .filter(r -> r.getStatus() == AuctionStatus.PAID)
                     .map(r -> r.getCurrentPrice() != null ? r.getCurrentPrice() : java.math.BigDecimal.ZERO)
                     .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+            java.math.BigDecimal platformRevenue = grossSales.multiply(new java.math.BigDecimal("0.05"));
 
             Map<String, Object> stats = new LinkedHashMap<>();
             stats.put("totalUsers", totalUsers);
             stats.put("totalItems", itemService.countAll());
-            stats.put("revenue",    revenue.longValue());
+            stats.put("revenue",    platformRevenue.longValue());
+            stats.put("grossSales", grossSales.longValue());
+            stats.put("pendingDeposits", pendingDeposits);
+            stats.put("paidAuctions", auctionService.getActiveRooms().stream().filter(r -> r.getStatus() == AuctionStatus.PAID).count());
+            stats.put("canceledAuctions", auctionService.getActiveRooms().stream().filter(r -> r.getStatus() == AuctionStatus.CANCELED).count());
             return new MessageDTO("ADMIN_STATS", gson.toJson(stats));
         } catch (Exception e) {
             return new MessageDTO("ERROR", "Lỗi lấy thống kê admin: " + e.getMessage());
+        }
+    }
+
+
+
+    public MessageDTO handleGetAdminRevenueReport(MessageDTO request, User loggedInUser) {
+        if (loggedInUser == null || !loggedInUser.getRole().equalsIgnoreCase("ADMIN"))
+            return new MessageDTO("ERROR", "Không có quyền truy cập!");
+        try {
+            java.math.BigDecimal grossSales = java.math.BigDecimal.ZERO;
+            java.math.BigDecimal platformFee = java.math.BigDecimal.ZERO;
+            int paidCount = 0;
+            int runningCount = 0;
+            int canceledCount = 0;
+            int openCount = 0;
+            int finishedUnpaidCount = 0;
+
+            List<Map<String, Object>> rows = new java.util.ArrayList<>();
+            for (AuctionRoom r : auctionService.getActiveRooms()) {
+                java.math.BigDecimal price = r.getCurrentPrice() != null ? r.getCurrentPrice() : java.math.BigDecimal.ZERO;
+                java.math.BigDecimal fee = java.math.BigDecimal.ZERO;
+                if (r.getStatus() == AuctionStatus.PAID) {
+                    paidCount++;
+                    grossSales = grossSales.add(price);
+                    fee = price.multiply(new java.math.BigDecimal("0.05"));
+                    platformFee = platformFee.add(fee);
+                } else if (r.getStatus() == AuctionStatus.RUNNING) {
+                    runningCount++;
+                } else if (r.getStatus() == AuctionStatus.CANCELED) {
+                    canceledCount++;
+                } else if (r.getStatus() == AuctionStatus.OPEN) {
+                    openCount++;
+                } else if (r.getStatus() == AuctionStatus.FINISHED) {
+                    finishedUnpaidCount++;
+                }
+
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("auctionId", r.getId());
+                row.put("itemName", r.getItem() != null ? r.getItem().getName() : "N/A");
+                row.put("sellerId", r.getSellerID());
+                row.put("winner", r.getCurrentWinner() != null ? r.getCurrentWinner().getUsername() : "");
+                row.put("finalPrice", price.doubleValue());
+                row.put("platformFee", fee.doubleValue());
+                row.put("sellerPayout", price.subtract(fee).doubleValue());
+                row.put("status", r.getStatus() != null ? r.getStatus().name() : "UNKNOWN");
+                row.put("startTime", r.getStarttime() != null ? r.getStarttime().toString() : "");
+                row.put("endTime", r.getEndTime() != null ? r.getEndTime().toString() : "");
+                rows.add(row);
+            }
+
+            Map<String, Object> report = new LinkedHashMap<>();
+            report.put("grossSales", grossSales.doubleValue());
+            report.put("platformRevenue", platformFee.doubleValue());
+            report.put("sellerPayout", grossSales.subtract(platformFee).doubleValue());
+            report.put("paidCount", paidCount);
+            report.put("runningCount", runningCount);
+            report.put("openCount", openCount);
+            report.put("canceledCount", canceledCount);
+            report.put("finishedUnpaidCount", finishedUnpaidCount);
+            report.put("feePercent", 5);
+            report.put("rows", rows);
+            return new MessageDTO("ADMIN_REVENUE_REPORT", gson.toJson(report));
+        } catch (Exception e) {
+            return new MessageDTO("ERROR", "Lỗi lấy báo cáo doanh thu: " + e.getMessage());
         }
     }
 
@@ -222,6 +326,13 @@ public class AuctionRequestHandler {
                         m.put("auctionId",     r.getId());
                         m.put("itemId",        r.getItem() != null ? r.getItem().getItemId() : 0);
                         m.put("itemName",      r.getItem() != null ? r.getItem().getName()    : "");
+                        m.put("description",   r.getItem() != null ? r.getItem().getDescription() : "");
+                        m.put("category",      r.getItem() != null ? r.getItem().getCategoryInfo() : "");
+                        m.put("startingPrice", r.getItem() != null && r.getItem().getStartingPrice() != null
+                                ? r.getItem().getStartingPrice().doubleValue() : 0);
+                        m.put("imagePath",     r.getItem() != null ? r.getItem().getImagePath() : "");
+                        m.put("bidIncrement",  r.getItem() != null && r.getItem().getBidIncrement() != null
+                                ? r.getItem().getBidIncrement().doubleValue() : 0);
                         m.put("currentPrice",  r.getCurrentPrice() != null
                                 ? r.getCurrentPrice().doubleValue() : 0);
                         m.put("status",        r.getStatus().name());
@@ -275,13 +386,23 @@ public class AuctionRequestHandler {
     private Map<String, Object> roomToMap(AuctionRoom room) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id",           room.getId());
-        m.put("itemName",     room.getItem() != null ? room.getItem().getName() : "N/A");
+        Item item = room.getItem();
+        m.put("itemId",       item != null ? item.getItemId() : 0);
+        m.put("itemName",     item != null ? item.getName() : "N/A");
+        m.put("description",  item != null ? item.getDescription() : "");
+        m.put("category",     item != null ? item.getCategoryInfo() : "");
+        m.put("startingPrice", item != null && item.getStartingPrice() != null
+                ? item.getStartingPrice().doubleValue() : 0);
+        m.put("imagePath", item != null ? item.getImagePath() : "");
+        m.put("bidIncrement", item != null && item.getBidIncrement() != null
+                ? item.getBidIncrement().doubleValue() : 0);
         m.put("currentPrice", room.getCurrentPrice() != null
                 ? room.getCurrentPrice().doubleValue()
-                : (room.getItem() != null ? room.getItem().getStartingPrice().doubleValue() : 0));
+                : (item != null ? item.getStartingPrice().doubleValue() : 0));
         m.put("currentWinner", room.getCurrentWinner() != null
                 ? room.getCurrentWinner().getUsername() : "Chưa có");
         m.put("status",  room.getStatus().name());
+        m.put("startTime", room.getStarttime() != null ? room.getStarttime().toString() : "");
         m.put("endTime", room.getEndTime() != null ? room.getEndTime().toString() : "");
         m.put("sellerID", room.getSellerID());
         return m;

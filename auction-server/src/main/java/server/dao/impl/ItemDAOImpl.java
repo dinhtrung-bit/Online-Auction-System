@@ -6,72 +6,96 @@ import server.models.items.Item;
 import server.models.items.ItemFactory;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ItemDAOImpl implements ItemDAO {
 
+    private volatile boolean optionalColumnsChecked = false;
+    private volatile boolean hasImagePathColumn = false;
+    private volatile boolean hasBidIncrementColumn = false;
+
     @Override
-    public void insert( Item item) throws Exception {
+    public void insert(Item item) throws Exception {
         insertWithSellerId(item, item.getSeller().getUserId());
     }
 
-    public int insertWithSellerId( Item item, int sellerId) throws Exception {
-        String sql = "INSERT INTO items (seller_id, name, description, CategoryInfo, startingPrice) " +
-                "VALUES (?, ?, ?, ?, ?)";
+    @Override
+    public int insertWithSellerId(Item item, int sellerId) throws Exception {
+        try (Connection conn = DBConnection.getInstance()) {
+            ensureOptionalColumns(conn);
 
-        try (Connection conn = DBConnection.getInstance();
-             PreparedStatement pstmt = conn.prepareStatement(
-                     sql,
-                     java.sql.Statement.RETURN_GENERATED_KEYS
-             )) {
+            String sql;
+            if (hasImagePathColumn && hasBidIncrementColumn) {
+                sql = "INSERT INTO items (seller_id, name, description, CategoryInfo, startingPrice, imagePath, bidIncrement) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?)";
+            } else if (hasImagePathColumn) {
+                sql = "INSERT INTO items (seller_id, name, description, CategoryInfo, startingPrice, imagePath) " +
+                        "VALUES (?, ?, ?, ?, ?, ?)";
+            } else if (hasBidIncrementColumn) {
+                sql = "INSERT INTO items (seller_id, name, description, CategoryInfo, startingPrice, bidIncrement) " +
+                        "VALUES (?, ?, ?, ?, ?, ?)";
+            } else {
+                sql = "INSERT INTO items (seller_id, name, description, CategoryInfo, startingPrice) " +
+                        "VALUES (?, ?, ?, ?, ?)";
+            }
 
-            pstmt.setInt(1, sellerId);
-            pstmt.setString(2, item.getName());
-            pstmt.setString(3, item.getDescription());
-            pstmt.setString(4, item.getCategoryInfo());
-            pstmt.setBigDecimal(5, item.getStartingPrice());
+            try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                int i = 1;
+                pstmt.setInt(i++, sellerId);
+                pstmt.setString(i++, item.getName());
+                pstmt.setString(i++, item.getDescription());
+                pstmt.setString(i++, item.getCategoryInfo());
+                pstmt.setBigDecimal(i++, item.getStartingPrice());
+                if (hasImagePathColumn) pstmt.setString(i++, item.getImagePath());
+                if (hasBidIncrementColumn) pstmt.setBigDecimal(i++, item.getBidIncrement());
+                pstmt.executeUpdate();
 
-            pstmt.executeUpdate();
-
-            try (ResultSet keys = pstmt.getGeneratedKeys()) {
-                if (keys.next()) {
-                    return keys.getInt(1);
+                try (ResultSet keys = pstmt.getGeneratedKeys()) {
+                    if (keys.next()) return keys.getInt(1);
                 }
             }
         }
-
         return -1;
     }
 
     @Override
     public void update(Item item) throws Exception {
-        String sql = "UPDATE items SET seller_id = ?, name = ?, description = ?, CategoryInfo = ?, startingPrice = ? WHERE item_id = ?";
+        try (Connection conn = DBConnection.getInstance()) {
+            ensureOptionalColumns(conn);
 
-        try (Connection conn = DBConnection.getInstance();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            String sql;
+            if (hasImagePathColumn && hasBidIncrementColumn) {
+                sql = "UPDATE items SET seller_id = ?, name = ?, description = ?, CategoryInfo = ?, startingPrice = ?, imagePath = ?, bidIncrement = ? WHERE item_id = ?";
+            } else if (hasImagePathColumn) {
+                sql = "UPDATE items SET seller_id = ?, name = ?, description = ?, CategoryInfo = ?, startingPrice = ?, imagePath = ? WHERE item_id = ?";
+            } else if (hasBidIncrementColumn) {
+                sql = "UPDATE items SET seller_id = ?, name = ?, description = ?, CategoryInfo = ?, startingPrice = ?, bidIncrement = ? WHERE item_id = ?";
+            } else {
+                sql = "UPDATE items SET seller_id = ?, name = ?, description = ?, CategoryInfo = ?, startingPrice = ? WHERE item_id = ?";
+            }
 
-            pstmt.setInt(1, item.getSeller().getUserId());
-            pstmt.setString(2, item.getName());
-            pstmt.setString(3, item.getDescription());
-            pstmt.setString(4, item.getCategoryInfo());
-            pstmt.setBigDecimal(5, item.getStartingPrice());
-            pstmt.setInt(6, item.getItemId());
-            pstmt.executeUpdate();
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                int i = 1;
+                pstmt.setInt(i++, item.getSeller().getUserId());
+                pstmt.setString(i++, item.getName());
+                pstmt.setString(i++, item.getDescription());
+                pstmt.setString(i++, item.getCategoryInfo());
+                pstmt.setBigDecimal(i++, item.getStartingPrice());
+                if (hasImagePathColumn) pstmt.setString(i++, item.getImagePath());
+                if (hasBidIncrementColumn) pstmt.setBigDecimal(i++, item.getBidIncrement());
+                pstmt.setInt(i, item.getItemId());
+                pstmt.executeUpdate();
+            }
         }
     }
 
     @Override
     public void delete(int id) throws Exception {
         String sql = "DELETE FROM items WHERE item_id = ?";
-
         try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
             pstmt.setInt(1, id);
             pstmt.executeUpdate();
         }
@@ -81,14 +105,12 @@ public class ItemDAOImpl implements ItemDAO {
     public List<Item> findBySellerId(int sellerId) throws Exception {
         List<Item> itemlist = new ArrayList<>();
         String sql = "SELECT * FROM items WHERE seller_id = ?";
-
-        try (Connection conn = DBConnection.getInstance();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setInt(1, sellerId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    itemlist.add(mapResultSetToItem(rs));
+        try (Connection conn = DBConnection.getInstance()) {
+            ensureOptionalColumns(conn);
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, sellerId);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) itemlist.add(mapResultSetToItem(rs));
                 }
             }
         }
@@ -98,18 +120,33 @@ public class ItemDAOImpl implements ItemDAO {
     @Override
     public List<Item> findAll() throws Exception {
         List<Item> itemList = new ArrayList<>();
-        String sql = "SELECT item_id, name, startingPrice, description, CategoryInfo FROM items";
-
-        try (Connection conn = DBConnection.getInstance();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-
-            while (rs.next()) {
-                Item item = mapResultSetToItem(rs);
-                if (item != null) itemList.add(item);
+        String sql = "SELECT * FROM items";
+        try (Connection conn = DBConnection.getInstance()) {
+            ensureOptionalColumns(conn);
+            try (PreparedStatement pstmt = conn.prepareStatement(sql);
+                 ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Item item = mapResultSetToItem(rs);
+                    if (item != null) itemList.add(item);
+                }
             }
         }
         return itemList;
+    }
+
+    @Override
+    public Item findById(int id) throws Exception {
+        String sql = "SELECT * FROM items WHERE item_id = ?";
+        try (Connection conn = DBConnection.getInstance()) {
+            ensureOptionalColumns(conn);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) return mapResultSetToItem(rs);
+                }
+            }
+        }
+        return null;
     }
 
     private Item mapResultSetToItem(ResultSet rs) throws SQLException {
@@ -119,21 +156,56 @@ public class ItemDAOImpl implements ItemDAO {
         String categoryInfo = rs.getString("CategoryInfo");
         BigDecimal startingPrice = rs.getBigDecimal("startingPrice");
 
-        return ItemFactory.createItem(categoryInfo, itemId, name, startingPrice, description);
+        Item item = ItemFactory.createItem(categoryInfo, itemId, name, startingPrice, description);
+        if (hasColumn(rs, "imagePath")) item.setImagePath(rs.getString("imagePath"));
+        if (hasColumn(rs, "bidIncrement")) item.setBidIncrement(rs.getBigDecimal("bidIncrement"));
+        return item;
     }
 
-    @Override
-    public Item findById(int id) throws Exception {
-        String sql = "SELECT * FROM items WHERE item_id = ?";
+    private void ensureOptionalColumns(Connection conn) {
+        if (optionalColumnsChecked) return;
+        synchronized (this) {
+            if (optionalColumnsChecked) return;
+            try {
+                hasImagePathColumn = columnExists(conn, "items", "imagePath");
+                hasBidIncrementColumn = columnExists(conn, "items", "bidIncrement");
 
-        try (Connection conn = DBConnection.getInstance();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                if (!hasImagePathColumn) {
+                    try (Statement st = conn.createStatement()) {
+                        st.executeUpdate("ALTER TABLE items ADD COLUMN imagePath VARCHAR(1000)");
+                    } catch (Exception ignored) { }
+                    hasImagePathColumn = columnExists(conn, "items", "imagePath");
+                }
 
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return mapResultSetToItem(rs);
-            }
+                if (!hasBidIncrementColumn) {
+                    try (Statement st = conn.createStatement()) {
+                        st.executeUpdate("ALTER TABLE items ADD COLUMN bidIncrement DECIMAL(15,2) DEFAULT 0");
+                    } catch (Exception ignored) { }
+                    hasBidIncrementColumn = columnExists(conn, "items", "bidIncrement");
+                }
+            } catch (Exception ignored) { }
+            optionalColumnsChecked = true;
         }
-        return null;
+    }
+
+    private boolean columnExists(Connection conn, String table, String column) {
+        try (ResultSet rs = conn.getMetaData().getColumns(null, null, table, column)) {
+            if (rs.next()) return true;
+        } catch (Exception ignored) { }
+        try (ResultSet rs = conn.getMetaData().getColumns(null, null, table.toUpperCase(), column)) {
+            if (rs.next()) return true;
+        } catch (Exception ignored) { }
+        try (ResultSet rs = conn.getMetaData().getColumns(null, null, table, column.toUpperCase())) {
+            return rs.next();
+        } catch (Exception ignored) { }
+        return false;
+    }
+
+    private boolean hasColumn(ResultSet rs, String column) throws SQLException {
+        ResultSetMetaData meta = rs.getMetaData();
+        for (int i = 1; i <= meta.getColumnCount(); i++) {
+            if (column.equalsIgnoreCase(meta.getColumnName(i))) return true;
+        }
+        return false;
     }
 }

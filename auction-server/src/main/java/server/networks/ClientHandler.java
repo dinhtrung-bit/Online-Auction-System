@@ -62,8 +62,15 @@ public class ClientHandler implements Runnable {
         router.put("LOGIN",         req -> userHandler.handleLogin(req, userHolder));
         router.put("REGISTER",      req -> userHandler.handleRegister(req));
         router.put("GET_ALL_USERS", req -> userHandler.handleGetAllUsers(req, userHolder.getUser()));
-        router.put("GET_BALANCE",   req -> userHandler.handleGetBalance(req, userHolder));
-        router.put("DEPOSIT",       req -> userHandler.handleDeposit(req, userHolder));
+        router.put("GET_BALANCE",                 req -> userHandler.handleGetBalance(req, userHolder));
+        router.put("DEPOSIT",                     req -> userHandler.handleDeposit(req, userHolder));
+        router.put("GET_MY_DEPOSIT_REQUESTS",     req -> userHandler.handleGetMyDepositRequests(req, userHolder));
+        router.put("GET_DEPOSIT_REQUESTS",        req -> userHandler.handleGetDepositRequests(req, userHolder.getUser()));
+        router.put("GET_PENDING_DEPOSITS",        req -> userHandler.handleGetPendingDeposits(req, userHolder.getUser()));
+        router.put("APPROVE_DEPOSIT",             req -> userHandler.handleApproveDeposit(req, userHolder.getUser()));
+        router.put("REJECT_DEPOSIT",              req -> userHandler.handleRejectDeposit(req, userHolder.getUser()));
+        router.put("ADMIN_ADJUST_BALANCE",        req -> userHandler.handleAdminAdjustBalance(req, userHolder.getUser()));
+        router.put("GET_DEPOSIT_STATS",           req -> userHandler.handleGetDepositStats(req, userHolder.getUser()));
 
         router.put("ADD_ITEM",     req -> itemHandler.handleAddItem(req,    userHolder.getUser()));
         router.put("UPDATE_ITEM",  req -> itemHandler.handleUpdateItem(req, userHolder.getUser()));
@@ -84,11 +91,13 @@ public class ClientHandler implements Runnable {
         router.put("GET_ADMIN_STATS",        req -> {
             try {
                 int total = userService.findAll().size();
-                return auctionHandler.handleGetAdminStats(req, userHolder.getUser(), total);
+                int pendingDeposits = userService.countPendingDeposits();
+                return auctionHandler.handleGetAdminStats(req, userHolder.getUser(), total, pendingDeposits);
             } catch (Exception e) {
                 return new MessageDTO("ERROR", "Lỗi lấy thống kê: " + e.getMessage());
             }
         });
+        router.put("GET_ADMIN_REVENUE_REPORT", req -> auctionHandler.handleGetAdminRevenueReport(req, userHolder.getUser()));
 
         router.put("SET_AUTO_BID",    req -> autoBidHandler.handleSetAutoBid(req,    userHolder.getUser()));
         router.put("CANCEL_AUTO_BID", req -> autoBidHandler.handleCancelAutoBid(req, userHolder.getUser()));

@@ -4,6 +4,7 @@ import server.dao.impl.ItemDAOImpl;
 import server.dao.interfaces.ItemDAO;
 import server.models.items.Item;
 import server.models.items.ItemFactory;
+import server.models.users.Seller;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -33,6 +34,7 @@ public class ItemService {
         BigDecimal price   = new BigDecimal(data.get("startingPrice").toString());
 
         Item item = ItemFactory.createItem(category, 0, name, price, description);
+        applyOptionalClientFields(item, data);
         itemDAO.insertWithSellerId(item, sellerId);
         System.out.println(">>> [ItemService] Thêm sản phẩm: " + name + " (seller=" + sellerId + ")");
     }
@@ -46,6 +48,9 @@ public class ItemService {
         BigDecimal price   = new BigDecimal(data.get("startingPrice").toString());
 
         Item item = ItemFactory.createItem(category, itemId, name, price, description);
+        applyOptionalClientFields(item, data);
+        Seller seller = new Seller(sellerId, "", "", "", java.math.BigDecimal.ZERO);
+        item.setSeller(seller);
         itemDAO.update(item);
     }
 
@@ -62,6 +67,19 @@ public class ItemService {
     /** Lấy sản phẩm theo ID. */
     public Item findById(int itemId) throws Exception {
         return itemDAO.findById(itemId);
+    }
+
+
+    private void applyOptionalClientFields(Item item, Map<String, Object> data) {
+        if (item == null || data == null) return;
+        if (data.get("imagePath") != null) {
+            item.setImagePath(data.get("imagePath").toString());
+        }
+        if (data.get("bidIncrement") != null) {
+            try {
+                item.setBidIncrement(new BigDecimal(data.get("bidIncrement").toString()));
+            } catch (Exception ignored) { }
+        }
     }
 
     /** Đếm tổng số sản phẩm trong hệ thống (dùng cho admin stats). */

@@ -4,81 +4,72 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<HBox alignment="CENTER" prefHeight="650.0" prefWidth="1000.0" stylesheets="@app.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.LoginController">
+<StackPane prefHeight="720.0" prefWidth="1120.0" styleClass="auth-bg" stylesheets="@app.css"
+           xmlns="http://javafx.com/javafx/17.0.2-ea"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="client.controllers.LoginController">
 
-    <VBox alignment="CENTER" spacing="30.0" styleClass="left-pane" HBox.hgrow="ALWAYS">
-        <padding><Insets bottom="50.0" left="60.0" right="60.0" top="50.0" /></padding>
-        <VBox maxWidth="450.0" spacing="25.0">
-            <Label text="🏛" textFill="WHITE"><font><Font size="60.0" /></font></Label>
-            <VBox>
-                <Label text="AuctionVN" textFill="WHITE"><font><Font name="System Bold" size="48.0" /></font></Label>
-                <Label text="Nền tảng đấu giá trực tuyến số 1 Việt Nam" textFill="#D1FAE5"><font><Font size="18.0" /></font></Label>
+    <HBox maxWidth="1040" maxHeight="640" styleClass="auth-shell">
+        <VBox prefWidth="470" alignment="CENTER_LEFT" spacing="28" styleClass="auth-hero">
+            <padding><Insets top="56" right="46" bottom="56" left="46"/></padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <StackPane styleClass="brand-icon-large" prefWidth="56" prefHeight="56">
+                    <Label text="⚡" style="-fx-font-size: 28px;"/>
+                </StackPane>
+                <VBox spacing="2">
+                    <Label text="AuctionVN" textFill="WHITE"><font><Font name="System Bold" size="32"/></font></Label>
+                    <Label text="Realtime Online Auction" styleClass="auth-hero-subtitle"/>
+                </VBox>
+            </HBox>
+
+            <VBox spacing="10">
+                <Label text="Đấu giá trực tuyến\nnhanh, rõ ràng, an toàn" styleClass="auth-hero-title"/>
+                <Label text="Quản lý phiên đấu giá, ví điện tử, sản phẩm và người dùng trên cùng một hệ thống JavaFX." styleClass="auth-hero-desc" wrapText="true"/>
             </VBox>
-            <VBox spacing="15.0">
-                <Label text="✨ Đấu giá thời gian thực, không độ trễ" textFill="WHITE"><font><Font size="15.0" /></font></Label>
-                <Label text="✨ Bảo mật thông tin tuyệt đối" textFill="WHITE"><font><Font size="15.0" /></font></Label>
-                <Label text="✨ Giao dịch minh bạch, rõ ràng" textFill="WHITE"><font><Font size="15.0" /></font></Label>
+
+            <VBox spacing="12">
+                <Label text="✓ Đấu giá thời gian thực" styleClass="auth-feature"/>
+                <Label text="✓ Tách quyền Admin / Seller / Bidder" styleClass="auth-feature"/>
+                <Label text="✓ Giao diện FXML dễ bảo trì" styleClass="auth-feature"/>
             </VBox>
         </VBox>
-    </VBox>
 
-    <VBox alignment="CENTER" HBox.hgrow="ALWAYS">
-        <VBox alignment="CENTER_LEFT" maxWidth="450.0" spacing="20.0" styleClass="form-card">
-            <padding><Insets bottom="40.0" left="40.0" right="40.0" top="40.0" /></padding>
+        <VBox alignment="CENTER" HBox.hgrow="ALWAYS">
+            <VBox alignment="CENTER_LEFT" maxWidth="440" spacing="20" styleClass="auth-card">
+                <padding><Insets top="42" right="42" bottom="42" left="42"/></padding>
 
-            <VBox spacing="5.0">
-                <Label text="Đăng nhập"><font><Font name="System Bold" size="32.0" /></font></Label>
-                <Label text="Chào mừng bạn quay trở lại!" textFill="#6B7280"><font><Font size="14.0" /></font></Label>
-            </VBox>
+                <VBox spacing="6">
+                    <Label text="Đăng nhập" styleClass="auth-title"/>
+                    <Label text="Chọn vai trò và nhập thông tin tài khoản" styleClass="auth-subtitle"/>
+                </VBox>
 
-            <VBox spacing="8.0">
-                <Label text="Bạn là ai?"><font><Font name="System Bold" size="13.0" /></font></Label>
-                <HBox spacing="12.0" alignment="CENTER">
-                    <Button fx:id="btnAdmin"
-                            onAction="#selectAdmin"
-                            minHeight="44.0"
-                            prefHeight="44.0"
-                            prefWidth="118.0"
-                            text="Admin"
-                            styleClass="role-button" />
+                <VBox spacing="9">
+                    <Label text="Bạn là ai?" styleClass="form-label"/>
+                    <HBox spacing="10" alignment="CENTER">
+                        <Button fx:id="btnAdmin" onAction="#selectAdmin" prefHeight="44" prefWidth="118" text="Admin" styleClass="role-button"/>
+                        <Button fx:id="btnSeller" onAction="#selectSeller" prefHeight="44" prefWidth="118" text="Người bán" styleClass="role-button"/>
+                        <Button fx:id="btnBidder" onAction="#selectBidder" prefHeight="44" prefWidth="118" text="Người mua" styleClass="role-button"/>
+                    </HBox>
+                </VBox>
 
-                    <Button fx:id="btnSeller"
-                            onAction="#selectSeller"
-                            minHeight="44.0"
-                            prefHeight="44.0"
-                            prefWidth="118.0"
-                            text="Người bán"
-                            styleClass="role-button" />
+                <VBox spacing="9">
+                    <Label text="Tên đăng nhập" styleClass="form-label"/>
+                    <TextField fx:id="txtUsername" prefHeight="46" promptText="Nhập username..." styleClass="input-field"/>
+                </VBox>
 
-                    <Button fx:id="btnBidder"
-                            onAction="#selectBidder"
-                            minHeight="44.0"
-                            prefHeight="44.0"
-                            prefWidth="118.0"
-                            text="Người mua"
-                            styleClass="role-button" />
+                <VBox spacing="9">
+                    <Label text="Mật khẩu" styleClass="form-label"/>
+                    <PasswordField fx:id="txtPassword" onAction="#handleLogin" prefHeight="46" promptText="Nhập mật khẩu..." styleClass="input-field"/>
+                </VBox>
+
+                <Button maxWidth="Infinity" onAction="#handleLogin" prefHeight="50" styleClass="btn-primary" text="ĐĂNG NHẬP"/>
+
+                <HBox alignment="CENTER" spacing="5">
+                    <Label text="Chưa có tài khoản?" styleClass="text-muted"/>
+                    <Hyperlink onAction="#goToRegister" styleClass="hyperlink" text="Đăng ký ngay"/>
                 </HBox>
             </VBox>
-
-            <VBox spacing="8.0">
-                <Label text="Tên đăng nhập"><font><Font name="System Bold" size="13.0" /></font></Label>
-                <TextField fx:id="txtUsername" prefHeight="45.0" promptText="Nhập username..." styleClass="input-field" />
-            </VBox>
-
-            <VBox spacing="8.0">
-                <Label text="Mật khẩu"><font><Font name="System Bold" size="13.0" /></font></Label>
-                <PasswordField fx:id="txtPassword" prefHeight="45.0" promptText="Nhập mật khẩu..." styleClass="input-field" />
-            </VBox>
-
-            <Button maxWidth="Infinity" onAction="#handleLogin" prefHeight="50.0" styleClass="btn-primary" text="ĐĂNG NHẬP">
-                <VBox.margin><Insets top="10.0" /></VBox.margin>
-            </Button>
-
-            <HBox alignment="CENTER" spacing="5.0">
-                <VBox.margin><Insets top="10.0" /></VBox.margin>
-                <Label text="Chưa có tài khoản?" textFill="#6B7280"><font><Font size="14.0" /></font></Label>
-                <Hyperlink onAction="#goToRegister" styleClass="hyperlink" text="Đăng ký ngay"><font><Font size="14.0" /></font></Hyperlink>
-            </HBox>
         </VBox>
-    </VBox>
-</HBox>
+    </HBox>
+</StackPane>

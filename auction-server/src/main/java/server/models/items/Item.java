@@ -10,8 +10,10 @@ public abstract class Item implements Serializable {
     protected String name;
     protected Seller seller;
     protected BigDecimal startingPrice;
-   // protected BigDecimal currenthightestprice;
+    // protected BigDecimal currenthightestprice;
     protected String description;
+    protected String imagePath;
+    protected BigDecimal bidIncrement = BigDecimal.ZERO;
     public Item(int itemId, String name, BigDecimal startingPrice,String description) {
         this.itemId = itemId;
         this.name = name;
@@ -33,7 +35,7 @@ public abstract class Item implements Serializable {
     public void setStartingPrice(BigDecimal startingPrice) {
         this.startingPrice = startingPrice;
     }
-   // public void setCurrenthightestPrice(BigDecimal currenthightestprice){this.currenthightestprice=currenthightestprice;}
+    // public void setCurrenthightestPrice(BigDecimal currenthightestprice){this.currenthightestprice=currenthightestprice;}
     public void setDescription(String description){this.description=description;}
 
     public int getItemId() {
@@ -51,7 +53,23 @@ public abstract class Item implements Serializable {
 
     public abstract String getCategoryInfo(); // Trả về thông tin đặc thù từng loại đồ
     public String getDescription(){
-        return description;
+        return description == null ? "" : description;
+    }
+
+    public String getImagePath() {
+        return imagePath == null ? "" : imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
+
+    public BigDecimal getBidIncrement() {
+        return bidIncrement == null ? BigDecimal.ZERO : bidIncrement;
+    }
+
+    public void setBidIncrement(BigDecimal bidIncrement) {
+        this.bidIncrement = bidIncrement;
     }
 }
 

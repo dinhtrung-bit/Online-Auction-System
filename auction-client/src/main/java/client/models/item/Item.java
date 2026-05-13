@@ -11,6 +11,7 @@ public abstract class Item implements Serializable {
     protected double bidIncrement;
     protected String imagePath;
     protected String description;
+    protected String category;
 
     public Item(String itemId, String name, double startingPrice) {
         this.itemId = itemId;
@@ -48,6 +49,14 @@ public abstract class Item implements Serializable {
 
     public String getDescription() {
         return description == null ? "" : description;
+    }
+
+    public String getCategory() {
+        return category == null ? "ART" : category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public void setDescription(String description) {

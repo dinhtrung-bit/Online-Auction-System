@@ -1,114 +1,76 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
 
-<VBox prefWidth="760.0" spacing="18.0" styleClass="card, main-bg"
-      stylesheets="@app.css"
-      xmlns="http://javafx.com/javafx/17.0.2-ea"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="client.controllers.AddProductController">
+<BorderPane prefWidth="820" prefHeight="620" styleClass="dialog-root" stylesheets="@app.css"
+            xmlns="http://javafx.com/javafx/17.0.2-ea"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="client.controllers.AddProductController">
 
-    <padding>
-        <Insets top="30.0" right="30.0" bottom="30.0" left="30.0"/>
-    </padding>
-
-    <VBox spacing="5.0">
-        <Label text="Thêm / Sửa Sản Phẩm" textFill="#1e293b">
-            <font>
-                <Font name="System Bold" size="26.0"/>
-            </font>
-        </Label>
-        <Label text="Nhập thông tin sản phẩm, mô tả chi tiết và ảnh minh họa"
-               styleClass="text-muted"/>
-    </VBox>
-
-    <Separator/>
-
-    <HBox spacing="35.0">
-        <VBox spacing="16.0" HBox.hgrow="ALWAYS" prefWidth="350.0">
-
-            <VBox spacing="5.0">
-                <Label text="Loại sản phẩm" style="-fx-font-weight: bold;" textFill="#475569"/>
-                <ComboBox fx:id="cmbCategory" maxWidth="Infinity" styleClass="input-field"/>
-            </VBox>
-
-            <VBox spacing="5.0">
-                <Label text="Mã sản phẩm (ID)" style="-fx-font-weight: bold;" textFill="#475569"/>
-                <TextField fx:id="txtId" promptText="Vd: ART001" styleClass="input-field"/>
-            </VBox>
-
-            <VBox spacing="5.0">
-                <Label text="Tên sản phẩm" style="-fx-font-weight: bold;" textFill="#475569"/>
-                <TextField fx:id="txtName" promptText="Vd: Bức tranh Mona Lisa" styleClass="input-field"/>
-            </VBox>
-
-            <VBox spacing="5.0">
-                <Label text="Mô tả sản phẩm" style="-fx-font-weight: bold;" textFill="#475569"/>
-                <TextArea fx:id="txtDescription"
-                          promptText="Nhập mô tả chi tiết sản phẩm"
-                          wrapText="true"
-                          prefRowCount="8"
-                          styleClass="input-field, description-area"/>
-            </VBox>
-
+    <top>
+        <VBox spacing="5" styleClass="dialog-header">
+            <Label text="Thêm / Sửa sản phẩm" styleClass="dialog-title"/>
+            <Label text="Nhập thông tin sản phẩm, giá khởi điểm, bước nhảy và ảnh minh họa" styleClass="dialog-subtitle"/>
         </VBox>
+    </top>
 
-        <VBox spacing="16.0" HBox.hgrow="ALWAYS" prefWidth="350.0">
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true" pannable="true" styleClass="clean-scroll dialog-scroll">
+            <HBox spacing="28" styleClass="dialog-body">
+                <VBox spacing="16" HBox.hgrow="ALWAYS" prefWidth="390">
+                    <VBox spacing="7">
+                        <Label text="Loại sản phẩm" styleClass="form-label"/>
+                        <ComboBox fx:id="cmbCategory" maxWidth="Infinity" styleClass="input-field"/>
+                    </VBox>
 
-            <HBox spacing="15.0">
-                <VBox spacing="5.0" HBox.hgrow="ALWAYS">
-                    <Label text="Giá khởi điểm (VNĐ)" style="-fx-font-weight: bold;" textFill="#475569"/>
-                    <TextField fx:id="txtPrice" promptText="Vd: 1000000" styleClass="input-field"/>
+                    <HBox spacing="12">
+                        <VBox spacing="7" HBox.hgrow="ALWAYS">
+                            <Label text="Mã sản phẩm" styleClass="form-label"/>
+                            <TextField fx:id="txtId" promptText="VD: ART001" styleClass="input-field"/>
+                        </VBox>
+                        <VBox spacing="7" HBox.hgrow="ALWAYS">
+                            <Label text="Tên sản phẩm" styleClass="form-label"/>
+                            <TextField fx:id="txtName" promptText="VD: Bình gốm cổ" styleClass="input-field"/>
+                        </VBox>
+                    </HBox>
+
+                    <VBox spacing="7" VBox.vgrow="ALWAYS">
+                        <Label text="Mô tả sản phẩm" styleClass="form-label"/>
+                        <TextArea fx:id="txtDescription" promptText="Nhập mô tả chi tiết, tình trạng, xuất xứ..." wrapText="true" prefRowCount="9" styleClass="description-area" VBox.vgrow="ALWAYS"/>
+                    </VBox>
                 </VBox>
 
-                <VBox spacing="5.0" HBox.hgrow="ALWAYS">
-                    <Label text="Bước nhảy (VNĐ)" style="-fx-font-weight: bold;" textFill="#475569"/>
-                    <TextField fx:id="txtBidIncrement" promptText="Vd: 50000" styleClass="input-field"/>
+                <VBox spacing="16" HBox.hgrow="ALWAYS" prefWidth="340">
+                    <HBox spacing="12">
+                        <VBox spacing="7" HBox.hgrow="ALWAYS">
+                            <Label text="Giá khởi điểm" styleClass="form-label"/>
+                            <TextField fx:id="txtPrice" promptText="VD: 1000000" styleClass="input-field"/>
+                        </VBox>
+                        <VBox spacing="7" HBox.hgrow="ALWAYS">
+                            <Label text="Bước nhảy" styleClass="form-label"/>
+                            <TextField fx:id="txtBidIncrement" promptText="VD: 50000" styleClass="input-field"/>
+                        </VBox>
+                    </HBox>
+
+                    <VBox spacing="9" VBox.vgrow="ALWAYS">
+                        <Label text="Ảnh minh họa" styleClass="form-label"/>
+                        <VBox styleClass="image-upload-box" alignment="CENTER" spacing="10" VBox.vgrow="ALWAYS" onMouseClicked="#handleChooseImage">
+                            <ImageView fx:id="imgPreview" fitHeight="260" fitWidth="320" preserveRatio="true"/>
+                            <Label text="Nhấp vào khu vực này để chọn ảnh" styleClass="text-muted"/>
+                        </VBox>
+                        <Button onAction="#handleChooseImage" text="Duyệt file..." styleClass="btn-outline" maxWidth="Infinity"/>
+                    </VBox>
                 </VBox>
             </HBox>
+        </ScrollPane>
+    </center>
 
-            <VBox spacing="5.0" alignment="CENTER">
-                <Label text="Ảnh minh họa"
-                       style="-fx-font-weight: bold;"
-                       textFill="#475569"
-                       maxWidth="Infinity"
-                       alignment="CENTER_LEFT"/>
-
-                <VBox styleClass="image-upload-box"
-                      alignment="CENTER"
-                      spacing="10.0"
-                      minHeight="300.0"
-                      onMouseClicked="#handleChooseImage">
-                    <ImageView fx:id="imgPreview"
-                               fitHeight="230.0"
-                               fitWidth="310.0"
-                               preserveRatio="true"/>
-                    <Label text="Nhấp vào đây để chọn ảnh" textFill="#94a3b8"/>
-                </VBox>
-
-                <Button onAction="#handleChooseImage"
-                        text="Duyệt file..."
-                        styleClass="btn-outline"
-                        maxWidth="Infinity"/>
-            </VBox>
-        </VBox>
-    </HBox>
-
-    <Separator/>
-
-    <HBox spacing="15.0" alignment="CENTER_RIGHT">
-        <Button onAction="#handleCancel"
-                text="Hủy bỏ"
-                styleClass="btn-outline"
-                style="-fx-padding: 10 25;"/>
-
-        <Button onAction="#handleSave"
-                text="💾 Lưu Sản Phẩm"
-                styleClass="btn-primary"
-                style="-fx-padding: 10 25;"/>
-    </HBox>
-</VBox>
+    <bottom>
+        <HBox spacing="12" alignment="CENTER_RIGHT" styleClass="dialog-footer">
+            <Button onAction="#handleCancel" text="Hủy bỏ" styleClass="btn-outline"/>
+            <Button onAction="#handleSave" text="💾 Lưu sản phẩm" styleClass="btn-primary"/>
+        </HBox>
+    </bottom>
+</BorderPane>

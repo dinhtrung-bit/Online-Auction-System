@@ -8,86 +8,101 @@
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="client.controllers.AuctionListController">
 
-    <VBox styleClass="main-bg" spacing="0">
+    <BorderPane styleClass="app-shell">
+        <left>
+            <VBox prefWidth="260" styleClass="side-panel" spacing="18">
+                <padding><Insets top="24" right="18" bottom="24" left="18"/></padding>
 
-        <!-- ── TOP NAVIGATION BAR ─────────────────────────── -->
-        <HBox alignment="CENTER_LEFT" spacing="16"
-              style="-fx-background-color: #0F172A; -fx-padding: 0 28;">
-            <padding><Insets top="14" bottom="14"/></padding>
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <StackPane styleClass="brand-icon" prefWidth="44" prefHeight="44">
+                        <Label text="⚡" style="-fx-font-size: 21px;"/>
+                    </StackPane>
+                    <VBox spacing="1">
+                        <Label text="AuctionVN" styleClass="brand-title"/>
+                        <Label text="Online Auction System" styleClass="brand-subtitle"/>
+                    </VBox>
+                </HBox>
 
-            <!-- Logo / Brand -->
-            <Label text="⚡"  style="-fx-font-size: 20px;"/>
-            <Label text="AuctionVN"
-                   style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                <VBox styleClass="user-card" spacing="8">
+                    <Label text="Xin chào" styleClass="muted-small"/>
+                    <Label fx:id="lblUserName" text="Người đấu giá" styleClass="user-name"/>
+                    <Label text="● Online" styleClass="online-text"/>
+                </VBox>
 
-            <Region HBox.hgrow="ALWAYS"/>
+                <VBox spacing="8" VBox.vgrow="ALWAYS">
+                    <Button fx:id="btnNavHome" text="🏠   Trang chính" onAction="#handleNavHome" styleClass="nav-button-active" maxWidth="Infinity"/>
+                    <Button fx:id="btnNavLive" text="🔥   Đang đấu giá" onAction="#handleNavLive" styleClass="nav-button" maxWidth="Infinity"/>
+                    <Button fx:id="btnNavWon" text="🏆   Đã thắng" onAction="#handleNavWon" styleClass="nav-button" maxWidth="Infinity"/>
+                    <Button fx:id="btnNavWallet" text="💳   Ví của tôi" onAction="#handleNavWallet" styleClass="nav-button" maxWidth="Infinity"/>
+                    <Button fx:id="btnNavSettings" text="⚙   Cài đặt" onAction="#handleNavSettings" styleClass="nav-button" maxWidth="Infinity"/>
+                </VBox>
 
-            <!-- Số dư -->
-            <Label fx:id="lblBalance" text="💳 Số dư: --"
-                   style="-fx-font-size: 13px; -fx-font-weight: bold;
-                          -fx-text-fill: #34D399; -fx-padding: 6 14;
-                          -fx-background-color: #064E3B;
-                          -fx-background-radius: 20;"/>
-
-            <!-- Nạp tiền -->
-            <Button text="💰 Nạp tiền" onAction="#handleDeposit"
-                    style="-fx-background-color: #10B981; -fx-text-fill: white;
-                           -fx-font-weight: bold; -fx-font-size: 13px;
-                           -fx-background-radius: 10; -fx-cursor: hand;
-                           -fx-padding: 7 16;"/>
-
-            <!-- Đăng xuất -->
-            <Button text="Đăng xuất" onAction="#handleLogout"
-                    style="-fx-background-color: #1E293B; -fx-text-fill: #94A3B8;
-                           -fx-border-color: #334155; -fx-border-radius: 8;
-                           -fx-background-radius: 8; -fx-font-size: 13px;
-                           -fx-cursor: hand; -fx-padding: 7 16;"/>
-        </HBox>
-
-        <!-- ── TABS + FILTER BAR ──────────────────────────── -->
-        <HBox alignment="CENTER_LEFT" spacing="12"
-              style="-fx-background-color: #F8FAFC;
-                     -fx-border-color: transparent transparent #E2E8F0 transparent;
-                     -fx-border-width: 1; -fx-padding: 14 28;">
-
-            <!-- Tab buttons -->
-            <ToggleButton fx:id="btnTabLive" text="🔥  Đang đấu giá"
-                          selected="true" onAction="#switchTab"
-                          style="-fx-background-color: #0F172A; -fx-text-fill: white;
-                                 -fx-font-weight: bold; -fx-font-size: 13px;
-                                 -fx-background-radius: 10; -fx-cursor: hand;
-                                 -fx-padding: 8 20;"/>
-            <ToggleButton fx:id="btnTabWon" text="🏆  Đã thắng"
-                          onAction="#switchTab"
-                          style="-fx-background-color: #F1F5F9;
-                                 -fx-text-fill: #475569;
-                                 -fx-font-weight: bold; -fx-font-size: 13px;
-                                 -fx-background-radius: 10; -fx-cursor: hand;
-                                 -fx-padding: 8 20;"/>
-
-            <Region HBox.hgrow="ALWAYS"/>
-
-            <!-- Filter theo trạng thái -->
-            <Label text="Lọc:"
-                   style="-fx-font-size: 13px; -fx-text-fill: #64748B;"/>
-            <ComboBox fx:id="cmbStatus" onAction="#handleFilterByStatus"
-                      prefWidth="160" prefHeight="36"
-                      style="-fx-font-size: 13px; -fx-background-radius: 8;
-                             -fx-border-radius: 8; -fx-border-color: #CBD5E1;"/>
-        </HBox>
-
-        <!-- ── MAIN CONTENT: danh sách phiên đấu giá ──────── -->
-        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
-                    style="-fx-background-color: transparent;
-                           -fx-background: transparent;
-                           -fx-border-color: transparent;">
-            <VBox fx:id="auctionContainer" spacing="16"
-                  style="-fx-background-color: transparent;">
-                <padding><Insets top="24" right="32" bottom="24" left="32"/></padding>
-                <!-- Cards được thêm động bằng Java -->
+                <Button text="Đăng xuất" onAction="#handleLogout" styleClass="logout-button" maxWidth="Infinity"/>
             </VBox>
-        </ScrollPane>
+        </left>
 
-    </VBox>
+        <center>
+            <VBox styleClass="content-bg" spacing="0">
 
+                <HBox alignment="CENTER_LEFT" spacing="16" styleClass="topbar">
+                    <VBox spacing="3">
+                        <Label text="Sàn đấu giá trực tuyến" styleClass="page-title"/>
+                        <Label text="Theo dõi phiên đang mở, lịch sử chiến thắng và ví đấu giá của bạn" styleClass="page-subtitle"/>
+                    </VBox>
+
+                    <Region HBox.hgrow="ALWAYS"/>
+
+                    <Button text="↻ Làm mới" onAction="#handleRefresh" styleClass="btn-outline"/>
+                    <Label fx:id="lblBalance" text="💳 Số dư: --" styleClass="balance-pill"/>
+                    <Button text="💰 Nạp tiền" onAction="#handleDeposit" styleClass="deposit-button"/>
+                </HBox>
+
+                <VBox styleClass="main-content" spacing="18" VBox.vgrow="ALWAYS">
+                    <padding><Insets top="24" right="30" bottom="28" left="30"/></padding>
+
+                    <HBox spacing="16" alignment="CENTER_LEFT">
+                        <VBox styleClass="summary-green-card" spacing="5" HBox.hgrow="ALWAYS">
+                            <Label text="PHIÊN ĐANG MỞ" styleClass="summary-label"/>
+                            <Label fx:id="lblLiveCount" text="0" styleClass="summary-value"/>
+                            <Label text="Sẵn sàng tham gia" styleClass="summary-desc"/>
+                        </VBox>
+                        <VBox styleClass="summary-blue-card" spacing="5" HBox.hgrow="ALWAYS">
+                            <Label text="VÍ ĐIỆN TỬ" styleClass="summary-label"/>
+                            <Label fx:id="lblBalanceCard" text="--" styleClass="summary-value"/>
+                            <Label text="Nạp tiền nhanh, đặt giá ngay" styleClass="summary-desc"/>
+                        </VBox>
+                        <VBox styleClass="summary-purple-card" spacing="5" HBox.hgrow="ALWAYS">
+                            <Label text="ĐÃ THẮNG" styleClass="summary-label"/>
+                            <Label fx:id="lblWonCount" text="0" styleClass="summary-value"/>
+                            <Label text="Vật phẩm đấu giá thành công" styleClass="summary-desc"/>
+                        </VBox>
+                    </HBox>
+
+                    <VBox styleClass="list-panel" spacing="18" VBox.vgrow="ALWAYS">
+                        <HBox alignment="CENTER_LEFT" spacing="12">
+                            <ToggleButton fx:id="btnTabLive" text="🔥  Đang đấu giá"
+                                          selected="true" onAction="#switchTab" styleClass="segment-button"/>
+                            <ToggleButton fx:id="btnTabWon" text="🏆  Đã thắng"
+                                          onAction="#switchTab" styleClass="segment-button"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="txtAuctionSearch" promptText="Tìm phiên/sản phẩm..."
+                                       onKeyReleased="#handleSearchAuctions" prefWidth="230" prefHeight="42"
+                                       styleClass="search-field"/>
+                            <ComboBox fx:id="cmbSort" onAction="#handleSortAuctions"
+                                      prefWidth="170" prefHeight="42" styleClass="filter-combo"/>
+                            <ComboBox fx:id="cmbStatus" onAction="#handleFilterByStatus"
+                                      prefWidth="150" prefHeight="42" styleClass="filter-combo"/>
+                        </HBox>
+
+                        <ScrollPane fx:id="scrollAuctions" fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="clean-scroll">
+                            <VBox fx:id="auctionContainer" spacing="16" styleClass="auction-list-container">
+                                <padding><Insets top="6" right="4" bottom="10" left="4"/></padding>
+                                <!-- Cards được thêm động bằng Java -->
+                            </VBox>
+                        </ScrollPane>
+                    </VBox>
+                </VBox>
+            </VBox>
+        </center>
+    </BorderPane>
 </StackPane>
