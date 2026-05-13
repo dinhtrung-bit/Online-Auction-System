@@ -34,6 +34,8 @@ public class AddProductController {
                 "Đồ điện tử (Electronics)"
         ));
         cmbCategory.getSelectionModel().selectFirst();
+        setupMoneyField(txtPrice);
+        setupMoneyField(txtBidIncrement);
     }
 
     @FXML
@@ -41,7 +43,7 @@ public class AddProductController {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Chọn ảnh minh họa sản phẩm");
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg")
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.webp")
         );
 
         Stage stage = (Stage) txtId.getScene().getWindow();
@@ -65,10 +67,13 @@ public class AddProductController {
         txtBidIncrement.setText(String.format("%.0f", item.getBidIncrement()));
         txtDescription.setText(item.getDescription());
 
-        if (item instanceof Art) {
-            cmbCategory.getSelectionModel().select("Nghệ thuật (Art)");
+        String cat = item.getCategory();
+        if (cat != null && cat.toUpperCase().contains("ELECT")) {
+            cmbCategory.getSelectionModel().select("Đồ điện tử (Electronics)");
         } else if (item instanceof Electronics) {
             cmbCategory.getSelectionModel().select("Đồ điện tử (Electronics)");
+        } else {
+            cmbCategory.getSelectionModel().select("Nghệ thuật (Art)");
         }
 
         cmbCategory.setDisable(true);
@@ -91,6 +96,11 @@ public class AddProductController {
                 return;
             }
 
+            if (txtPrice.getText().trim().isEmpty() || txtBidIncrement.getText().trim().isEmpty()) {
+                showAlert("Thiếu thông tin", "Vui lòng nhập giá khởi điểm và bước nhảy!");
+                return;
+            }
+
             double price = Double.parseDouble(txtPrice.getText().trim());
             double bidInc = Double.parseDouble(txtBidIncrement.getText().trim());
 
@@ -99,12 +109,19 @@ public class AddProductController {
                 return;
             }
 
+            if (bidInc > price) {
+                showAlert("Bước giá chưa hợp lý", "Bước nhảy đang lớn hơn giá khởi điểm. Hãy chọn bước giá nhỏ hơn để người mua dễ tham gia hơn.");
+                return;
+            }
+
             String category = cmbCategory.getValue();
 
             if (category.contains("Art")) {
                 resultItem = new Art(id, name, price, "");
+                resultItem.setCategory("ART");
             } else {
                 resultItem = new Electronics(id, name, price, 0);
+                resultItem.setCategory("ELECTRONICS");
             }
 
             resultItem.setBidIncrement(bidInc);
@@ -137,11 +154,29 @@ public class AddProductController {
         return isEditMode;
     }
 
+    private void setupMoneyField(TextField field) {
+        if (field == null) return;
+        field.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null) return;
+            String sanitized = newVal.replaceAll("[^\\d]", "");
+            if (!newVal.equals(sanitized)) field.setText(sanitized);
+        });
+    }
+
     private void showAlert(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
         alert.setHeaderText(null);
-        alert.setContentText(content);
+        if (content != null && content.length() > 180) {
+            TextArea area = new TextArea(content);
+            area.setWrapText(true);
+            area.setEditable(false);
+            area.setPrefWidth(500);
+            area.setPrefHeight(220);
+            alert.getDialogPane().setContent(area);
+        } else {
+            alert.setContentText(content);
+        }
         alert.showAndWait();
     }
 }

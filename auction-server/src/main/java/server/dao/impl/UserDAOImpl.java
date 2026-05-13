@@ -85,7 +85,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public List<User> findAll() throws Exception {
         List<User> userList = new ArrayList<>();
-        String sql = "SELECT user_id, username, password_hash, role FROM users";
+        String sql = "SELECT user_id, username, password_hash, role, balance FROM users";
         try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
@@ -98,6 +98,8 @@ public class UserDAOImpl implements UserDAO {
                 User user = UserFactory.createUser(role, userId, username);
                 if (user != null) {
                     user.setPasswordHash(passwordHash); // Nạp pass để tránh lỗi hiển thị/xử lý
+                    java.math.BigDecimal balance = rs.getBigDecimal("balance");
+                    user.setAccountBalance(balance == null ? java.math.BigDecimal.ZERO : balance);
                     userList.add(user);
                 }
             }

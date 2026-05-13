@@ -74,7 +74,10 @@ public class ItemRequestHandler {
                 m.put("name",          i.getName());
                 m.put("description",   i.getDescription());
                 m.put("category",      i.getCategoryInfo());
+                m.put("categoryInfo",  i.getCategoryInfo());
                 m.put("startingPrice", i.getStartingPrice());
+                m.put("imagePath",     i.getImagePath());
+                m.put("bidIncrement",  i.getBidIncrement());
                 return m;
             }).collect(Collectors.toList());
             return new MessageDTO("MY_ITEMS", gson.toJson(result));
