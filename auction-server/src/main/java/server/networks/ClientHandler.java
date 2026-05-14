@@ -7,6 +7,7 @@ import server.networks.handlers.AutoBidRequestHandler;
 import server.networks.handlers.ItemRequestHandler;
 import server.networks.handlers.UserHolder;
 import server.networks.handlers.UserRequestHandler;
+import server.networks.interfaces.BroadcastChannel;
 import server.services.AuctionService;
 import server.services.ItemService;
 import server.services.UserService;
@@ -25,8 +26,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * KHÔNG chứa business logic. KHÔNG gọi DAO trực tiếp.
  * Tuân thủ: Single Responsibility Principle + Layered Architecture.
  * Constructor Injection: nhận Service qua constructor thay vì tự new.
+ * Fix 3.10: Loại bỏ từ khóa static.
+ * Bây giờ mỗi ClientHandler có thể đóng vai trò là một kênh phát tin.
  */
-public class ClientHandler implements Runnable {
+public class ClientHandler implements Runnable , BroadcastChannel {
 
     private static final CopyOnWriteArrayList<ClientHandler> activeClients =
             new CopyOnWriteArrayList<>();
@@ -123,7 +126,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    public static void broadcast(String json) {
+    public  void broadcast(String json) {
         activeClients.forEach(c -> { if (c.out != null) c.out.println(json); });
     }
 

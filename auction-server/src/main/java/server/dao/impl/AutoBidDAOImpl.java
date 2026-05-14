@@ -16,6 +16,11 @@ import java.util.List;
  * Fix type: getAuctionId() giờ trả về int trực tiếp (AutoBidConfig đã sửa).
  */
 public class AutoBidDAOImpl implements AutoBidDAO {
+    private final server.dao.interfaces.UserDAO userDAO;
+
+    public AutoBidDAOImpl(server.dao.interfaces.UserDAO userDAO) {
+        this.userDAO = userDAO;
+    }
 
     @Override
     public void insert(Object obj) throws Exception {
@@ -158,25 +163,36 @@ public class AutoBidDAOImpl implements AutoBidDAO {
     }
 
     @Override
-    public void deleteByAuctionId(int auctionId) throws Exception {
-        String sql = "DELETE FROM auto_bids WHERE auction_id = ?";
+    public void deleteByAuctionIdAndBidderId(int auctionId , int bidderId) throws Exception {
+        String sql = "DELETE FROM auto_bids WHERE auction_id = ? AND bidder_id = ?";
 
         try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, auctionId);
+            pstmt.setInt(2, bidderId); // Fix 3.9: Gán đúng ID người cần xóa
             pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new Exception("Lỗi khi xóa cấu hình Auto-bid: " + e.getMessage());
         }
     }
 
-    private AutoBidConfig mapResultSetToAutoBid(ResultSet rs) throws SQLException {
+    private AutoBidConfig mapResultSetToAutoBid(ResultSet rs) throws Exception {
         AutoBidConfig autoBid = new AutoBidConfig();
         autoBid.setId(rs.getInt("autobid_id"));
         autoBid.setAuctionId(rs.getInt("auction_id"));   // int trực tiếp
 
-        Bidder bidder = new Bidder();
-        bidder.setUserId(rs.getInt("bidder_id"));
-        autoBid.setBidder(bidder);
+        int bidderId = rs.getInt("bidder_id");
+        server.models.users.User user = userDAO.findById(bidderId);
+
+        if (user instanceof Bidder) {
+            autoBid.setBidder((Bidder) user);
+        } else {
+            // Trường hợp dự phòng nếu không tìm thấy hoặc lỗi ép kiểu
+            Bidder fallback = new Bidder();
+            fallback.setUserId(bidderId);
+            autoBid.setBidder(fallback);
+        }
 
         autoBid.setMaxBid(rs.getBigDecimal("max_bid"));
         autoBid.setIncrement(rs.getBigDecimal("increment_step"));

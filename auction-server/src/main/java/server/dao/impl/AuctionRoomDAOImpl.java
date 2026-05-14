@@ -18,6 +18,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AuctionRoomDAOImpl implements AuctionRoomDAO {
+    private final ItemDAO itemDAO;
+    private final UserDAO userDAO;
+
+    public AuctionRoomDAOImpl(ItemDAO itemDAO, UserDAO userDAO) {
+        this.itemDAO = itemDAO;
+        this.userDAO = userDAO;
+    }
 
     // DTO nội bộ để lưu dữ liệu thô từ ResultSet trước khi đóng
     private static class AuctionRoomRaw {
@@ -194,9 +201,6 @@ public class AuctionRoomDAOImpl implements AuctionRoomDAO {
      * vì ResultSet gốc đã được đóng trước khi phương thức này được gọi.
      */
     private AuctionRoom buildFromRaw(AuctionRoomRaw raw) throws Exception {
-        ItemDAO itemDAO = new ItemDAOImpl();
-        UserDAO userDAO = new UserDAOImpl();
-
         Item item = itemDAO.findById(raw.itemId);
 
         User winner = null;

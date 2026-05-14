@@ -6,6 +6,7 @@ import server.dao.impl.BidMessageDAOImpl;
 import server.dao.impl.ItemDAOImpl;
 import server.dao.impl.UserDAOImpl;
 import server.networks.ClientHandler;
+import server.networks.interfaces.BroadcastChannel;
 import server.services.AuctionService;
 import server.services.ItemService;
 import server.services.UserService;
@@ -33,15 +34,18 @@ public class MainServer {
         // ── Wiring DAO ───────────────────────────────────────────────
         UserDAOImpl        userDAO    = new UserDAOImpl();
         ItemDAOImpl        itemDAO    = new ItemDAOImpl();
-        AuctionRoomDAOImpl auctionDAO = new AuctionRoomDAOImpl();
+        AuctionRoomDAOImpl auctionDAO = new AuctionRoomDAOImpl(itemDAO, userDAO);
         BidMessageDAOImpl  bidDAO     = new BidMessageDAOImpl();
-        AutoBidDAOImpl     autoBidDAO = new AutoBidDAOImpl();
+        AutoBidDAOImpl     autoBidDAO = new AutoBidDAOImpl(userDAO);
 
         // ── Wiring Service (Constructor Injection) ───────────────────
         UserService    userService    = new UserService(userDAO);
         ItemService    itemService    = new ItemService(itemDAO);
+
+        BroadcastChannel broadcaster = (json) -> ClientHandler.broadcast(json);
+
         AuctionService auctionService = AuctionService.getInstance(
-                auctionDAO, itemDAO, bidDAO, userDAO, autoBidDAO);
+                auctionDAO, itemDAO, bidDAO, userDAO, autoBidDAO , broadcaster);
 
         // ── Background scheduler ─────────────────────────────────────
         startBackgroundAuctionQuitter(auctionService);

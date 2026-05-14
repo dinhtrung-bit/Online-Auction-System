@@ -55,7 +55,7 @@ public class ClientMain {
             if (socket != null && !socket.isClosed()) return;
             socket = new Socket();
             socket.connect(
-                    new java.net.InetSocketAddress("localhost", 8080),
+                    new java.net.InetSocketAddress("6hfggtcuko.localto.net", 3583),
                     CONNECT_TIMEOUT_MS
             );
             out    = new PrintWriter(socket.getOutputStream(), true);

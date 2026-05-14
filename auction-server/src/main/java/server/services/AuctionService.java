@@ -14,6 +14,7 @@ import server.models.items.Item;
 import server.models.users.Bidder;
 import server.models.users.User;
 import server.networks.ClientHandler;
+import server.networks.interfaces.BroadcastChannel;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,24 +32,29 @@ public class AuctionService {
     private final UserDAO        userDAO;
     private final AutoBidDAO     autoBidDAO;
 
+    private final BroadcastChannel broadcaster;
+
     private ConcurrentHashMap<Long, AuctionRoom> activeRooms;
 
     private AuctionService(AuctionRoomDAO roomDAO, ItemDAO itemDAO,
-                           BidMessageDAO bidDAO, UserDAO userDAO, AutoBidDAO autoBidDAO) {
+                           BidMessageDAO bidDAO, UserDAO userDAO,
+                           AutoBidDAO autoBidDAO, BroadcastChannel broadcaster) {
         this.roomDAO    = roomDAO;
         this.itemDAO    = itemDAO;
         this.bidDAO     = bidDAO;
         this.userDAO    = userDAO;
         this.autoBidDAO = autoBidDAO;
+        this.broadcaster = broadcaster;
         this.activeRooms = new ConcurrentHashMap<>();
         loadRoomsFromDatabase();
     }
 
     public static synchronized AuctionService getInstance(
             AuctionRoomDAO roomDAO, ItemDAO itemDAO,
-            BidMessageDAO bidDAO, UserDAO userDAO, AutoBidDAO autoBidDAO) {
+            BidMessageDAO bidDAO, UserDAO userDAO,
+            AutoBidDAO autoBidDAO, BroadcastChannel broadcaster) {
         if (instance == null) {
-            instance = new AuctionService(roomDAO, itemDAO, bidDAO, userDAO, autoBidDAO);
+            instance = new AuctionService(roomDAO, itemDAO, bidDAO, userDAO, autoBidDAO , broadcaster);
         }
         return instance;
     }
@@ -150,7 +156,7 @@ public class AuctionService {
                 BigDecimal nextBid = room.getCurrentPrice().add(config.getIncrement());
 
                 if (nextBid.compareTo(config.getMaxBid()) > 0) {
-                    ClientHandler.broadcast(new com.google.gson.Gson().toJson(
+                    broadcaster.broadcast(new com.google.gson.Gson().toJson(
                             new server.networks.dto.MessageDTO("AUTO_BID_EXCEEDED",
                                     String.valueOf(room.getId()))
                     ));
@@ -173,7 +179,7 @@ public class AuctionService {
                 roomDAO.updateWithOptimisticLock(room, oldPrice);
                 bidDAO.insert(new BidRecord(room.getId(), fullBidder.getUserId(), nextBid));
 
-                ClientHandler.broadcast(new com.google.gson.Gson().toJson(
+                broadcaster.broadcast(new com.google.gson.Gson().toJson(
                         new server.networks.dto.MessageDTO("UPDATE_PRICE",
                                 room.getId() + ":" + nextBid.toPlainString() + ":" + fullBidder.getUsername())
                 ));
@@ -202,7 +208,7 @@ public class AuctionService {
                     updateRoomInDB(room);
                     System.out.println(">>> [Hệ thống] Room " + room.getId() + " START.");
 
-                    ClientHandler.broadcast(new com.google.gson.Gson().toJson(
+                    broadcaster.broadcast(new com.google.gson.Gson().toJson(
                             new server.networks.dto.MessageDTO("AUCTION_STARTED",
                                     String.valueOf(room.getId()))
                     ));
@@ -211,7 +217,7 @@ public class AuctionService {
                     processAuctionSettlement(room);
                     updateRoomInDB(room);
 
-                    ClientHandler.broadcast(new com.google.gson.Gson().toJson(
+                    broadcaster.broadcast(new com.google.gson.Gson().toJson(
                             new server.networks.dto.MessageDTO("AUCTION_FINISHED",
                                     String.valueOf(room.getId()))
                     ));
@@ -327,8 +333,8 @@ public class AuctionService {
         triggerAutoBidsForRoom(auctionId, bidder);
     }
 
-    public void cancelAutoBid(int auctionId) throws Exception {
-        autoBidDAO.deleteByAuctionId(auctionId);
+    public void cancelAutoBid(int auctionId, int bidderId) throws Exception {
+        autoBidDAO.deleteByAuctionIdAndBidderId(auctionId, bidderId);
     }
 
     /**
