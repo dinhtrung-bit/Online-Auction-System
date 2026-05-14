@@ -55,7 +55,7 @@ public class AuctionRequestHandler {
             String result = auctionService.handleBidRequest(
                     Long.parseLong(roomId), (Bidder) loggedInUser, Double.parseDouble(amount));
             if ("SUCCESS".equals(result)) {
-                ClientHandler.broadcast(gson.toJson(new MessageDTO("UPDATE_PRICE",
+                auctionService.getBroadcaster().broadcast(gson.toJson(new MessageDTO("UPDATE_PRICE",
                         roomId + ":" + amount + ":" + userBid)));
                 return new MessageDTO("BID_SUCCESS", "Đặt giá thành công");
             }
@@ -201,7 +201,7 @@ public class AuctionRequestHandler {
             int auctionId = Integer.parseInt(request.getPayload().trim());
             String result = auctionService.cancelAuctionBySeller(auctionId, loggedInUser.getUserId());
             if ("SUCCESS".equals(result)) {
-                ClientHandler.broadcast(gson.toJson(
+                auctionService.getBroadcaster().broadcast(gson.toJson(
                         new MessageDTO("AUCTION_CANCELED", String.valueOf(auctionId))));
                 return new MessageDTO("DELETE_AUCTION_SUCCESS", "Đã hủy phiên đấu giá #" + auctionId);
             }
@@ -218,7 +218,7 @@ public class AuctionRequestHandler {
             int auctionId = Integer.parseInt(request.getPayload().trim());
             String result = auctionService.cancelAuctionByAdmin(auctionId);
             if ("SUCCESS".equals(result)) {
-                ClientHandler.broadcast(gson.toJson(
+                auctionService.getBroadcaster().broadcast(gson.toJson(
                         new MessageDTO("AUCTION_CANCELED", String.valueOf(auctionId))));
                 return new MessageDTO("ADMIN_CANCEL_AUCTION_SUCCESS", "Đã hủy phiên đấu giá #" + auctionId);
             }

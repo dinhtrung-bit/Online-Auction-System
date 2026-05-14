@@ -49,6 +49,10 @@ public class AuctionService {
         loadRoomsFromDatabase();
     }
 
+    public BroadcastChannel getBroadcaster() {
+        return this.broadcaster;
+    }
+
     public static synchronized AuctionService getInstance(
             AuctionRoomDAO roomDAO, ItemDAO itemDAO,
             BidMessageDAO bidDAO, UserDAO userDAO,

@@ -40,7 +40,8 @@ public class AutoBidRequestHandler {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
         try {
             int auctionId = Integer.parseInt(request.getPayload().trim());
-            auctionService.cancelAutoBid(auctionId);
+            int userId = loggedInUser.getUserId();
+            auctionService.cancelAutoBid(auctionId ,userId);
             return new MessageDTO("CANCEL_AUTO_BID_SUCCESS", "Hủy auto bid thành công!");
         } catch (Exception e) {
             return new MessageDTO("CANCEL_AUTO_BID_FAILED", "Lỗi: " + e.getMessage());
