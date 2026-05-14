@@ -1,15 +1,26 @@
 package server.dao.interfaces;
 
-import server.dao.core.GenericDAO;
-import server.models.auction.BidMessage;
+import server.models.auction.BidRecord;
 
 import java.util.List;
 
-public interface BidMessageDAO extends GenericDAO<BidMessage> {
+/**
+ * Interface DAO cho bảng bid_message.
+ * Tất cả method dùng BidRecord (entity DB), không dùng BidMessage (DTO mạng).
+ */
+public interface BidMessageDAO {
 
-    // Lấy toàn bộ lịch sử các lần đặt giá của một phòng đấu giá
-    List<BidMessage> getBidHistoryByAuctionRoomId(int auctionRoomId) throws Exception;
+    void insert(BidRecord obj) throws Exception;
 
-    // Lấy ra mức giá đặt cao nhất hiện tại của phòng đấu giá
-    BidMessage getHighestBid(int auctionRoomId) throws Exception;
+    void update(BidRecord obj) throws Exception;
+
+    void delete(int id) throws Exception;
+
+    List<BidRecord> findAll() throws Exception;
+
+    BidRecord findById(int id) throws Exception;
+
+    List<BidRecord> getBidHistoryByAuctionRoomId(int auctionRoomId) throws Exception;
+
+    BidRecord getHighestBid(int auctionRoomId) throws Exception;
 }

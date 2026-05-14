@@ -1,23 +1,15 @@
-# IDE files
-.idea/
-.vscode/
-*.iml
+# =============================================
+# FIX 3.1: Sửa typo tên file trong .gitignore
+# Trước: auction-server/src/main/resources/config.propertiess.db  ← SAI (thừa 's.db')
+# Sau:   **/config.properties                                      ← ĐÚNG
+# =============================================
 
-# Build files
+# Ignore file cấu hình chứa thông tin nhạy cảm (DB password, v.v.)
+**/config.properties
+
+# Các file thường bỏ qua
+*.class
+*.jar
 target/
-build/
-.gradle/
-
-# System files
-.DS_Store
-Thumbs.db
-
-# IntelliJ out folder
-out/
-
-# Database file local
-data.db
-
-# Cấu hình DB — chứa credentials nhạy cảm, KHÔNG commit lên Git
-# Hãy commit file config.properties.example (template không có thông tin thật)
-auction-server/src/main/resources/config.propertiess.db
+.idea/
+*.imlmain/resources/config.propertiess.db
