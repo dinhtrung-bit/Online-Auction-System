@@ -2,36 +2,47 @@ package server.models.users;
 
 import java.math.BigDecimal;
 
-// 4. INHERITANCE: Bidder kế thừa tất cả thuộc tính/hàm từ User
+/**
+ * Bidder — người tham gia đặt giá.
+ *
+ * Fix 3.4: dùng getAccountBalance() thay vì truy cập field protected trực tiếp.
+ * Fix 3.5: override canBid() = true để handler dùng user.canBid() thay vì instanceof.
+ */
 public class Bidder extends User {
-    // Thuộc tính riêng của người mua
-    private int reputationScore; // Điểm uy tín (tránh spam bid)
+
+    private int reputationScore;
 
     public Bidder() {
         super();
-        this.reputationScore = 100; // Mặc định khi tạo mới
+        this.reputationScore = 100;
     }
 
     public Bidder(int userId, String username, String passwordHash, String email, BigDecimal accountBalance) {
-        // Gọi Constructor của lớp cha (User)
         super(userId, username, passwordHash, email, accountBalance);
         this.reputationScore = 100;
     }
 
-    // Đa hình (Polymorphism): Ghi đè phương thức của lớp cha
     @Override
     public String getRole() {
         return "BIDDER";
     }
-    public BigDecimal getBalance(){return accountBalance;}
 
-    public int getReputationScore() { return reputationScore; }
-    public void setReputationScore(int reputationScore) { this.reputationScore = reputationScore; }
+    /** Bidder được phép đặt giá. */
+    @Override
+    public boolean canBid() {
+        return true;
+    }
 
-    // Nghiệp vụ riêng: Kiểm tra xem người này có đủ tiền để đặt mức giá đó không
-   /* public boolean canPlaceBid(BigDecimal bidAmount) {
-        return this.accountBalance >= bidAmount;*/
+    /** Kiểm tra số dư đủ để đặt mức giá cho trước. */
     public boolean canPlaceBid(BigDecimal bidAmount) {
-        return this.accountBalance.compareTo(bidAmount) >= 0;
+        return getAccountBalance().compareTo(bidAmount) >= 0;
     }
+
+    public int getReputationScore() {
+        return reputationScore;
     }
+
+    public void setReputationScore(int reputationScore) {
+        this.reputationScore = reputationScore;
+    }
+}

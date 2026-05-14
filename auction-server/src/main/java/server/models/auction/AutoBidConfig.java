@@ -4,9 +4,19 @@ import server.models.users.Bidder;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * AutoBidConfig — cấu hình đặt giá tự động của một Bidder cho một phiên đấu giá.
+ *
+ * Fix 3.1 (naming + type):
+ *   Trường auctionId giờ là int thay vì AuctionRoom.
+ *   Tên "auctionId" khớp với kiểu int — không còn nhập nhằng "tên là id nhưng kiểu là Object".
+ *   AuctionService.registerAutoBid() không cần tạo AuctionRoom rỗng làm workaround nữa.
+ *   AutoBidDAOImpl đọc trực tiếp getAuctionId() (int) thay vì getAuctionId().getId().
+ */
 public class AutoBidConfig implements Comparable<AutoBidConfig> {
+
     private int id;
-    private AuctionRoom auctionId;
+    private int auctionId;   // int — khớp tên và kiểu
     private Bidder bidder;
     private BigDecimal maxBid;
     private BigDecimal increment;
@@ -15,7 +25,7 @@ public class AutoBidConfig implements Comparable<AutoBidConfig> {
     public AutoBidConfig() {
     }
 
-    public AutoBidConfig(AuctionRoom auctionId, Bidder bidder, BigDecimal maxBid, BigDecimal increment) {
+    public AutoBidConfig(int auctionId, Bidder bidder, BigDecimal maxBid, BigDecimal increment) {
         this.auctionId = auctionId;
         this.bidder = bidder;
         this.maxBid = maxBid;
@@ -31,11 +41,11 @@ public class AutoBidConfig implements Comparable<AutoBidConfig> {
         this.id = id;
     }
 
-    public AuctionRoom getAuctionId() {
+    public int getAuctionId() {
         return auctionId;
     }
 
-    public void setAuctionId(AuctionRoom auctionId) {
+    public void setAuctionId(int auctionId) {
         this.auctionId = auctionId;
     }
 

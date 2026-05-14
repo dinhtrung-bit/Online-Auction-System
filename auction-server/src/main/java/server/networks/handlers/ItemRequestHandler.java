@@ -2,7 +2,6 @@ package server.networks.handlers;
 
 import com.google.gson.Gson;
 import server.models.items.Item;
-import server.models.users.Seller;
 import server.models.users.User;
 import server.networks.dto.MessageDTO;
 import server.services.ItemService;
@@ -74,10 +73,7 @@ public class ItemRequestHandler {
                 m.put("name",          i.getName());
                 m.put("description",   i.getDescription());
                 m.put("category",      i.getCategoryInfo());
-                m.put("categoryInfo",  i.getCategoryInfo());
                 m.put("startingPrice", i.getStartingPrice());
-                m.put("imagePath",     i.getImagePath());
-                m.put("bidIncrement",  i.getBidIncrement());
                 return m;
             }).collect(Collectors.toList());
             return new MessageDTO("MY_ITEMS", gson.toJson(result));
@@ -88,7 +84,7 @@ public class ItemRequestHandler {
 
     private MessageDTO requireSeller(User loggedInUser) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
-        if (!(loggedInUser instanceof Seller))
+        if (!loggedInUser.canSell())
             return new MessageDTO("ERROR", "Chỉ Seller mới được thực hiện hành động này!");
         return null;
     }

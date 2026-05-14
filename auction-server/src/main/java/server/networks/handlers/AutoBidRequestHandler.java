@@ -1,7 +1,5 @@
 package server.networks.handlers;
 
-import server.models.auction.AutoBidConfig;
-import server.models.auction.AuctionRoom;
 import server.models.users.Bidder;
 import server.models.users.User;
 import server.networks.dto.MessageDTO;
@@ -23,10 +21,10 @@ public class AutoBidRequestHandler {
 
     public MessageDTO handleSetAutoBid(MessageDTO request, User loggedInUser) {
         if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
-        if (!(loggedInUser instanceof Bidder))
+        if (!loggedInUser.canBid())
             return new MessageDTO("SET_AUTO_BID_FAILED", "Chỉ Bidder mới được đặt auto-bid!");
         try {
-            String[] data    = request.getPayload().split(":");
+            String[] data = request.getPayload().split(":");
             int auctionId    = Integer.parseInt(data[0]);
             BigDecimal max   = new BigDecimal(data[1]);
             BigDecimal step  = new BigDecimal(data[2]);

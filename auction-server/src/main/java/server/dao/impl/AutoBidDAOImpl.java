@@ -2,7 +2,6 @@ package server.dao.impl;
 
 import server.dao.core.DBConnection;
 import server.dao.interfaces.AutoBidDAO;
-import server.models.auction.AuctionRoom;
 import server.models.auction.AutoBidConfig;
 import server.models.users.Bidder;
 
@@ -10,6 +9,12 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * AutoBidDAOImpl — thao tác DB cho bảng auto_bids.
+ *
+ * Fix connection leak: tất cả Connection đều nằm trong try-with-resources.
+ * Fix type: getAuctionId() giờ trả về int trực tiếp (AutoBidConfig đã sửa).
+ */
 public class AutoBidDAOImpl implements AutoBidDAO {
 
     @Override
@@ -17,19 +22,18 @@ public class AutoBidDAOImpl implements AutoBidDAO {
         AutoBidConfig autoBid = (AutoBidConfig) obj;
 
         String sql = """
-                INSERT INTO auto_bids 
+                INSERT INTO auto_bids
                 (auction_id, bidder_id, max_bid, increment_step, created_at)
                 VALUES (?, ?, ?, ?, NOW())
                 """;
 
-        Connection conn = DBConnection.getInstance();
+        try (Connection conn = DBConnection.getInstance();
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            pstmt.setInt(1, autoBid.getAuctionId().getId());
+            pstmt.setInt(1, autoBid.getAuctionId());
             pstmt.setInt(2, autoBid.getBidder().getUserId());
             pstmt.setBigDecimal(3, autoBid.getMaxBid());
             pstmt.setBigDecimal(4, autoBid.getIncrement());
-
             pstmt.executeUpdate();
 
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
@@ -45,20 +49,19 @@ public class AutoBidDAOImpl implements AutoBidDAO {
         AutoBidConfig autoBid = (AutoBidConfig) obj;
 
         String sql = """
-                UPDATE auto_bids 
+                UPDATE auto_bids
                 SET auction_id = ?, bidder_id = ?, max_bid = ?, increment_step = ?
                 WHERE autobid_id = ?
                 """;
 
-        Connection conn = DBConnection.getInstance();
+        try (Connection conn = DBConnection.getInstance();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, autoBid.getAuctionId().getId());
+            pstmt.setInt(1, autoBid.getAuctionId());
             pstmt.setInt(2, autoBid.getBidder().getUserId());
             pstmt.setBigDecimal(3, autoBid.getMaxBid());
             pstmt.setBigDecimal(4, autoBid.getIncrement());
             pstmt.setInt(5, autoBid.getId());
-
             pstmt.executeUpdate();
         }
     }
@@ -67,9 +70,9 @@ public class AutoBidDAOImpl implements AutoBidDAO {
     public void delete(int id) throws Exception {
         String sql = "DELETE FROM auto_bids WHERE autobid_id = ?";
 
-        Connection conn = DBConnection.getInstance();
+        try (Connection conn = DBConnection.getInstance();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             pstmt.executeUpdate();
         }
@@ -79,37 +82,32 @@ public class AutoBidDAOImpl implements AutoBidDAO {
     public Object findById(int id) throws Exception {
         String sql = "SELECT * FROM auto_bids WHERE autobid_id = ?";
 
-        Connection conn = DBConnection.getInstance();
+        try (Connection conn = DBConnection.getInstance();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
-
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     return mapResultSetToAutoBid(rs);
                 }
             }
         }
-
         return null;
     }
 
     @Override
     public List findAll() throws Exception {
         List<AutoBidConfig> list = new ArrayList<>();
-
         String sql = "SELECT * FROM auto_bids";
 
-        Connection conn = DBConnection.getInstance();
-
-        try (PreparedStatement pstmt = conn.prepareStatement(sql);
+        try (Connection conn = DBConnection.getInstance();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
                 list.add(mapResultSetToAutoBid(rs));
             }
         }
-
         return list;
     }
 
@@ -118,50 +116,44 @@ public class AutoBidDAOImpl implements AutoBidDAO {
         List<AutoBidConfig> list = new ArrayList<>();
 
         String sql = """
-                SELECT * FROM auto_bids 
-                WHERE auction_id = ? 
+                SELECT * FROM auto_bids
+                WHERE auction_id = ?
                 ORDER BY created_at ASC
                 """;
 
-        try {
-            Connection conn = DBConnection.getInstance();
+        try (Connection conn = DBConnection.getInstance();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setInt(1, auctionId);
-
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    while (rs.next()) {
-                        list.add(mapResultSetToAutoBid(rs));
-                    }
+            pstmt.setInt(1, auctionId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToAutoBid(rs));
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(">>> [AutoBidDAO] getAutoBidsByAuctionId lỗi: " + e.getMessage());
         }
-
         return list;
     }
 
     @Override
     public AutoBidConfig findByUserIdAndAuctionId(int userId, int auctionId) throws Exception {
         String sql = """
-                SELECT * FROM auto_bids 
+                SELECT * FROM auto_bids
                 WHERE bidder_id = ? AND auction_id = ?
                 """;
 
-        Connection conn = DBConnection.getInstance();
+        try (Connection conn = DBConnection.getInstance();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, userId);
             pstmt.setInt(2, auctionId);
-
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     return mapResultSetToAutoBid(rs);
                 }
             }
         }
-
         return null;
     }
 
@@ -169,9 +161,9 @@ public class AutoBidDAOImpl implements AutoBidDAO {
     public void deleteByAuctionId(int auctionId) throws Exception {
         String sql = "DELETE FROM auto_bids WHERE auction_id = ?";
 
-        Connection conn = DBConnection.getInstance();
+        try (Connection conn = DBConnection.getInstance();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, auctionId);
             pstmt.executeUpdate();
         }
@@ -179,12 +171,8 @@ public class AutoBidDAOImpl implements AutoBidDAO {
 
     private AutoBidConfig mapResultSetToAutoBid(ResultSet rs) throws SQLException {
         AutoBidConfig autoBid = new AutoBidConfig();
-
         autoBid.setId(rs.getInt("autobid_id"));
-
-        AuctionRoom auction = new AuctionRoom();
-        auction.setId(rs.getInt("auction_id"));
-        autoBid.setAuctionId(auction);
+        autoBid.setAuctionId(rs.getInt("auction_id"));   // int trực tiếp
 
         Bidder bidder = new Bidder();
         bidder.setUserId(rs.getInt("bidder_id"));
@@ -197,7 +185,6 @@ public class AutoBidDAOImpl implements AutoBidDAO {
         if (timestamp != null) {
             autoBid.setRegisterTime(timestamp.toLocalDateTime());
         }
-
         return autoBid;
     }
 }
