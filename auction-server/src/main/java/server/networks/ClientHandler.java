@@ -29,9 +29,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Fix 3.10: Loại bỏ từ khóa static.
  * Bây giờ mỗi ClientHandler có thể đóng vai trò là một kênh phát tin.
  */
-public class ClientHandler implements Runnable , BroadcastChannel {
+public class ClientHandler implements Runnable  {
 
-    private static final CopyOnWriteArrayList<ClientHandler> activeClients =
+    public static final CopyOnWriteArrayList<ClientHandler> activeClients =
             new CopyOnWriteArrayList<>();
 
     private final Socket clientSocket;
@@ -126,7 +126,7 @@ public class ClientHandler implements Runnable , BroadcastChannel {
         }
     }
 
-    public  void broadcast(String json) {
+    public void broadcast(String json) {
         activeClients.forEach(c -> { if (c.out != null) c.out.println(json); });
     }
 
@@ -136,6 +136,12 @@ public class ClientHandler implements Runnable , BroadcastChannel {
             if (clientSocket != null && !clientSocket.isClosed()) clientSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void sendMessage(String json) {
+        if (out != null) {
+            out.println(json);
         }
     }
 

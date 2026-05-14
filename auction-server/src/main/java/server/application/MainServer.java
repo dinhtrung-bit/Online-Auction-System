@@ -17,6 +17,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static server.networks.ClientHandler.activeClients;
+
 /**
  * MainServer — Composition Root.
  *
@@ -42,7 +44,14 @@ public class MainServer {
         UserService    userService    = new UserService(userDAO);
         ItemService    itemService    = new ItemService(itemDAO);
 
-        BroadcastChannel broadcaster = (json) -> ClientHandler.broadcast(json);
+        BroadcastChannel broadcaster = new BroadcastChannel() {
+            @Override
+            public void broadcast(String json) {
+                // Gửi tin cho mọi client mà không cần thông qua hàm static của ClientHandler
+                for (ClientHandler client : activeClients) {
+                }
+            }
+        };
 
         AuctionService auctionService = AuctionService.getInstance(
                 auctionDAO, itemDAO, bidDAO, userDAO, autoBidDAO , broadcaster);
