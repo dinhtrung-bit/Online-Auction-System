@@ -1,45 +1,26 @@
 package server.dao.impl;
 
 import server.dao.core.DBConnection;
+import server.dao.core.GenericDAO;
 import server.models.finance.DepositRequest;
 
 import java.math.BigDecimal;
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/** DAO riêng cho workflow nạp tiền cần Admin duyệt. */
-public class DepositRequestDAOImpl {
+/**
+ * DAO hoàn thiện: Chống SQL Injection, tối ưu hiệu năng,
+ * tương thích GenericDAO và giữ lại các hàm nghiệp vụ cũ.
+ */
+public class DepositRequestDAOImpl implements GenericDAO<DepositRequest> {
 
-    public DepositRequestDAOImpl() {
-        ensureTable();
-    }
+    // Hằng số truy vấn dùng chung để dễ bảo trì
+    private static final String BASE_SELECT = "SELECT dr.*, u.username FROM deposit_requests dr LEFT JOIN users u ON u.user_id = dr.user_id";
 
-    private void ensureTable() {
-        String sql = "CREATE TABLE IF NOT EXISTS deposit_requests (" +
-                "request_id INT AUTO_INCREMENT PRIMARY KEY," +
-                "user_id INT NOT NULL," +
-                "amount DECIMAL(18,2) NOT NULL," +
-                "status VARCHAR(20) NOT NULL DEFAULT 'PENDING'," +
-                "note VARCHAR(500) NULL," +
-                "admin_id INT NULL," +
-                "admin_note VARCHAR(500) NULL," +
-                "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                "reviewed_at TIMESTAMP NULL," +
-                "INDEX idx_deposit_status(status)," +
-                "INDEX idx_deposit_user(user_id)" +
-                ")";
-        try (Connection conn = DBConnection.getInstance();
-             Statement st = conn.createStatement()) {
-            st.execute(sql);
-        } catch (Exception e) {
-            System.err.println(">>> [DB] Không thể tạo bảng deposit_requests: " + e.getMessage());
-        }
-    }
+    // --- 1. PHƯƠNG THỨC TƯƠNG THÍCH (CHO CODE CŨ) ---
 
     public DepositRequest create(int userId, BigDecimal amount, String note) throws Exception {
-        ensureTable();
         String sql = "INSERT INTO deposit_requests(user_id, amount, status, note) VALUES (?, ?, 'PENDING', ?)";
         try (Connection conn = DBConnection.getInstance();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -51,46 +32,71 @@ public class DepositRequestDAOImpl {
                 if (rs.next()) return findById(rs.getInt(1));
             }
         }
-        throw new Exception("Không tạo được yêu cầu nạp tiền.");
+        throw new Exception("Lỗi: Không thể tạo yêu cầu nạp tiền mới.");
     }
 
-    public DepositRequest findById(int requestId) throws Exception {
-        ensureTable();
-        String sql = baseSelect() + " WHERE dr.request_id = ?";
+    public BigDecimal sumByStatus(String status) throws Exception {
+        String sql = "SELECT COALESCE(SUM(amount), 0) FROM deposit_requests WHERE status = ?";
         try (Connection conn = DBConnection.getInstance();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, requestId);
+            ps.setString(1, status);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return map(rs);
+                return rs.next() ? rs.getBigDecimal(1) : BigDecimal.ZERO;
             }
         }
-        return null;
     }
 
-    public List<DepositRequest> findAll() throws Exception {
-        ensureTable();
-        String sql = baseSelect() + " ORDER BY dr.created_at DESC";
-        return queryList(sql);
+    // --- 2. TRIỂN KHAI GENERIC DAO ---
+
+    @Override
+    public void insert(DepositRequest obj) throws Exception {
+        create(obj.getUserId(), obj.getAmount(), obj.getNote());
     }
+
+    @Override
+    public void update(DepositRequest obj) throws Exception {
+        String sql = "UPDATE deposit_requests SET amount = ?, status = ?, note = ?, admin_id = ?, admin_note = ?, reviewed_at = ? WHERE request_id = ?";
+        execute(sql, ps -> {
+            ps.setBigDecimal(1, obj.getAmount());
+            ps.setString(2, obj.getStatus());
+            ps.setString(3, obj.getNote());
+            ps.setObject(4, obj.getAdminId());
+            ps.setString(5, obj.getAdminNote());
+            ps.setObject(6, obj.getReviewedAt() != null ? Timestamp.valueOf(obj.getReviewedAt()) : null);
+            ps.setInt(7, obj.getId()); 
+        });
+    }
+
+    @Override
+    public void delete(int id) throws Exception {
+        execute("DELETE FROM deposit_requests WHERE request_id = ?", ps -> ps.setInt(1, id));
+    }
+
+    @Override
+    public DepositRequest findById(int id) throws Exception {
+        String sql = BASE_SELECT + " WHERE dr.request_id = ?";
+        try (Connection conn = DBConnection.getInstance();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? map(rs) : null;
+            }
+        }
+    }
+
+    @Override
+    public List<DepositRequest> findAll() throws Exception {
+        return queryList(BASE_SELECT + " ORDER BY dr.created_at DESC", ps -> {});
+    }
+
+    // --- 3. CÁC HÀM NGHIỆP VỤ THIẾT YẾU ---
 
     public List<DepositRequest> findPending() throws Exception {
-        ensureTable();
-        String sql = baseSelect() + " WHERE dr.status = 'PENDING' ORDER BY dr.created_at ASC";
-        return queryList(sql);
+        return queryList(BASE_SELECT + " WHERE dr.status = 'PENDING' ORDER BY dr.created_at ASC", ps -> {});
     }
 
     public List<DepositRequest> findByUserId(int userId) throws Exception {
-        ensureTable();
-        String sql = baseSelect() + " WHERE dr.user_id = ? ORDER BY dr.created_at DESC";
-        try (Connection conn = DBConnection.getInstance();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, userId);
-            try (ResultSet rs = ps.executeQuery()) {
-                List<DepositRequest> list = new ArrayList<>();
-                while (rs.next()) list.add(map(rs));
-                return list;
-            }
-        }
+        return queryList(BASE_SELECT + " WHERE dr.user_id = ? ORDER BY dr.created_at DESC", ps -> ps.setInt(1, userId));
     }
 
     public boolean markReviewed(Connection conn, int requestId, int adminId, String status, String adminNote) throws Exception {
@@ -106,7 +112,6 @@ public class DepositRequestDAOImpl {
     }
 
     public int countPending() throws Exception {
-        ensureTable();
         String sql = "SELECT COUNT(*) FROM deposit_requests WHERE status = 'PENDING'";
         try (Connection conn = DBConnection.getInstance();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -115,47 +120,37 @@ public class DepositRequestDAOImpl {
         }
     }
 
-    public BigDecimal sumByStatus(String status) throws Exception {
-        ensureTable();
-        String sql = "SELECT COALESCE(SUM(amount),0) FROM deposit_requests WHERE status = ?";
-        try (Connection conn = DBConnection.getInstance();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, status);
+    // --- 4. HÀM HỖ TRỢ (PRIVATE HELPERS) ---
+
+    @FunctionalInterface
+    private interface SQLBinder { void bind(PreparedStatement ps) throws SQLException; }
+
+    private void execute(String sql, SQLBinder binder) throws Exception {
+        try (Connection conn = DBConnection.getInstance(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            binder.bind(ps);
+            ps.executeUpdate();
+        }
+    }
+
+    private List<DepositRequest> queryList(String sql, SQLBinder binder) throws Exception {
+        try (Connection conn = DBConnection.getInstance(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            binder.bind(ps);
             try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? rs.getBigDecimal(1) : BigDecimal.ZERO;
+                List<DepositRequest> list = new ArrayList<>();
+                while (rs.next()) list.add(map(rs));
+                return list;
             }
         }
     }
 
-    private List<DepositRequest> queryList(String sql) throws Exception {
-        try (Connection conn = DBConnection.getInstance();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            List<DepositRequest> list = new ArrayList<>();
-            while (rs.next()) list.add(map(rs));
-            return list;
-        }
-    }
-
-    private String baseSelect() {
-        return "SELECT dr.*, u.username FROM deposit_requests dr " +
-                "LEFT JOIN users u ON u.user_id = dr.user_id";
-    }
-
     private DepositRequest map(ResultSet rs) throws SQLException {
-        Timestamp created = rs.getTimestamp("created_at");
-        Timestamp reviewed = rs.getTimestamp("reviewed_at");
+        Timestamp c = rs.getTimestamp("created_at");
+        Timestamp r = rs.getTimestamp("reviewed_at");
         return new DepositRequest(
-                rs.getInt("request_id"),
-                rs.getInt("user_id"),
-                rs.getString("username"),
-                rs.getBigDecimal("amount"),
-                rs.getString("status"),
-                rs.getString("note"),
-                (Integer) rs.getObject("admin_id"),
-                rs.getString("admin_note"),
-                created != null ? created.toLocalDateTime() : null,
-                reviewed != null ? reviewed.toLocalDateTime() : null
+                rs.getInt("request_id"), rs.getInt("user_id"), rs.getString("username"),
+                rs.getBigDecimal("amount"), rs.getString("status"), rs.getString("note"),
+                (Integer) rs.getObject("admin_id"), rs.getString("admin_note"),
+                c != null ? c.toLocalDateTime() : null, r != null ? r.toLocalDateTime() : null
         );
     }
 }
