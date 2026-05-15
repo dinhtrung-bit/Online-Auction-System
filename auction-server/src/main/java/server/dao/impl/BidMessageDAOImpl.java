@@ -2,9 +2,10 @@ package server.dao.impl;
 
 import server.dao.core.DBConnection;
 import server.dao.interfaces.BidMessageDAO;
-import server.models.auction.BidRecord;   // ← đổi từ BidMessage sang BidRecord
+import server.models.auction.BidRecord;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +13,10 @@ public class BidMessageDAOImpl implements BidMessageDAO {
 
     @Override
     public void insert(BidRecord obj) throws Exception {
+        if (obj == null) {
+            throw new IllegalArgumentException("BidRecord không được null.");
+        }
+
         String sql = """
                 INSERT INTO bid_message (auction_id, bidder_id, bid_amount, bid_time)
                 VALUES (?, ?, ?, ?)
@@ -23,7 +28,12 @@ public class BidMessageDAOImpl implements BidMessageDAO {
             ps.setInt(1, obj.getAuctionRoomId());
             ps.setInt(2, obj.getBidderId());
             ps.setBigDecimal(3, obj.getBidAmount());
-            ps.setTimestamp(4, Timestamp.valueOf(obj.getTimestamp()));
+
+            LocalDateTime time = obj.getTimestamp() != null
+                    ? obj.getTimestamp()
+                    : LocalDateTime.now();
+
+            ps.setTimestamp(4, Timestamp.valueOf(time));
 
             ps.executeUpdate();
         }
@@ -31,25 +41,33 @@ public class BidMessageDAOImpl implements BidMessageDAO {
 
     @Override
     public void update(BidRecord obj) throws Exception {
+        if (obj == null) {
+            throw new IllegalArgumentException("BidRecord không được null.");
+        }
+
         String sql = """
                 UPDATE bid_message
-                SET auction_id = ?, bidder_id = ?, bid_amount = ?, bid_time = ?
+                SET bid_amount = ?
                 WHERE auction_id = ? AND bidder_id = ? AND bid_time = ?
                 """;
 
         try (Connection conn = DBConnection.getInstance();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, obj.getAuctionRoomId());
-            ps.setInt(2, obj.getBidderId());
-            ps.setBigDecimal(3, obj.getBidAmount());
-            ps.setTimestamp(4, Timestamp.valueOf(obj.getTimestamp()));
+            ps.setBigDecimal(1, obj.getBidAmount());
+            ps.setInt(2, obj.getAuctionRoomId());
+            ps.setInt(3, obj.getBidderId());
 
-            ps.setInt(5, obj.getAuctionRoomId());
-            ps.setInt(6, obj.getBidderId());
-            ps.setTimestamp(7, Timestamp.valueOf(obj.getTimestamp()));
+            LocalDateTime time = obj.getTimestamp() != null
+                    ? obj.getTimestamp()
+                    : LocalDateTime.now();
 
-            ps.executeUpdate();
+            ps.setTimestamp(4, Timestamp.valueOf(time));
+
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows == 0) {
+                throw new IllegalArgumentException("Không tìm thấy bid để cập nhật.");
+            }
         }
     }
 
@@ -61,7 +79,11 @@ public class BidMessageDAOImpl implements BidMessageDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);
-            ps.executeUpdate();
+
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows == 0) {
+                throw new IllegalArgumentException("Không tìm thấy bid để xóa.");
+            }
         }
     }
 
@@ -70,7 +92,7 @@ public class BidMessageDAOImpl implements BidMessageDAO {
         List<BidRecord> list = new ArrayList<>();
 
         String sql = """
-                SELECT bidder_id, auction_id, bid_amount, bid_time
+                SELECT transaction_id, bidder_id, auction_id, bid_amount, bid_time
                 FROM bid_message
                 ORDER BY bid_time ASC
                 """;
@@ -88,11 +110,34 @@ public class BidMessageDAOImpl implements BidMessageDAO {
     }
 
     @Override
+    public BidRecord findById(int id) throws Exception {
+        String sql = """
+                SELECT transaction_id, bidder_id, auction_id, bid_amount, bid_time
+                FROM bid_message
+                WHERE transaction_id = ?
+                """;
+
+        try (Connection conn = DBConnection.getInstance();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Override
     public List<BidRecord> getBidHistoryByAuctionRoomId(int auctionRoomId) throws Exception {
         List<BidRecord> list = new ArrayList<>();
 
         String sql = """
-                SELECT bidder_id, auction_id, bid_amount, bid_time
+                SELECT transaction_id, bidder_id, auction_id, bid_amount, bid_time
                 FROM bid_message
                 WHERE auction_id = ?
                 ORDER BY bid_time ASC
@@ -116,7 +161,7 @@ public class BidMessageDAOImpl implements BidMessageDAO {
     @Override
     public BidRecord getHighestBid(int auctionRoomId) throws Exception {
         String sql = """
-                SELECT bidder_id, auction_id, bid_amount, bid_time
+                SELECT transaction_id, bidder_id, auction_id, bid_amount, bid_time
                 FROM bid_message
                 WHERE auction_id = ?
                 ORDER BY bid_amount DESC, bid_time ASC
@@ -138,26 +183,6 @@ public class BidMessageDAOImpl implements BidMessageDAO {
         return null;
     }
 
-    @Override
-    public BidRecord findById(int id) throws Exception {
-        String sql = "SELECT * FROM bid_message WHERE transaction_id = ?";
-
-        try (Connection conn = DBConnection.getInstance();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, id);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapRow(rs);
-                }
-            }
-        }
-
-        return null;
-    }
-
-    // Đổi tên từ mapResultSetToBidMessage → mapRow cho gọn
     private BidRecord mapRow(ResultSet rs) throws SQLException {
         BidRecord record = new BidRecord();
 

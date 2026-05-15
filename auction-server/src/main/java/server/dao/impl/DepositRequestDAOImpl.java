@@ -8,12 +8,13 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import server.dao.interfaces.DepositRequestDAO;
 
 /**
  * DAO hoàn thiện: Chống SQL Injection, tối ưu hiệu năng,
  * tương thích GenericDAO và giữ lại các hàm nghiệp vụ cũ.
  */
-public class DepositRequestDAOImpl implements GenericDAO<DepositRequest> {
+public class DepositRequestDAOImpl implements GenericDAO<DepositRequest>, DepositRequestDAO {
 
     // Hằng số truy vấn dùng chung để dễ bảo trì
     private static final String BASE_SELECT = "SELECT dr.*, u.username FROM deposit_requests dr LEFT JOIN users u ON u.user_id = dr.user_id";

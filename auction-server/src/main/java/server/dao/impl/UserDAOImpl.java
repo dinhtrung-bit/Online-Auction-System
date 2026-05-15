@@ -5,156 +5,101 @@ import server.dao.interfaces.UserDAO;
 import server.models.users.User;
 import server.models.users.UserFactory;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.math.BigDecimal;
+
 public class UserDAOImpl implements UserDAO {
 
     @Override
     public void insert(User user) throws Exception {
-        // Sử dụng PreparedStatement để tối ưu và đảm bảo bảo mật SQL Injection
-        String sql = "INSERT INTO users(username, password_hash, role) VALUES (?, ?, ?)";
+        if (user == null) {
+            throw new IllegalArgumentException("User không được null.");
+        }
+
+        String sql = "INSERT INTO users(username, password_hash, role, balance) VALUES (?, ?, ?, ?)";
+
         try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, user.getUsername());
             pstmt.setString(2, user.getPasswordHash());
             pstmt.setString(3, user.getRole());
+            pstmt.setBigDecimal(4,
+                    user.getAccountBalance() != null ? user.getAccountBalance() : BigDecimal.ZERO);
 
-            pstmt.executeUpdate(); // Thực thi câu lệnh
+            pstmt.executeUpdate();
         }
     }
 
     @Override
     public void update(User user) throws Exception {
+        if (user == null) {
+            throw new IllegalArgumentException("User không được null.");
+        }
+
         String sql = "UPDATE users SET username = ?, password_hash = ?, role = ?, balance = ? WHERE user_id = ?";
+
         try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, user.getUsername());
             pstmt.setString(2, user.getPasswordHash());
             pstmt.setString(3, user.getRole());
-            pstmt.setBigDecimal(4, user.getAccountBalance());
+            pstmt.setBigDecimal(4,
+                    user.getAccountBalance() != null ? user.getAccountBalance() : BigDecimal.ZERO);
             pstmt.setInt(5, user.getUserId());
 
-            pstmt.executeUpdate();
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new IllegalArgumentException("Không tìm thấy user để cập nhật.");
+            }
         }
     }
 
     @Override
     public void delete(int id) throws Exception {
         String sql = "DELETE FROM users WHERE user_id = ?";
+
         try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, id);
-            pstmt.executeUpdate();
+
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new IllegalArgumentException("Không tìm thấy user để xóa.");
+            }
         }
     }
 
     @Override
     public User findByUsername(String username) throws Exception {
-        String sql = "SELECT * FROM users WHERE username = ?";
+        if (username == null || username.trim().isEmpty()) {
+            return null;
+        }
+
+        String sql = "SELECT user_id, username, password_hash, role, balance FROM users WHERE username = ?";
+
         try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, username);
+
+            pstmt.setString(1, username.trim());
+
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    int userId = rs.getInt("user_id");
-                    String uname = rs.getString("username");
-                    String passwordHash = rs.getString("password_hash");
-                    String role = rs.getString("role");
-
-                    // THÊM DÒNG NÀY: Lấy số dư từ cột 'balance' trong MySQL
-                    BigDecimal balance = rs.getBigDecimal("balance");
-                    if (balance == null) balance = BigDecimal.ZERO;
-
-                    User user = UserFactory.createUser(role, userId, uname);
-                    if (user != null) {
-                        user.setPasswordHash(passwordHash);
-                        user.setAccountBalance(balance); // Nạp tiền vào bộ nhớ
-                    }
-                    return user;
+                    return mapResultSetToUser(rs);
                 }
             }
         }
+
         return null;
     }
 
     @Override
-    public List<User> findAll() throws Exception {
-        List<User> userList = new ArrayList<>();
-        String sql = "SELECT user_id, username, password_hash, role, balance FROM users";
-        try (Connection conn = DBConnection.getInstance();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-            while (rs.next()) {
-                int userId = rs.getInt("user_id");
-                String username = rs.getString("username");
-                String passwordHash = rs.getString("password_hash");
-                String role = rs.getString("role");
-
-                User user = UserFactory.createUser(role, userId, username);
-                if (user != null) {
-                    user.setPasswordHash(passwordHash); // Nạp pass để tránh lỗi hiển thị/xử lý
-                    java.math.BigDecimal balance = rs.getBigDecimal("balance");
-                    user.setAccountBalance(balance == null ? java.math.BigDecimal.ZERO : balance);
-                    userList.add(user);
-                }
-            }
-        }
-        return userList;
-    }
-    @Override
-    public boolean transferMoney(int fromUserId, int toUserId, BigDecimal amount) {
-        String sqlWithdraw = "UPDATE Users SET accountBalance = accountBalance - ? WHERE id = ? AND accountBalance >= ?";
-        String sqlDeposit = "UPDATE Users SET accountBalance = accountBalance + ? WHERE id = ?";
-
-        // Lưu ý: Thay DBConnection.getConnection() bằng object lấy connection của dự án bạn
-        try (java.sql.Connection conn = server.dao.core.DBConnection.getInstance()) {
-            conn.setAutoCommit(false); // Bắt đầu Transaction
-
-            try (java.sql.PreparedStatement pstmtWithdraw = conn.prepareStatement(sqlWithdraw);
-                 java.sql.PreparedStatement pstmtDeposit = conn.prepareStatement(sqlDeposit)) {
-
-                // Trừ tiền người mua
-                pstmtWithdraw.setBigDecimal(1, amount);
-                pstmtWithdraw.setInt(2, fromUserId);
-                pstmtWithdraw.setBigDecimal(3, amount); // Đảm bảo số dư >= giá mua
-                int rowsAffectedWithdraw = pstmtWithdraw.executeUpdate();
-
-                // Nếu người mua không đủ tiền (rowsAffected = 0) thì Rollback
-                if (rowsAffectedWithdraw == 0) {
-                    conn.rollback();
-                    return false;
-                }
-
-                // Cộng tiền cho người bán
-                pstmtDeposit.setBigDecimal(1, amount);
-                pstmtDeposit.setInt(2, toUserId);
-                pstmtDeposit.executeUpdate();
-
-                // Nếu cả 2 lệnh trên OK -> Commit
-                conn.commit();
-                return true;
-
-            } catch (Exception ex) {
-                conn.rollback(); // Có lỗi bất ngờ thì hoàn tác toàn bộ
-                ex.printStackTrace();
-                return false;
-            } finally {
-                conn.setAutoCommit(true);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    @Override
     public User findById(int id) throws Exception {
-        String sql = "SELECT * FROM users WHERE user_id = ?";
+        String sql = "SELECT user_id, username, password_hash, role, balance FROM users WHERE user_id = ?";
 
         try (Connection conn = DBConnection.getInstance();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -167,24 +112,108 @@ public class UserDAOImpl implements UserDAO {
                 }
             }
         }
+
         return null;
     }
 
+    @Override
+    public List<User> findAll() throws Exception {
+        List<User> userList = new ArrayList<>();
+        String sql = "SELECT user_id, username, password_hash, role, balance FROM users ORDER BY user_id ASC";
+
+        try (Connection conn = DBConnection.getInstance();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                User user = mapResultSetToUser(rs);
+                if (user != null) {
+                    userList.add(user);
+                }
+            }
+        }
+
+        return userList;
+    }
+
+    @Override
+    public boolean transferMoney(int fromUserId, int toUserId, BigDecimal amount) {
+        if (fromUserId == toUserId) {
+            return false;
+        }
+
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return false;
+        }
+
+        String sqlWithdraw =
+                "UPDATE users SET balance = balance - ? " +
+                        "WHERE user_id = ? AND balance >= ?";
+
+        String sqlDeposit =
+                "UPDATE users SET balance = COALESCE(balance, 0) + ? " +
+                        "WHERE user_id = ?";
+
+        try (Connection conn = DBConnection.getInstance()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement withdrawStmt = conn.prepareStatement(sqlWithdraw);
+                 PreparedStatement depositStmt = conn.prepareStatement(sqlDeposit)) {
+
+                withdrawStmt.setBigDecimal(1, amount);
+                withdrawStmt.setInt(2, fromUserId);
+                withdrawStmt.setBigDecimal(3, amount);
+
+                int withdrawnRows = withdrawStmt.executeUpdate();
+                if (withdrawnRows == 0) {
+                    conn.rollback();
+                    return false;
+                }
+
+                depositStmt.setBigDecimal(1, amount);
+                depositStmt.setInt(2, toUserId);
+
+                int depositedRows = depositStmt.executeUpdate();
+                if (depositedRows == 0) {
+                    conn.rollback();
+                    return false;
+                }
+
+                conn.commit();
+                return true;
+
+            } catch (Exception e) {
+                conn.rollback();
+                System.err.println(">>> [UserDAO.transferMoney] " + e.getMessage());
+                return false;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+
+        } catch (Exception e) {
+            System.err.println(">>> [UserDAO.transferMoney] " + e.getMessage());
+            return false;
+        }
+    }
+
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
-        String role = rs.getString("role");
         int userId = rs.getInt("user_id");
         String username = rs.getString("username");
         String passwordHash = rs.getString("password_hash");
-
+        String role = rs.getString("role");
 
         BigDecimal balance = rs.getBigDecimal("balance");
-        if (balance == null) balance = BigDecimal.ZERO;
+        if (balance == null) {
+            balance = BigDecimal.ZERO;
+        }
 
         User user = UserFactory.createUser(role, userId, username);
+
         if (user != null) {
             user.setPasswordHash(passwordHash);
-            user.setAccountBalance(balance); // Nạp tiền vào bộ nhớ
+            user.setAccountBalance(balance);
         }
+
         return user;
     }
 }

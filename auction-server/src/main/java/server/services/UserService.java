@@ -1,7 +1,7 @@
 package server.services;
 
 import server.dao.core.DBConnection;
-import server.dao.impl.DepositRequestDAOImpl;
+import server.dao.interfaces.DepositRequestDAO;
 import server.dao.interfaces.UserDAO;
 import server.models.finance.DepositRequest;
 import server.models.users.User;
@@ -20,11 +20,11 @@ import java.util.List;
 public class UserService {
 
     private final UserDAO userDAO;
-    private final DepositRequestDAOImpl depositDAO = new DepositRequestDAOImpl();
+    private final DepositRequestDAO depositDAO;
 
-    /** Constructor Injection — MainServer truyền DAO vào, không tự new. */
-    public UserService(UserDAO userDAO) {
+    public UserService(UserDAO userDAO, DepositRequestDAO depositDAO) {
         this.userDAO = userDAO;
+        this.depositDAO = depositDAO;
     }
 
     public void register(String username, String password, String role) throws Exception {

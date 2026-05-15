@@ -4,6 +4,7 @@ import server.dao.core.DBConnection;
 import server.dao.interfaces.ItemDAO;
 import server.models.items.Item;
 import server.models.items.ItemFactory;
+import server.models.users.Seller;
 
 import java.math.BigDecimal;
 import java.sql.*;
@@ -48,20 +49,38 @@ public class ItemDAOImpl implements ItemDAO {
                 pstmt.setString(i++, item.getDescription());
                 pstmt.setString(i++, item.getCategoryInfo());
                 pstmt.setBigDecimal(i++, item.getStartingPrice());
-                if (hasImagePathColumn) pstmt.setString(i++, item.getImagePath());
-                if (hasBidIncrementColumn) pstmt.setBigDecimal(i++, item.getBidIncrement());
+
+                if (hasImagePathColumn) {
+                    pstmt.setString(i++, item.getImagePath());
+                }
+
+                if (hasBidIncrementColumn) {
+                    pstmt.setBigDecimal(i++, item.getBidIncrement());
+                }
+
                 pstmt.executeUpdate();
 
                 try (ResultSet keys = pstmt.getGeneratedKeys()) {
-                    if (keys.next()) return keys.getInt(1);
+                    if (keys.next()) {
+                        return keys.getInt(1);
+                    }
                 }
             }
         }
+
         return -1;
     }
 
     @Override
     public void update(Item item) throws Exception {
+        if (item == null) {
+            throw new IllegalArgumentException("Item không được null.");
+        }
+
+        if (item.getSeller() == null) {
+            throw new IllegalArgumentException("Item phải có seller.");
+        }
+
         try (Connection conn = DBConnection.getInstance()) {
             ensureOptionalColumns(conn);
 
@@ -83,10 +102,21 @@ public class ItemDAOImpl implements ItemDAO {
                 pstmt.setString(i++, item.getDescription());
                 pstmt.setString(i++, item.getCategoryInfo());
                 pstmt.setBigDecimal(i++, item.getStartingPrice());
-                if (hasImagePathColumn) pstmt.setString(i++, item.getImagePath());
-                if (hasBidIncrementColumn) pstmt.setBigDecimal(i++, item.getBidIncrement());
+
+                if (hasImagePathColumn) {
+                    pstmt.setString(i++, item.getImagePath());
+                }
+
+                if (hasBidIncrementColumn) {
+                    pstmt.setBigDecimal(i++, item.getBidIncrement());
+                }
+
                 pstmt.setInt(i, item.getItemId());
-                pstmt.executeUpdate();
+
+                int affectedRows = pstmt.executeUpdate();
+                if (affectedRows == 0) {
+                    throw new IllegalArgumentException("Không tìm thấy sản phẩm để cập nhật.");
+                }
             }
         }
     }
@@ -94,78 +124,113 @@ public class ItemDAOImpl implements ItemDAO {
     @Override
     public void delete(int id) throws Exception {
         String sql = "DELETE FROM items WHERE item_id = ?";
+
         try (Connection conn = DBConnection.getInstance();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
-            pstmt.executeUpdate();
+
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new IllegalArgumentException("Không tìm thấy sản phẩm để xóa.");
+            }
         }
     }
 
     @Override
     public List<Item> findBySellerId(int sellerId) throws Exception {
-        List<Item> itemlist = new ArrayList<>();
+        List<Item> itemList = new ArrayList<>();
         String sql = "SELECT * FROM items WHERE seller_id = ?";
+
         try (Connection conn = DBConnection.getInstance()) {
             ensureOptionalColumns(conn);
+
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setInt(1, sellerId);
+
                 try (ResultSet rs = pstmt.executeQuery()) {
-                    while (rs.next()) itemlist.add(mapResultSetToItem(rs));
+                    while (rs.next()) {
+                        itemList.add(mapResultSetToItem(rs));
+                    }
                 }
             }
         }
-        return itemlist;
+
+        return itemList;
     }
 
     @Override
     public List<Item> findAll() throws Exception {
         List<Item> itemList = new ArrayList<>();
         String sql = "SELECT * FROM items";
+
         try (Connection conn = DBConnection.getInstance()) {
             ensureOptionalColumns(conn);
+
             try (PreparedStatement pstmt = conn.prepareStatement(sql);
                  ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     Item item = mapResultSetToItem(rs);
-                    if (item != null) itemList.add(item);
+                    if (item != null) {
+                        itemList.add(item);
+                    }
                 }
             }
         }
+
         return itemList;
     }
 
     @Override
     public Item findById(int id) throws Exception {
         String sql = "SELECT * FROM items WHERE item_id = ?";
+
         try (Connection conn = DBConnection.getInstance()) {
             ensureOptionalColumns(conn);
+
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, id);
+
                 try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) return mapResultSetToItem(rs);
+                    if (rs.next()) {
+                        return mapResultSetToItem(rs);
+                    }
                 }
             }
         }
+
         return null;
     }
 
     private Item mapResultSetToItem(ResultSet rs) throws SQLException {
         int itemId = rs.getInt("item_id");
+        int sellerId = rs.getInt("seller_id");
         String name = rs.getString("name");
         String description = rs.getString("description");
         String categoryInfo = rs.getString("CategoryInfo");
         BigDecimal startingPrice = rs.getBigDecimal("startingPrice");
 
         Item item = ItemFactory.createItem(categoryInfo, itemId, name, startingPrice, description);
-        if (hasColumn(rs, "imagePath")) item.setImagePath(rs.getString("imagePath"));
-        if (hasColumn(rs, "bidIncrement")) item.setBidIncrement(rs.getBigDecimal("bidIncrement"));
+
+        Seller seller = new Seller(sellerId, "", "", "", BigDecimal.ZERO);
+        item.setSeller(seller);
+
+        if (hasColumn(rs, "imagePath")) {
+            item.setImagePath(rs.getString("imagePath"));
+        }
+
+        if (hasColumn(rs, "bidIncrement")) {
+            item.setBidIncrement(rs.getBigDecimal("bidIncrement"));
+        }
+
         return item;
     }
 
     private void ensureOptionalColumns(Connection conn) {
         if (optionalColumnsChecked) return;
+
         synchronized (this) {
             if (optionalColumnsChecked) return;
+
             try {
                 hasImagePathColumn = columnExists(conn, "items", "imagePath");
                 hasBidIncrementColumn = columnExists(conn, "items", "bidIncrement");
@@ -173,17 +238,23 @@ public class ItemDAOImpl implements ItemDAO {
                 if (!hasImagePathColumn) {
                     try (Statement st = conn.createStatement()) {
                         st.executeUpdate("ALTER TABLE items ADD COLUMN imagePath VARCHAR(1000)");
-                    } catch (Exception ignored) { }
+                    } catch (Exception ignored) {
+                    }
+
                     hasImagePathColumn = columnExists(conn, "items", "imagePath");
                 }
 
                 if (!hasBidIncrementColumn) {
                     try (Statement st = conn.createStatement()) {
                         st.executeUpdate("ALTER TABLE items ADD COLUMN bidIncrement DECIMAL(15,2) DEFAULT 0");
-                    } catch (Exception ignored) { }
+                    } catch (Exception ignored) {
+                    }
+
                     hasBidIncrementColumn = columnExists(conn, "items", "bidIncrement");
                 }
-            } catch (Exception ignored) { }
+            } catch (Exception ignored) {
+            }
+
             optionalColumnsChecked = true;
         }
     }
@@ -191,21 +262,31 @@ public class ItemDAOImpl implements ItemDAO {
     private boolean columnExists(Connection conn, String table, String column) {
         try (ResultSet rs = conn.getMetaData().getColumns(null, null, table, column)) {
             if (rs.next()) return true;
-        } catch (Exception ignored) { }
+        } catch (Exception ignored) {
+        }
+
         try (ResultSet rs = conn.getMetaData().getColumns(null, null, table.toUpperCase(), column)) {
             if (rs.next()) return true;
-        } catch (Exception ignored) { }
+        } catch (Exception ignored) {
+        }
+
         try (ResultSet rs = conn.getMetaData().getColumns(null, null, table, column.toUpperCase())) {
             return rs.next();
-        } catch (Exception ignored) { }
+        } catch (Exception ignored) {
+        }
+
         return false;
     }
 
     private boolean hasColumn(ResultSet rs, String column) throws SQLException {
         ResultSetMetaData meta = rs.getMetaData();
+
         for (int i = 1; i <= meta.getColumnCount(); i++) {
-            if (column.equalsIgnoreCase(meta.getColumnName(i))) return true;
+            if (column.equalsIgnoreCase(meta.getColumnName(i))) {
+                return true;
+            }
         }
+
         return false;
     }
 }

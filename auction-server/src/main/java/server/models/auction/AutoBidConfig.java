@@ -1,28 +1,21 @@
 package server.models.auction;
 
 import server.models.users.Bidder;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * AutoBidConfig — cấu hình đặt giá tự động của một Bidder cho một phiên đấu giá.
- *
- * Fix 3.1 (naming + type):
- *   Trường auctionId giờ là int thay vì AuctionRoom.
- *   Tên "auctionId" khớp với kiểu int — không còn nhập nhằng "tên là id nhưng kiểu là Object".
- *   AuctionService.registerAutoBid() không cần tạo AuctionRoom rỗng làm workaround nữa.
- *   AutoBidDAOImpl đọc trực tiếp getAuctionId() (int) thay vì getAuctionId().getId().
- */
 public class AutoBidConfig implements Comparable<AutoBidConfig> {
 
     private int id;
-    private int auctionId;   // int — khớp tên và kiểu
+    private int auctionId;
     private Bidder bidder;
     private BigDecimal maxBid;
     private BigDecimal increment;
     private LocalDateTime registerTime;
 
     public AutoBidConfig() {
+        this.registerTime = LocalDateTime.now();
     }
 
     public AutoBidConfig(int auctionId, Bidder bidder, BigDecimal maxBid, BigDecimal increment) {
@@ -40,6 +33,7 @@ public class AutoBidConfig implements Comparable<AutoBidConfig> {
     public void setId(int id) {
         this.id = id;
     }
+
 
     public int getAuctionId() {
         return auctionId;
@@ -78,11 +72,16 @@ public class AutoBidConfig implements Comparable<AutoBidConfig> {
     }
 
     public void setRegisterTime(LocalDateTime registerTime) {
-        this.registerTime = registerTime;
+        this.registerTime = registerTime != null ? registerTime : LocalDateTime.now();
     }
 
     @Override
     public int compareTo(AutoBidConfig other) {
-        return this.registerTime.compareTo(other.registerTime);
+        if (other == null) return -1;
+
+        LocalDateTime thisTime = this.registerTime != null ? this.registerTime : LocalDateTime.now();
+        LocalDateTime otherTime = other.registerTime != null ? other.registerTime : LocalDateTime.now();
+
+        return thisTime.compareTo(otherTime);
     }
 }
