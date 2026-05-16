@@ -628,41 +628,37 @@ public class SellerDashboardController {
 
         dialog.setResultConverter(btn -> {
             if (btn == btnOk) {
-                return datePicker.getValue() + "T" + txtTime.getText() + ":" + txtDuration.getText();
+                com.google.gson.JsonObject payloadObj = new com.google.gson.JsonObject();
+                payloadObj.addProperty("itemId", selectedItem.getItemId());
+                payloadObj.addProperty("startTime", datePicker.getValue() + "T" + txtTime.getText());
+                payloadObj.addProperty("durationMinutes", txtDuration.getText());
+                return payloadObj.toString();
             }
             return null;
         });
 
-        dialog.showAndWait().ifPresent(data -> {
-            try {
-                String[] parts = data.split(":");
-                String startTime = parts[0] + ":" + parts[1];
-                String duration = parts[2];
-                String payload = selectedItem.getItemId() + ":" + startTime + ":" + duration;
+        dialog.showAndWait().ifPresent(payloadJson -> {
+            // 1. Đăng ký lắng nghe phản hồi từ Server TRƯỚC khi gửi
+            ClientMain.registerListener("CREATE_AUCTION_SUCCESS", p -> {
+                ClientMain.unregisterListener("CREATE_AUCTION_SUCCESS");
+                ClientMain.unregisterListener("CREATE_AUCTION_FAILED");
 
-                ClientMain.registerListener("CREATE_AUCTION_SUCCESS", p -> {
-                    ClientMain.unregisterListener("CREATE_AUCTION_SUCCESS");
-                    ClientMain.unregisterListener("CREATE_AUCTION_FAILED");
-
-                    Platform.runLater(() -> {
-                        showAlert("Thành công", "Phiên đấu giá sẽ bắt đầu lúc " + startTime.replace("T", " "));
-                        loadMyAuctionsFromServer();
-                    });
+                Platform.runLater(() -> {
+                    showAlert("Thành công", "Phiên đấu giá đã được tạo thành công!");
+                    loadMyAuctionsFromServer();
                 });
+            });
 
-                ClientMain.registerListener("CREATE_AUCTION_FAILED", p -> {
-                    ClientMain.unregisterListener("CREATE_AUCTION_SUCCESS");
-                    ClientMain.unregisterListener("CREATE_AUCTION_FAILED");
-                    Platform.runLater(() -> showAlert("Lỗi", "Tạo phiên thất bại: " + p));
-                });
+            ClientMain.registerListener("CREATE_AUCTION_FAILED", p -> {
+                ClientMain.unregisterListener("CREATE_AUCTION_SUCCESS");
+                ClientMain.unregisterListener("CREATE_AUCTION_FAILED");
+                Platform.runLater(() -> showAlert("Lỗi", "Tạo phiên thất bại: " + p));
+            });
 
-                new Thread(() ->
-                        ClientMain.send(gson.toJson(new MessageDTO("CREATE_AUCTION", payload)))
-                ).start();
-
-            } catch (Exception e) {
-                showAlert("Lỗi nhập liệu", "Vui lòng nhập đúng định dạng giờ HH:mm và thời gian là số phút.");
-            }
+            // 2. Gửi duy nhất payloadJson (đối tượng JSON đã tạo ở ResultConverter)
+            new Thread(() ->
+                    ClientMain.send(gson.toJson(new MessageDTO("CREATE_AUCTION", payloadJson)))
+            ).start();
         });
     }
 
