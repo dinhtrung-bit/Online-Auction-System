@@ -25,13 +25,14 @@ public class AutoBidRequestHandler {
         }
 
         try {
-            Map<String, Object> data = parseJsonPayload(request);
+            AutoBidPayload payload = parseSetAutoBidPayload(request);
 
-            int auctionId = getInt(data, "auctionId");
-            BigDecimal maxBid = getBigDecimal(data, "maxBid");
-            BigDecimal step = getBigDecimal(data, "step");
-
-            auctionService.registerAutoBid(auctionId, bidder, maxBid, step);
+            auctionService.registerAutoBid(
+                    payload.auctionId,
+                    bidder,
+                    payload.maxBid,
+                    payload.step
+            );
 
             return new MessageDTO("SET_AUTO_BID_SUCCESS", "Đặt auto bid thành công!");
 
@@ -62,13 +63,65 @@ public class AutoBidRequestHandler {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> parseJsonPayload(MessageDTO request) {
-        if (request == null || request.getPayload() == null || request.getPayload().trim().isEmpty()) {
-            throw new IllegalArgumentException("Payload không được để trống.");
+    private AutoBidPayload parseSetAutoBidPayload(MessageDTO request) {
+        String payload = requirePayload(request);
+
+        // Format mới: JSON
+        if (payload.startsWith("{")) {
+            Map<String, Object> data = parseJsonPayload(request);
+
+            int auctionId = hasKey(data, "auctionId")
+                    ? getInt(data, "auctionId")
+                    : getInt(data, "roomId");
+
+            BigDecimal maxBid;
+            if (hasKey(data, "maxBid")) {
+                maxBid = getBigDecimal(data, "maxBid");
+            } else if (hasKey(data, "max")) {
+                maxBid = getBigDecimal(data, "max");
+            } else if (hasKey(data, "amount")) {
+                maxBid = getBigDecimal(data, "amount");
+            } else {
+                throw new IllegalArgumentException("Thiếu maxBid.");
+            }
+
+            BigDecimal step;
+            if (hasKey(data, "step")) {
+                step = getBigDecimal(data, "step");
+            } else if (hasKey(data, "increment")) {
+                step = getBigDecimal(data, "increment");
+            } else if (hasKey(data, "bidIncrement")) {
+                step = getBigDecimal(data, "bidIncrement");
+            } else {
+                step = new BigDecimal("500");
+            }
+
+            return new AutoBidPayload(auctionId, maxBid, step);
         }
 
-        String payload = request.getPayload().trim();
+        // Format cũ: auctionId:maxBid:step
+        String[] parts = payload.split(":");
+
+        if (parts.length < 2) {
+            throw new IllegalArgumentException("Payload auto-bid không hợp lệ.");
+        }
+
+        int auctionId = (int) Double.parseDouble(cleanNumberText(parts[0]));
+        BigDecimal maxBid = new BigDecimal(cleanNumberText(parts[1]));
+
+        BigDecimal step = parts.length >= 3
+                ? new BigDecimal(cleanNumberText(parts[2]))
+                : new BigDecimal("500");
+
+        validatePositive(maxBid, "maxBid");
+        validatePositive(step, "step");
+
+        return new AutoBidPayload(auctionId, maxBid, step);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> parseJsonPayload(MessageDTO request) {
+        String payload = requirePayload(request);
 
         if (!payload.startsWith("{")) {
             throw new IllegalArgumentException("Payload phải là JSON object.");
@@ -86,23 +139,36 @@ public class AutoBidRequestHandler {
     }
 
     private int parseAuctionId(MessageDTO request) {
-        if (request == null || request.getPayload() == null || request.getPayload().trim().isEmpty()) {
-            throw new IllegalArgumentException("Thiếu auctionId.");
-        }
-
-        String payload = request.getPayload().trim();
+        String payload = requirePayload(request);
 
         try {
             if (payload.startsWith("{")) {
                 Map<String, Object> data = parseJsonPayload(request);
-                return getInt(data, "auctionId");
+
+                if (hasKey(data, "auctionId")) {
+                    return getInt(data, "auctionId");
+                }
+
+                return getInt(data, "roomId");
             }
 
-            return (int) Double.parseDouble(payload);
+            return (int) Double.parseDouble(cleanNumberText(payload));
 
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("auctionId phải là số nguyên.");
         }
+    }
+
+    private String requirePayload(MessageDTO request) {
+        if (request == null || request.getPayload() == null || request.getPayload().trim().isEmpty()) {
+            throw new IllegalArgumentException("Payload không được để trống.");
+        }
+
+        return request.getPayload().trim();
+    }
+
+    private boolean hasKey(Map<String, Object> data, String key) {
+        return data != null && data.containsKey(key) && data.get(key) != null;
     }
 
     private int getInt(Map<String, Object> data, String key) {
@@ -117,7 +183,7 @@ public class AutoBidRequestHandler {
         }
 
         try {
-            return (int) Double.parseDouble(String.valueOf(value));
+            return (int) Double.parseDouble(cleanNumberText(String.valueOf(value)));
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(key + " phải là số nguyên.");
         }
@@ -131,16 +197,45 @@ public class AutoBidRequestHandler {
         }
 
         try {
-            BigDecimal number = new BigDecimal(String.valueOf(value));
-
-            if (number.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException(key + " phải lớn hơn 0.");
-            }
-
+            BigDecimal number = new BigDecimal(cleanNumberText(String.valueOf(value)));
+            validatePositive(number, key);
             return number;
 
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(key + " phải là số hợp lệ.");
+        }
+    }
+
+    private void validatePositive(BigDecimal value, String fieldName) {
+        if (value == null || value.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException(fieldName + " phải lớn hơn 0.");
+        }
+    }
+
+    private String cleanNumberText(String text) {
+        if (text == null) {
+            return "";
+        }
+
+        return text
+                .replace("đ", "")
+                .replace("VND", "")
+                .replace("VNĐ", "")
+                .replace(",", "")
+                .replace(".", "")
+                .replaceAll("[^0-9\\-]", "")
+                .trim();
+    }
+
+    private static class AutoBidPayload {
+        final int auctionId;
+        final BigDecimal maxBid;
+        final BigDecimal step;
+
+        AutoBidPayload(int auctionId, BigDecimal maxBid, BigDecimal step) {
+            this.auctionId = auctionId;
+            this.maxBid = maxBid;
+            this.step = step;
         }
     }
 }

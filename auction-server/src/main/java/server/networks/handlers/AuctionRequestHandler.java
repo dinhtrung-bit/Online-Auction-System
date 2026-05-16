@@ -37,16 +37,13 @@ public class AuctionRequestHandler {
         }
 
         try {
-            Map<String, Object> data = parseJsonPayload(request);
+            BidPayload bid = parseBidPayload(request);
 
-            long roomId = getLong(data, "roomId");
-            BigDecimal bidAmount = getBigDecimal(data, "amount");
-
-            if (bidAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            if (bid.amount.compareTo(BigDecimal.ZERO) <= 0) {
                 return new MessageDTO("BID_FAILED", "Số tiền đặt giá phải lớn hơn 0.");
             }
 
-            if (loggedInUser.getAccountBalance().compareTo(bidAmount) < 0) {
+            if (loggedInUser.getAccountBalance().compareTo(bid.amount) < 0) {
                 return new MessageDTO(
                         "BID_FAILED",
                         "Số dư ví không đủ! Bạn đang có: "
@@ -54,7 +51,7 @@ public class AuctionRequestHandler {
                 );
             }
 
-            String result = auctionService.handleBidRequest(roomId, bidder, bidAmount.doubleValue());
+            String result = auctionService.handleBidRequest(bid.roomId, bidder, bid.amount.doubleValue());
 
             if (!"SUCCESS".equals(result)) {
                 return new MessageDTO("BID_FAILED", result);
@@ -63,7 +60,7 @@ public class AuctionRequestHandler {
             auctionService.getBroadcaster().broadcast(gson.toJson(
                     new MessageDTO(
                             "UPDATE_PRICE",
-                            roomId + ":" + bidAmount.toPlainString() + ":" + bidder.getUsername()
+                            bid.roomId + ":" + bid.amount.toPlainString() + ":" + bidder.getUsername()
                     )
             ));
 
@@ -78,7 +75,7 @@ public class AuctionRequestHandler {
 
     public MessageDTO handleGetDetail(MessageDTO request) {
         try {
-            long roomId = Long.parseLong(request.getPayload().trim());
+            long roomId = parseIdPayload(request.getPayload(), "roomId");
             AuctionRoom room = auctionService.findRoomById(roomId);
 
             if (room == null) {
@@ -179,21 +176,13 @@ public class AuctionRequestHandler {
         }
 
         try {
-            Map<String, Object> data = parseJsonPayload(request);
+            CreateAuctionPayload payload = parseCreateAuctionPayload(request);
 
-            int itemId = getInt(data, "itemId");
-            String startTime = getString(data, "startTime", "");
-            int durationMinutes = getInt(data, "durationMinutes");
-
-            if (startTime.isBlank()) {
-                return new MessageDTO("CREATE_AUCTION_FAILED", "Thiếu startTime.");
-            }
-
-            if (durationMinutes <= 0) {
+            if (payload.durationMinutes <= 0) {
                 return new MessageDTO("CREATE_AUCTION_FAILED", "Thời lượng phiên đấu giá phải lớn hơn 0 phút.");
             }
 
-            Item item = itemService.findById(itemId);
+            Item item = itemService.findById(payload.itemId);
 
             if (item == null) {
                 return new MessageDTO("CREATE_AUCTION_FAILED", "Không tìm thấy sản phẩm.");
@@ -203,13 +192,13 @@ public class AuctionRequestHandler {
                 return new MessageDTO("CREATE_AUCTION_FAILED", "Bạn không sở hữu sản phẩm này.");
             }
 
-            LocalDateTime startDateTime = LocalDateTime.parse(startTime);
+            LocalDateTime startDateTime = LocalDateTime.parse(payload.startTime);
 
             if (startDateTime.isBefore(LocalDateTime.now())) {
                 return new MessageDTO("CREATE_AUCTION_FAILED", "Không thể tạo phiên đấu giá trong quá khứ.");
             }
 
-            LocalDateTime endTime = startDateTime.plusMinutes(durationMinutes);
+            LocalDateTime endTime = startDateTime.plusMinutes(payload.durationMinutes);
 
             auctionService.createAuction(seller.getUserId(), item, startDateTime, endTime);
 
@@ -228,7 +217,7 @@ public class AuctionRequestHandler {
         }
 
         try {
-            int auctionId = Integer.parseInt(request.getPayload().trim());
+            int auctionId = (int) parseIdPayload(request.getPayload(), "auctionId");
             String result = auctionService.cancelAuctionBySeller(auctionId, loggedInUser.getUserId());
 
             if ("SUCCESS".equals(result)) {
@@ -252,7 +241,7 @@ public class AuctionRequestHandler {
         }
 
         try {
-            int auctionId = Integer.parseInt(request.getPayload().trim());
+            int auctionId = (int) parseIdPayload(request.getPayload(), "auctionId");
             String result = auctionService.cancelAuctionByAdmin(auctionId);
 
             if ("SUCCESS".equals(result)) {
@@ -388,7 +377,7 @@ public class AuctionRequestHandler {
 
     public MessageDTO handleGetBidHistory(MessageDTO request, User loggedInUser) {
         try {
-            int roomId = Integer.parseInt(request.getPayload().trim());
+            int roomId = (int) parseIdPayload(request.getPayload(), "roomId");
             List<Map<String, Object>> result = auctionService.getBidHistory(roomId);
 
             return new MessageDTO("BID_HISTORY", gson.toJson(result));
@@ -431,6 +420,7 @@ public class AuctionRequestHandler {
         Item item = room.getItem();
 
         m.put("id", room.getId());
+        m.put("auctionId", room.getId());
         m.put("itemId", item != null ? item.getItemId() : 0);
         m.put("itemName", item != null ? item.getName() : "N/A");
         m.put("description", item != null ? item.getDescription() : "");
@@ -469,13 +459,76 @@ public class AuctionRequestHandler {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> parseJsonPayload(MessageDTO request) {
-        if (request == null || request.getPayload() == null || request.getPayload().trim().isEmpty()) {
-            throw new IllegalArgumentException("Payload không được để trống.");
+    private BidPayload parseBidPayload(MessageDTO request) {
+        String payload = requirePayload(request);
+
+        if (payload.startsWith("{")) {
+            Map<String, Object> data = parseJsonPayload(request);
+
+            long roomId = hasKey(data, "roomId")
+                    ? getLong(data, "roomId")
+                    : getLong(data, "auctionId");
+
+            BigDecimal amount;
+            if (hasKey(data, "amount")) {
+                amount = getBigDecimal(data, "amount");
+            } else if (hasKey(data, "bidAmount")) {
+                amount = getBigDecimal(data, "bidAmount");
+            } else if (hasKey(data, "price")) {
+                amount = getBigDecimal(data, "price");
+            } else {
+                throw new IllegalArgumentException("Thiếu số tiền đặt giá.");
+            }
+
+            return new BidPayload(roomId, amount);
         }
 
-        String payload = request.getPayload().trim();
+        String[] parts = payload.split(":");
+
+        if (parts.length < 2) {
+            throw new IllegalArgumentException("Payload BID không hợp lệ: " + payload);
+        }
+
+        long roomId = (long) Double.parseDouble(cleanNumberText(parts[0]));
+        BigDecimal amount = new BigDecimal(cleanNumberText(parts[1]));
+
+        return new BidPayload(roomId, amount);
+    }
+
+    private CreateAuctionPayload parseCreateAuctionPayload(MessageDTO request) {
+        String payload = requirePayload(request);
+
+        if (payload.startsWith("{")) {
+            Map<String, Object> data = parseJsonPayload(request);
+
+            int itemId = getInt(data, "itemId");
+            String startTime = getString(data, "startTime", "");
+            int durationMinutes = getInt(data, "durationMinutes");
+
+            if (startTime.isBlank()) {
+                throw new IllegalArgumentException("Thiếu startTime.");
+            }
+
+            return new CreateAuctionPayload(itemId, startTime, durationMinutes);
+        }
+
+        int firstColon = payload.indexOf(":");
+        int lastColon = payload.lastIndexOf(":");
+
+        if (firstColon <= 0 || lastColon <= firstColon) {
+            throw new IllegalArgumentException("Payload tạo phiên không hợp lệ.");
+        }
+
+        int itemId = (int) Double.parseDouble(cleanNumberText(payload.substring(0, firstColon)));
+        String startTime = payload.substring(firstColon + 1, lastColon).trim();
+        int durationMinutes = Integer.parseInt(cleanNumberText(payload.substring(lastColon + 1)));
+
+        return new CreateAuctionPayload(itemId, startTime, durationMinutes);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> parseJsonPayload(MessageDTO request) {
+        String payload = requirePayload(request);
 
         if (!payload.startsWith("{")) {
             throw new IllegalArgumentException("Payload phải là JSON object.");
@@ -493,6 +546,51 @@ public class AuctionRequestHandler {
         } catch (JsonSyntaxException e) {
             throw new IllegalArgumentException("Payload JSON sai định dạng.");
         }
+    }
+
+    private long parseIdPayload(String payload, String jsonKey) {
+        if (payload == null || payload.trim().isEmpty()) {
+            throw new IllegalArgumentException("Thiếu " + jsonKey + ".");
+        }
+
+        String raw = payload.trim();
+
+        if (raw.startsWith("{")) {
+            try {
+                Map<String, Object> data = gson.fromJson(raw, Map.class);
+                Object value = data != null ? data.get(jsonKey) : null;
+
+                if (value == null && "roomId".equals(jsonKey)) {
+                    value = data != null ? data.get("auctionId") : null;
+                }
+
+                if (value == null && "auctionId".equals(jsonKey)) {
+                    value = data != null ? data.get("roomId") : null;
+                }
+
+                if (value == null) {
+                    throw new IllegalArgumentException("Thiếu " + jsonKey + ".");
+                }
+
+                return toLong(value);
+
+            } catch (JsonSyntaxException e) {
+                throw new IllegalArgumentException("Payload JSON sai định dạng.");
+            }
+        }
+
+        return (long) Double.parseDouble(cleanNumberText(raw));
+    }
+
+    private String requirePayload(MessageDTO request) {
+        if (request == null || request.getPayload() == null || request.getPayload().trim().isEmpty()) {
+            throw new IllegalArgumentException("Payload không được để trống.");
+        }
+        return request.getPayload().trim();
+    }
+
+    private boolean hasKey(Map<String, Object> data, String key) {
+        return data != null && data.containsKey(key) && data.get(key) != null;
     }
 
     private String getString(Map<String, Object> data, String key, String defaultValue) {
@@ -513,15 +611,7 @@ public class AuctionRequestHandler {
             throw new IllegalArgumentException("Thiếu trường bắt buộc: " + key);
         }
 
-        if (value instanceof Number) {
-            return ((Number) value).intValue();
-        }
-
-        try {
-            return (int) Double.parseDouble(String.valueOf(value));
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(key + " phải là số nguyên.");
-        }
+        return (int) toLong(value);
     }
 
     private long getLong(Map<String, Object> data, String key) {
@@ -531,14 +621,22 @@ public class AuctionRequestHandler {
             throw new IllegalArgumentException("Thiếu trường bắt buộc: " + key);
         }
 
+        return toLong(value);
+    }
+
+    private long toLong(Object value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Giá trị số không được null.");
+        }
+
         if (value instanceof Number) {
             return ((Number) value).longValue();
         }
 
         try {
-            return (long) Double.parseDouble(String.valueOf(value));
+            return (long) Double.parseDouble(cleanNumberText(String.valueOf(value)));
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(key + " phải là số.");
+            throw new IllegalArgumentException("Giá trị phải là số nguyên.");
         }
     }
 
@@ -550,13 +648,50 @@ public class AuctionRequestHandler {
         }
 
         try {
-            return new BigDecimal(String.valueOf(value));
+            return new BigDecimal(cleanNumberText(String.valueOf(value)));
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(key + " phải là số hợp lệ.");
         }
     }
 
+    private String cleanNumberText(String text) {
+        if (text == null) {
+            return "";
+        }
+
+        return text
+                .replace("đ", "")
+                .replace("VND", "")
+                .replace("VNĐ", "")
+                .replace(",", "")
+                .replace(".", "")
+                .replaceAll("[^0-9\\-]", "")
+                .trim();
+    }
+
     private boolean isAdmin(User user) {
         return user != null && "ADMIN".equalsIgnoreCase(user.getRole());
+    }
+
+    private static class BidPayload {
+        final long roomId;
+        final BigDecimal amount;
+
+        BidPayload(long roomId, BigDecimal amount) {
+            this.roomId = roomId;
+            this.amount = amount;
+        }
+    }
+
+    private static class CreateAuctionPayload {
+        final int itemId;
+        final String startTime;
+        final int durationMinutes;
+
+        CreateAuctionPayload(int itemId, String startTime, int durationMinutes) {
+            this.itemId = itemId;
+            this.startTime = startTime;
+            this.durationMinutes = durationMinutes;
+        }
     }
 }

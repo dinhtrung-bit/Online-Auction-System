@@ -23,8 +23,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Popup;
@@ -37,7 +35,6 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class AuctionDetailController implements Initializable {
 
@@ -59,7 +56,6 @@ public class AuctionDetailController implements Initializable {
     @FXML private VBox overlayFinished;
     @FXML private Label lblFinishIcon, lblFinishTitle, lblFinishMessage;
 
-    // V4 — thông tin sản phẩm và trạng thái phòng đầy đủ
     @FXML private ImageView imgProduct;
     @FXML private VBox paneProductImagePlaceholder;
     @FXML private Label lblProductInitial, lblProductName, lblProductCategory, lblProductDescription;
@@ -86,7 +82,6 @@ public class AuctionDetailController implements Initializable {
     private boolean isAutoBidActive = false;
     private boolean roomCanBid = false;
 
-    // V5 — lưu snapshot dữ liệu để mở popup đọc chi tiết mà không cần gọi server lại.
     private Map<String, Object> latestAuctionData = new LinkedHashMap<>();
     private List<Map<String, Object>> latestBidHistory = new ArrayList<>();
     private String latestImagePath = "";
@@ -149,15 +144,6 @@ public class AuctionDetailController implements Initializable {
         if (lblRankSub != null) lblRankSub.setText("");
     }
 
-    private void setLoadingState() {
-        if (lblCurrentPrice != null) lblCurrentPrice.setText("Đang tải...");
-        if (lblTimer != null) lblTimer.setText("--:--:--");
-        if (timerProgress != null) timerProgress.setProgress(0);
-        if (lblProductName != null) lblProductName.setText("Đang tải sản phẩm...");
-        if (lblProductDescription != null) lblProductDescription.setText("Đang lấy thông tin sản phẩm từ server...");
-        if (lblSuggestedBid != null) lblSuggestedBid.setText("--");
-    }
-
     private String mapRoleLabel(String role) {
         if (role == null) return "Người dùng";
         return switch (role.toUpperCase()) {
@@ -182,6 +168,15 @@ public class AuctionDetailController implements Initializable {
         if (lblRankIcon != null) lblRankIcon.setText(icon);
         if (lblRankTitle != null) lblRankTitle.setText(title);
         if (lblRankSub != null) lblRankSub.setText(sub);
+    }
+
+    private void setLoadingState() {
+        if (lblCurrentPrice != null) lblCurrentPrice.setText("Đang tải...");
+        if (lblTimer != null) lblTimer.setText("--:--:--");
+        if (timerProgress != null) timerProgress.setProgress(0);
+        if (lblProductName != null) lblProductName.setText("Đang tải sản phẩm...");
+        if (lblProductDescription != null) lblProductDescription.setText("Đang lấy thông tin sản phẩm từ server...");
+        if (lblSuggestedBid != null) lblSuggestedBid.setText("--");
     }
 
     private void registerServerListeners() {
@@ -224,14 +219,18 @@ public class AuctionDetailController implements Initializable {
                 lastWinner = data[2];
                 updatePriceWidgets();
                 appendBidRow(lastWinner, currentPriceVal, "vừa xong");
+
                 Map<String, Object> liveBid = new LinkedHashMap<>();
                 liveBid.put("username", lastWinner);
                 liveBid.put("amount", currentPriceVal);
                 liveBid.put("time", "vừa xong");
                 latestBidHistory.add(liveBid);
+
                 if (lastWinner.equals(myUsername)) {
                     myBidCountInRoom++;
-                    if (myBidHistoryList != null) myBidHistoryList.getItems().add(0, formatVND(currentPriceVal) + "   [vừa xong]");
+                    if (myBidHistoryList != null) {
+                        myBidHistoryList.getItems().add(0, formatVND(currentPriceVal) + "   [vừa xong]");
+                    }
                     if (currentPriceVal > myBestBid) {
                         myBestBid = currentPriceVal;
                         if (lblMyBestBid != null) lblMyBestBid.setText("Cao nhất: " + formatVND(myBestBid));
@@ -240,7 +239,6 @@ public class AuctionDetailController implements Initializable {
                     sendAsync("GET_BALANCE", "");
                 }
             });
-            // Anti-sniping có thể làm đổi endTime, vì vậy đồng bộ lại timer sau mỗi lượt bid.
             refreshRoomDetailOnly();
         });
 
@@ -265,7 +263,7 @@ public class AuctionDetailController implements Initializable {
         ClientMain.registerListener("BID_FAILED", payload ->
                 Platform.runLater(() -> {
                     unlockBidButton();
-                    showAlert(Alert.AlertType.WARNING, "Đặt giá thất bại", payload);
+                    showAlert(Alert.AlertType.WARNING, "Đặt giá thất bại", safeMessage(payload, "Không đặt giá được."));
                 })
         );
 
@@ -273,13 +271,14 @@ public class AuctionDetailController implements Initializable {
                 Platform.runLater(() -> {
                     unlockBidButton();
                     showToast("✅ Đặt giá thành công!");
+                    refreshRoomData();
                 })
         );
 
         ClientMain.registerListener("ERROR", payload ->
                 Platform.runLater(() -> {
                     unlockBidButton();
-                    showAlert(Alert.AlertType.ERROR, "Lỗi từ máy chủ", payload);
+                    showAlert(Alert.AlertType.ERROR, "Lỗi từ máy chủ", safeMessage(payload, "Có lỗi từ máy chủ."));
                 })
         );
 
@@ -381,7 +380,9 @@ public class AuctionDetailController implements Initializable {
         if (lblProductName != null) lblProductName.setText(itemName);
         if (lblProductId != null) lblProductId.setText(itemId);
         if (lblProductCategory != null) lblProductCategory.setText("Danh mục: " + category);
-        if (lblProductDescription != null) lblProductDescription.setText(desc == null || desc.isBlank() ? "Chưa có mô tả." : desc);
+        if (lblProductDescription != null) {
+            lblProductDescription.setText(desc == null || desc.isBlank() ? "Chưa có mô tả." : desc);
+        }
         if (lblProductStartingPrice != null) lblProductStartingPrice.setText(formatVND(startingPriceVal));
         if (lblProductStatus != null) lblProductStatus.setText(statusToVietnamese(status));
         if (lblSellerInfo != null) lblSellerInfo.setText(seller);
@@ -451,7 +452,9 @@ public class AuctionDetailController implements Initializable {
 
     private void updateBidCounters(int participantCount) {
         if (lblTotalBidCount != null) lblTotalBidCount.setText(String.valueOf(bidCount));
-        if (lblParticipantCount != null) lblParticipantCount.setText(String.valueOf(Math.max(participantCount, lastWinner.isBlank() ? 0 : 1)));
+        if (lblParticipantCount != null) {
+            lblParticipantCount.setText(String.valueOf(Math.max(participantCount, lastWinner.isBlank() ? 0 : 1)));
+        }
     }
 
     private void updatePriceWidgets() {
@@ -482,8 +485,8 @@ public class AuctionDetailController implements Initializable {
                         if (timer != null) timer.cancel();
                         if (roomCanBid) {
                             if (lblTimeHint != null) lblTimeHint.setText("Đang chốt kết quả...");
-                            btnPlaceBid.setDisable(true);
-                            btnOpenAutoBid.setDisable(true);
+                            if (btnPlaceBid != null) btnPlaceBid.setDisable(true);
+                            if (btnOpenAutoBid != null) btnOpenAutoBid.setDisable(true);
                             refreshRoomDetailOnly();
                         }
                     }
@@ -520,32 +523,47 @@ public class AuctionDetailController implements Initializable {
             showAlert(Alert.AlertType.WARNING, "Không thể đặt giá", "Phiên hiện không ở trạng thái đang chạy.");
             return;
         }
+
         String text = txtBidAmount != null ? txtBidAmount.getText().trim() : "";
+
         if (text.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Thiếu dữ liệu", "Vui lòng nhập số tiền đặt giá!");
             return;
         }
+
         double amount = parseDoubleSafe(text, -1);
+
         if (amount <= currentPriceVal) {
             showAlert(Alert.AlertType.WARNING, "Không hợp lệ", "Giá đặt phải cao hơn giá hiện tại " + formatVND(currentPriceVal) + ".");
             return;
         }
+
         if (amount < suggestedBidVal) {
             showAlert(Alert.AlertType.WARNING, "Chưa đạt mức đề xuất", "Mức tối thiểu nên đặt là " + formatVND(suggestedBidVal) + ".");
             return;
         }
+
         if (amount > UserSession.getInstance().getBalance()) {
             showAlert(Alert.AlertType.WARNING, "Số dư không đủ", "Số dư hiện tại: " + formatVND(UserSession.getInstance().getBalance()));
             return;
         }
-        if (currentRoomId == null || myUsername == null) {
-            showAlert(Alert.AlertType.ERROR, "Lỗi phiên", "Không xác định được phòng hoặc tài khoản đăng nhập.");
+
+        if (currentRoomId == null || currentRoomId.isBlank()) {
+            showAlert(Alert.AlertType.ERROR, "Lỗi phiên", "Không xác định được phòng đấu giá.");
             return;
         }
 
         lockBidButton();
-        sendAsync("BID", currentRoomId + ":" + myUsername + ":" + amount);
-        if (txtBidAmount != null) txtBidAmount.clear();
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("roomId", parseDoubleSafe(currentRoomId, 0));
+        payload.put("amount", amount);
+
+        sendAsync("BID", gson.toJson(payload));
+
+        if (txtBidAmount != null) {
+            txtBidAmount.clear();
+        }
     }
 
     private void lockBidButton() {
@@ -581,6 +599,7 @@ public class AuctionDetailController implements Initializable {
 
         Label title = new Label(textOf(lblProductName, "Sản phẩm đấu giá"));
         title.getStyleClass().add("popup-main-title");
+
         Label subtitle = new Label("Toàn bộ thông tin đang đọc từ dữ liệu phòng đấu giá hiện tại.");
         subtitle.getStyleClass().add("popup-subtitle");
 
@@ -666,6 +685,7 @@ public class AuctionDetailController implements Initializable {
 
         Label summary = new Label("Tổng lượt đặt: " + bidCount + "  ·  Người dẫn đầu: " + (lastWinner == null || lastWinner.isBlank() ? "--" : lastWinner));
         summary.getStyleClass().add("popup-hint");
+
         content.getChildren().addAll(title, summary, list);
         showCustomDialog("Lịch sử đặt giá", content, 720, 620);
     }
@@ -684,6 +704,7 @@ public class AuctionDetailController implements Initializable {
 
         Label summary = new Label("Số lượt của bạn: " + myBidCountInRoom + "  ·  Mức cao nhất: " + (myBestBid > 0 ? formatVND(myBestBid) : "--"));
         summary.getStyleClass().add("popup-hint");
+
         content.getChildren().addAll(title, summary, list);
         showCustomDialog("Bid của tôi", content, 620, 560);
     }
@@ -694,9 +715,11 @@ public class AuctionDetailController implements Initializable {
             showAlert(Alert.AlertType.WARNING, "AutoBid", "Chỉ có thể bật AutoBid khi phiên đang chạy.");
             return;
         }
+
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("../views/autobid-dialog.fxml"));
             Parent root = loader.load();
+
             AutoBidDialogController ctrl = loader.getController();
             ctrl.setup(currentRoomId, currentPriceVal, (mode, cfg) -> {
                 ClientMain.registerListener("SET_AUTO_BID_SUCCESS", payload -> {
@@ -712,11 +735,17 @@ public class AuctionDetailController implements Initializable {
                     ClientMain.unregisterListener("SET_AUTO_BID_SUCCESS");
                     ClientMain.unregisterListener("SET_AUTO_BID_FAILED");
                     Platform.runLater(() -> showAlert(Alert.AlertType.WARNING,
-                            "Kích hoạt AutoBid thất bại", "Server báo: " + payload));
+                            "Kích hoạt AutoBid thất bại", "Server báo: " + safeMessage(payload, "Không bật được AutoBid.")));
                 });
 
-                sendAsync("SET_AUTO_BID", currentRoomId + ":" + cfg.maxBid + ":" + cfg.increment);
+                Map<String, Object> payload = new LinkedHashMap<>();
+                payload.put("auctionId", parseDoubleSafe(currentRoomId, 0));
+                payload.put("maxBid", cfg.maxBid);
+                payload.put("step", cfg.increment);
+
+                sendAsync("SET_AUTO_BID", gson.toJson(payload));
             });
+
             Stage dialog = new Stage();
             dialog.setTitle("Cài đặt AutoBid");
             dialog.initModality(Modality.APPLICATION_MODAL);
@@ -724,6 +753,7 @@ public class AuctionDetailController implements Initializable {
             dialog.setScene(new Scene(root, 460, 640));
             dialog.setResizable(false);
             dialog.show();
+
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Lỗi", "Không mở được AutoBid dialog: " + e.getMessage());
@@ -735,6 +765,7 @@ public class AuctionDetailController implements Initializable {
             paneAutoBidActive.setVisible(true);
             paneAutoBidActive.setManaged(true);
         }
+
         if (btnOpenAutoBid != null) {
             btnOpenAutoBid.setText("🤖 Đang bật");
             btnOpenAutoBid.getStyleClass().remove("autobid-button");
@@ -742,11 +773,13 @@ public class AuctionDetailController implements Initializable {
                 btnOpenAutoBid.getStyleClass().add("autobid-button-active");
             }
         }
+
         String modeLabel = switch (cfg.mode) {
             case "FIXED" -> "Giá cố định";
             case "SNIPE" -> "Snipe";
             default -> "Tăng dần";
         };
+
         if (lblAutoBidInfo != null) {
             lblAutoBidInfo.setText("Giới hạn: " + formatVND(cfg.maxBid)
                     + "  ·  Bước: " + formatVND(cfg.increment) + "  ·  Chế độ: " + modeLabel);
@@ -765,7 +798,7 @@ public class AuctionDetailController implements Initializable {
             ClientMain.unregisterListener("CANCEL_AUTO_BID_SUCCESS");
             ClientMain.unregisterListener("CANCEL_AUTO_BID_FAILED");
             Platform.runLater(() -> showAlert(Alert.AlertType.WARNING,
-                    "Hủy AutoBid thất bại", "Server báo: " + payload + "\nUI vẫn giữ trạng thái cũ."));
+                    "Hủy AutoBid thất bại", "Server báo: " + safeMessage(payload, "Không hủy được AutoBid.") + "\nUI vẫn giữ trạng thái cũ."));
         });
 
         sendAsync("CANCEL_AUTO_BID", currentRoomId);
@@ -773,10 +806,12 @@ public class AuctionDetailController implements Initializable {
 
     private void deactivateAutoBidUI() {
         isAutoBidActive = false;
+
         if (paneAutoBidActive != null) {
             paneAutoBidActive.setVisible(false);
             paneAutoBidActive.setManaged(false);
         }
+
         if (btnOpenAutoBid != null) {
             btnOpenAutoBid.setText("🤖 AutoBid");
             btnOpenAutoBid.getStyleClass().remove("autobid-button-active");
@@ -789,7 +824,14 @@ public class AuctionDetailController implements Initializable {
     private void updateStatusBadge(String status) {
         String normalized = status == null ? "UNKNOWN" : status.toUpperCase();
         if (lblStatusBadge == null) return;
-        lblStatusBadge.getStyleClass().removeAll("live-status-badge", "live-status-open", "live-status-ended", "live-status-canceled");
+
+        lblStatusBadge.getStyleClass().removeAll(
+                "live-status-badge",
+                "live-status-open",
+                "live-status-ended",
+                "live-status-canceled"
+        );
+
         switch (normalized) {
             case "RUNNING" -> {
                 lblStatusBadge.setText("● Đang chạy");
@@ -808,6 +850,7 @@ public class AuctionDetailController implements Initializable {
                 lblStatusBadge.getStyleClass().add("live-status-ended");
             }
         }
+
         if (btnPlaceBid != null) btnPlaceBid.setDisable(!roomCanBid);
         if (btnOpenAutoBid != null) btnOpenAutoBid.setDisable(!roomCanBid);
     }
@@ -817,10 +860,14 @@ public class AuctionDetailController implements Initializable {
         roomCanBid = false;
         updateTimerUI();
         unlockBidButton();
+
         if (btnOpenAutoBid != null) btnOpenAutoBid.setDisable(true);
         if (timer != null) timer.cancel();
+
         deactivateAutoBidUI();
+
         if (overlayFinished != null) overlayFinished.setVisible(true);
+
         if (myUsername != null && myUsername.equals(lastWinner)) {
             if (lblFinishIcon != null) lblFinishIcon.setText("🏆");
             if (lblFinishTitle != null) lblFinishTitle.setText("CHÚC MỪNG CHIẾN THẮNG!");
@@ -828,17 +875,23 @@ public class AuctionDetailController implements Initializable {
         } else {
             if (lblFinishIcon != null) lblFinishIcon.setText("🛑");
             if (lblFinishTitle != null) lblFinishTitle.setText("PHIÊN ĐẤU GIÁ KẾT THÚC");
-            if (lblFinishMessage != null) lblFinishMessage.setText("Sản phẩm đã thuộc về " + (lastWinner.isEmpty() ? "người khác" : lastWinner));
+            if (lblFinishMessage != null) {
+                lblFinishMessage.setText("Sản phẩm đã thuộc về " + (lastWinner.isEmpty() ? "người khác" : lastWinner));
+            }
         }
     }
 
     private void showCanceledOverlay(String message) {
         if (timer != null) timer.cancel();
+
         roomCanBid = false;
         unlockBidButton();
+
         if (btnOpenAutoBid != null) btnOpenAutoBid.setDisable(true);
+
         deactivateAutoBidUI();
         updateStatusBadge("CANCELED");
+
         if (overlayFinished != null) overlayFinished.setVisible(true);
         if (lblFinishIcon != null) lblFinishIcon.setText("🚫");
         if (lblFinishTitle != null) lblFinishTitle.setText("PHIÊN ĐẤU GIÁ BỊ HỦY");
@@ -849,6 +902,7 @@ public class AuctionDetailController implements Initializable {
     void handleBackToList(ActionEvent event) {
         if (timer != null) timer.cancel();
         unregisterDetailListeners();
+
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/client/views/auction-list.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
@@ -860,21 +914,34 @@ public class AuctionDetailController implements Initializable {
 
     private void unregisterDetailListeners() {
         for (String action : List.of(
-                "AUCTION_DETAIL_DATA", "UPDATE_PRICE", "AUCTION_FINISHED", "AUCTION_CANCELED",
-                "BID_FAILED", "BID_SUCCESS", "ERROR", "AUTO_BID_EXCEEDED", "BID_HISTORY",
-                "WON_AUCTIONS", "BALANCE_DATA", "SET_AUTO_BID_SUCCESS", "SET_AUTO_BID_FAILED",
-                "CANCEL_AUTO_BID_SUCCESS", "CANCEL_AUTO_BID_FAILED")) {
+                "AUCTION_DETAIL_DATA",
+                "UPDATE_PRICE",
+                "AUCTION_FINISHED",
+                "AUCTION_CANCELED",
+                "BID_FAILED",
+                "BID_SUCCESS",
+                "ERROR",
+                "AUTO_BID_EXCEEDED",
+                "BID_HISTORY",
+                "WON_AUCTIONS",
+                "BALANCE_DATA",
+                "SET_AUTO_BID_SUCCESS",
+                "SET_AUTO_BID_FAILED",
+                "CANCEL_AUTO_BID_SUCCESS",
+                "CANCEL_AUTO_BID_FAILED")) {
             ClientMain.unregisterListener(action);
         }
     }
 
     private void loadProductImage(String path) {
         boolean loaded = false;
+
         try {
             if (path != null && !path.isBlank() && imgProduct != null) {
                 String uri = path.startsWith("http") || path.startsWith("file:")
                         ? path
                         : new File(path).toURI().toString();
+
                 Image image = new Image(uri, true);
                 imgProduct.setImage(image);
                 loaded = !image.isError();
@@ -889,7 +956,9 @@ public class AuctionDetailController implements Initializable {
 
     private void setProductPlaceholderIcon(String category, String name) {
         if (lblProductInitial == null) return;
+
         String c = category == null ? "" : category.toLowerCase();
+
         if (c.contains("điện") || c.contains("elect")) lblProductInitial.setText("💻");
         else if (c.contains("xe") || c.contains("vehicle")) lblProductInitial.setText("🚗");
         else if (c.contains("art") || c.contains("nghệ")) lblProductInitial.setText("🏺");
@@ -906,6 +975,7 @@ public class AuctionDetailController implements Initializable {
 
     private String statusToVietnamese(String status) {
         if (status == null) return "Không rõ";
+
         return switch (status.toUpperCase()) {
             case "RUNNING" -> "Đang đấu giá";
             case "OPEN" -> "Sắp bắt đầu";
@@ -918,6 +988,7 @@ public class AuctionDetailController implements Initializable {
 
     private String normalizeCategory(String category) {
         if (category == null || category.isBlank()) return "--";
+
         return switch (category.toUpperCase()) {
             case "ART" -> "Nghệ thuật";
             case "ELECTRONIC", "ELECTRONICS" -> "Đồ điện tử";
@@ -928,6 +999,7 @@ public class AuctionDetailController implements Initializable {
 
     private String formatDateTime(String value) {
         if (value == null || value.isBlank()) return "--";
+
         try {
             LocalDateTime dt = LocalDateTime.parse(value);
             return dt.format(DateTimeFormatter.ofPattern("HH:mm · dd/MM/yyyy"));
@@ -942,21 +1014,30 @@ public class AuctionDetailController implements Initializable {
 
     private String stringFrom(Map<String, Object> m, String key, String fallback) {
         if (m == null || !m.containsKey(key) || m.get(key) == null) return fallback;
+
         String v = String.valueOf(m.get(key));
         return "null".equalsIgnoreCase(v) ? fallback : v;
     }
 
     private double numberFrom(Map<String, Object> m, String key, double fallback) {
         if (m == null || !m.containsKey(key) || m.get(key) == null) return fallback;
+
         Object obj = m.get(key);
         if (obj instanceof Number n) return n.doubleValue();
+
         return parseDoubleSafe(String.valueOf(obj), fallback);
     }
 
     private double parseDoubleSafe(String text, double fallback) {
         try {
             if (text == null) return fallback;
-            String raw = text.trim().replace("đ", "").replace(" ", "");
+
+            String raw = text.trim()
+                    .replace("đ", "")
+                    .replace("VNĐ", "")
+                    .replace("VND", "")
+                    .replace(" ", "");
+
             if (raw.matches("\\d{1,3}(\\.\\d{3})+(,\\d+)?")) {
                 raw = raw.replace(".", "").replace(",", ".");
             } else if (raw.matches("\\d{1,3}(,\\d{3})+(\\.\\d+)?")) {
@@ -964,7 +1045,9 @@ public class AuctionDetailController implements Initializable {
             } else if (raw.contains(",") && !raw.contains(".")) {
                 raw = raw.replace(",", ".");
             }
+
             return Double.parseDouble(raw);
+
         } catch (Exception e) {
             return fallback;
         }
@@ -978,26 +1061,39 @@ public class AuctionDetailController implements Initializable {
         }
     }
 
+    private String safeMessage(String payload, String fallback) {
+        if (payload == null || payload.trim().isEmpty() || "null".equalsIgnoreCase(payload.trim())) {
+            return fallback;
+        }
+        return payload;
+    }
+
     private void showAlert(Alert.AlertType type, String title, String content) {
         Alert a = new Alert(type);
         a.setTitle(title);
         a.setHeaderText(null);
-        if (content != null && content.length() > 180) {
-            TextArea area = readonlyTextArea(content, 240);
+
+        String safeContent = safeMessage(content, "Không có nội dung lỗi từ server.");
+
+        if (safeContent.length() > 180) {
+            TextArea area = readonlyTextArea(safeContent, 240);
             area.setPrefWidth(520);
             a.getDialogPane().setContent(area);
         } else {
-            a.setContentText(content);
+            a.setContentText(safeContent);
         }
+
         a.show();
     }
 
     private void addInfoRow(GridPane grid, int row, String label, String value) {
         Label left = new Label(label);
         left.getStyleClass().add("spec-label");
+
         Label right = new Label(value == null || value.isBlank() ? "--" : value);
         right.setWrapText(true);
         right.getStyleClass().add("spec-value");
+
         grid.add(left, 0, row);
         grid.add(right, 1, row);
     }
@@ -1032,26 +1128,31 @@ public class AuctionDetailController implements Initializable {
         dialog.getDialogPane().setContent(scroll);
         dialog.getDialogPane().setPrefWidth(width + 40);
         dialog.getDialogPane().setPrefHeight(height + 120);
+
         if (lblCurrentPrice != null && lblCurrentPrice.getScene() != null) {
             dialog.initOwner(lblCurrentPrice.getScene().getWindow());
         }
+
         Button close = (Button) dialog.getDialogPane().lookupButton(ButtonType.CLOSE);
         if (close != null) {
             close.setText("Đóng");
             close.getStyleClass().add("btn-primary");
         }
+
         dialog.showAndWait();
     }
 
     private void showToast(String message) {
         try {
             if (lblCurrentPrice == null || lblCurrentPrice.getScene() == null) return;
+
             javafx.stage.Window window = lblCurrentPrice.getScene().getWindow();
             if (window == null) return;
 
             Popup popup = new Popup();
             Label toast = new Label(message);
             toast.setStyle("-fx-background-color: rgba(15,23,42,0.94); -fx-text-fill: white; -fx-padding: 12 22; -fx-background-radius: 999; -fx-font-size: 13px; -fx-font-weight: bold;");
+
             popup.getContent().add(toast);
             popup.setAutoHide(true);
             popup.show(window, window.getX() + window.getWidth() - 330, window.getY() + window.getHeight() - 110);
@@ -1059,6 +1160,7 @@ public class AuctionDetailController implements Initializable {
             PauseTransition delay = new PauseTransition(Duration.seconds(2.3));
             delay.setOnFinished(e -> popup.hide());
             delay.play();
+
         } catch (Exception ignored) {}
     }
 }
