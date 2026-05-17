@@ -174,7 +174,7 @@ Bid trong 30 giây cuối → gia hạn thêm 60 giây tính từ thời điểm
 ```bash
 cd auction-server
 mvn clean package -DskipTests
-java -jar target/online-auction-1.0-SNAPSHOT-shaded.jar
+java -jar target/auction-server-1.0-SNAPSHOT-shaded.jar
 ```
 
 ### Client
