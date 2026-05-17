@@ -519,7 +519,7 @@ public class AuctionRequestHandler {
             throw new IllegalArgumentException("Payload tạo phiên không hợp lệ.");
         }
 
-        int itemId = (int) Double.parseDouble(cleanNumberText(payload.substring(0, firstColon)));
+        int itemId = (int) toLong(payload.substring(0, firstColon));
         String startTime = payload.substring(firstColon + 1, lastColon).trim();
         int durationMinutes = Integer.parseInt(cleanNumberText(payload.substring(lastColon + 1)));
 
@@ -579,7 +579,7 @@ public class AuctionRequestHandler {
             }
         }
 
-        return (long) Double.parseDouble(cleanNumberText(raw));
+        return toLong(raw);
     }
 
     private String requirePayload(MessageDTO request) {
@@ -634,10 +634,29 @@ public class AuctionRequestHandler {
         }
 
         try {
-            return (long) Double.parseDouble(cleanNumberText(String.valueOf(value)));
+            String raw = String.valueOf(value).trim();
+
+            if (raw.matches("-?\\d+\\.0+")) {
+                raw = raw.substring(0, raw.indexOf('.'));
+            }
+
+            return Long.parseLong(cleanIntegerText(raw));
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Giá trị phải là số nguyên.");
         }
+    }
+    private String cleanIntegerText(String text) {
+        if (text == null) {
+            return "";
+        }
+
+        return text
+                .replace("đ", "")
+                .replace("VND", "")
+                .replace("VNĐ", "")
+                .replace(",", "")
+                .replaceAll("[^0-9\\-]", "")
+                .trim();
     }
 
     private BigDecimal getBigDecimal(Map<String, Object> data, String key) {

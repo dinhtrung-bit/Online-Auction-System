@@ -661,6 +661,39 @@ public class SellerDashboardController {
             ).start();
         });
     }
+    private String normalizeIdText(Object value) {
+        if (value == null) return "";
+
+        try {
+            if (value instanceof Number) {
+                return String.valueOf(((Number) value).intValue());
+            }
+
+            String text = value.toString().trim();
+
+            if (text.matches("\\d+\\.0+")) {
+                return text.substring(0, text.indexOf('.'));
+            }
+
+            return String.valueOf((int) Double.parseDouble(text));
+        } catch (Exception e) {
+            return value.toString().trim();
+        }
+    }
+
+    private int parseItemIdForRequest(String itemId) {
+        if (itemId == null || itemId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Thiếu itemId sản phẩm.");
+        }
+
+        String text = itemId.trim();
+
+        if (text.matches("\\d+\\.0+")) {
+            text = text.substring(0, text.indexOf('.'));
+        }
+
+        return (int) Double.parseDouble(text);
+    }
 
     private Label createAuctionLabel(String text) {
         Label label = new Label(text);
@@ -671,6 +704,7 @@ public class SellerDashboardController {
                 """);
         return label;
     }
+
 
     @FXML
     private void handleEditProduct() {
