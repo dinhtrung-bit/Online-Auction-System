@@ -445,128 +445,268 @@ public class AuctionListController implements Initializable {
 
     @FXML
     void handleDeposit(ActionEvent event) {
-        Dialog<Map<String, Object>> dialog = new Dialog<>();
-        dialog.setTitle("Yêu cầu nạp tiền");
-        dialog.setHeaderText(null);
+        // ── Header ──────────────────────────────────────────────
+        StackPane iconWrap = new StackPane(new Label("💳"));
+        ((Label) iconWrap.getChildren().get(0)).setStyle("-fx-font-size:26px;");
+        iconWrap.setStyle(
+                "-fx-background-color: linear-gradient(to bottom right, #10B981, #059669);" +
+                        "-fx-background-radius: 18;" +
+                        "-fx-min-width:54; -fx-max-width:54; -fx-min-height:54; -fx-max-height:54;" +
+                        "-fx-effect: dropshadow(three-pass-box, rgba(16,185,129,0.38), 16, 0, 0, 5);");
 
-        DialogPane pane = dialog.getDialogPane();
-        pane.getStyleClass().add("modern-dialog-pane");
+        Label lblTitle = new Label("Nạp tiền vào ví");
+        lblTitle.setStyle("-fx-font-size:22px; -fx-font-weight:900; -fx-text-fill:#0F172A;");
+        Label lblSub = new Label("Số dư sẽ được cộng ngay lập tức sau khi nạp.");
+        lblSub.setStyle("-fx-font-size:13px; -fx-text-fill:#64748B;");
 
-        ButtonType submitBtnType = new ButtonType("📨 Gửi yêu cầu", ButtonBar.ButtonData.OK_DONE);
-        pane.getButtonTypes().addAll(submitBtnType, ButtonType.CANCEL);
+        VBox headerText = new VBox(4, lblTitle, lblSub);
+        HBox header = new HBox(16, iconWrap, headerText);
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.setStyle(
+                "-fx-background-color: linear-gradient(to bottom right, #F8FAFC, #ECFDF5);" +
+                        "-fx-padding: 22 24 20 24;" +
+                        "-fx-border-color: transparent transparent #E2E8F0 transparent;" +
+                        "-fx-border-width: 0 0 1 0;");
 
-        VBox root = new VBox(18);
-        root.getStyleClass().add("dialog-content");
+        // ── Số dư hiện tại ───────────────────────────────────────
+        double curBalance = UserSession.getInstance().getBalance();
+        Label lblBalanceTitle = new Label("SỐ DƯ HIỆN TẠI");
+        lblBalanceTitle.setStyle("-fx-font-size:11px; -fx-font-weight:900; -fx-text-fill:#64748B;");
+        Label lblBalanceVal = new Label(VND.format((long) curBalance) + " đ");
+        lblBalanceVal.setStyle("-fx-font-size:28px; -fx-font-weight:900; -fx-text-fill:#059669;");
 
-        Label title = new Label("💰 Gửi yêu cầu nạp tiền");
-        title.getStyleClass().add("dialog-title");
-        Label subtitle = new Label("Tiền sẽ vào ví sau khi Admin kiểm tra và duyệt yêu cầu.");
-        subtitle.getStyleClass().add("dialog-subtitle");
+        VBox balanceCard = new VBox(4, lblBalanceTitle, lblBalanceVal);
+        balanceCard.setStyle(
+                "-fx-background-color: linear-gradient(to bottom right, #FFFFFF, #ECFDF5);" +
+                        "-fx-background-radius: 18;" +
+                        "-fx-border-color: #A7F3D0;" +
+                        "-fx-border-radius: 18;" +
+                        "-fx-padding: 16 20;");
+
+        // ── Input số tiền ────────────────────────────────────────
+        Label lblAmountHint = new Label("Số tiền nạp (VNĐ)");
+        lblAmountHint.setStyle("-fx-font-size:13px; -fx-font-weight:900; -fx-text-fill:#334155;");
 
         TextField txtAmount = new TextField();
-        txtAmount.setPromptText("Ví dụ: 1000000");
-        txtAmount.setPrefHeight(48);
-        txtAmount.getStyleClass().add("input-field");
+        txtAmount.setPromptText("Nhập số tiền...");
+        txtAmount.setPrefHeight(52);
+        txtAmount.setStyle(
+                "-fx-font-size:20px; -fx-font-weight:900;" +
+                        "-fx-background-color:#F8FAFC; -fx-border-color:#CBD5E1;" +
+                        "-fx-background-radius:14; -fx-border-radius:14;" +
+                        "-fx-padding: 10 16; -fx-text-fill:#0F172A;" +
+                        "-fx-prompt-text-fill:#94A3B8;");
 
-        TextArea txtNote = new TextArea();
-        txtNote.setPromptText("Ghi chú chuyển khoản / mã giao dịch / nội dung thanh toán...");
-        txtNote.setPrefRowCount(3);
-        txtNote.setWrapText(true);
-        txtNote.getStyleClass().add("text-area-clean");
+        // Hiển thị số tiền đã format bên dưới input
+        Label lblFormatted = new Label(" ");
+        lblFormatted.setStyle("-fx-font-size:13px; -fx-font-weight:800; -fx-text-fill:#059669;");
 
         Label lblError = new Label();
-        lblError.getStyleClass().add("error-text");
-
-        HBox quickAmounts = new HBox(8);
-        quickAmounts.getChildren().addAll(
-                quickAmountButton(txtAmount, 500_000),
-                quickAmountButton(txtAmount, 1_000_000),
-                quickAmountButton(txtAmount, 5_000_000),
-                quickAmountButton(txtAmount, 10_000_000)
-        );
+        lblError.setStyle("-fx-font-size:13px; -fx-font-weight:800; -fx-text-fill:#EF4444;");
 
         txtAmount.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.matches("\\d*")) {
                 txtAmount.setText(newVal.replaceAll("[^\\d]", ""));
-                lblError.setText("❌ Chỉ được nhập số!");
+                return;
+            }
+            lblError.setText("");
+            if (newVal.isEmpty()) {
+                lblFormatted.setText(" ");
             } else {
-                lblError.setText("");
+                try {
+                    long val = Long.parseLong(newVal);
+                    lblFormatted.setText("= " + VND.format(val) + " đ");
+                } catch (NumberFormatException ignored) {
+                    lblFormatted.setText(" ");
+                }
             }
         });
 
-        VBox inputBox = new VBox(8, new Label("Số tiền yêu cầu nạp (VNĐ)"), txtAmount, quickAmounts, new Label("Ghi chú cho Admin"), txtNote, lblError);
-        inputBox.getChildren().get(0).getStyleClass().add("form-label");
-        inputBox.getChildren().get(3).getStyleClass().add("form-label");
+        // ── Quick-amount buttons ─────────────────────────────────
+        long[][] presets = {{500_000, 500}, {1_000_000, 1_000}, {2_000_000, 2_000}, {5_000_000, 5_000}, {10_000_000, 10_000}, {50_000_000, 50_000}};
+        String[] labels = {"+500k", "+1tr", "+2tr", "+5tr", "+10tr", "+50tr"};
+        HBox quickRow = new HBox(8);
+        quickRow.setAlignment(Pos.CENTER_LEFT);
+        for (int i = 0; i < presets.length; i++) {
+            final long val = presets[i][0];
+            Button btn = new Button(labels[i]);
+            btn.setStyle(
+                    "-fx-background-color:#ECFDF5; -fx-text-fill:#047857;" +
+                            "-fx-border-color:#A7F3D0; -fx-border-radius:999;" +
+                            "-fx-background-radius:999; -fx-font-weight:900;" +
+                            "-fx-font-size:12px; -fx-padding: 7 13; -fx-cursor:hand;");
+            btn.setOnMouseEntered(e -> btn.setStyle(
+                    "-fx-background-color:#D1FAE5; -fx-text-fill:#065F46;" +
+                            "-fx-border-color:#6EE7B7; -fx-border-radius:999;" +
+                            "-fx-background-radius:999; -fx-font-weight:900;" +
+                            "-fx-font-size:12px; -fx-padding: 7 13; -fx-cursor:hand;"));
+            btn.setOnMouseExited(e -> btn.setStyle(
+                    "-fx-background-color:#ECFDF5; -fx-text-fill:#047857;" +
+                            "-fx-border-color:#A7F3D0; -fx-border-radius:999;" +
+                            "-fx-background-radius:999; -fx-font-weight:900;" +
+                            "-fx-font-size:12px; -fx-padding: 7 13; -fx-cursor:hand;"));
+            btn.setOnAction(e -> {
+                String cur = txtAmount.getText().trim();
+                long curVal = 0;
+                if (!cur.isEmpty()) {
+                    try { curVal = Long.parseLong(cur); } catch (NumberFormatException ignored) {}
+                }
+                txtAmount.setText(String.valueOf(curVal + val));
+            });
+            quickRow.getChildren().add(btn);
+        }
 
-        VBox infoBox = new VBox(9,
-                new Label("✔ Yêu cầu sẽ ở trạng thái Chờ duyệt"),
-                new Label("✔ Admin duyệt xong thì ví mới được cộng tiền"),
-                new Label("✔ Bạn có thể nhấn Làm mới để đồng bộ số dư"));
-        infoBox.getStyleClass().add("info-box");
+        // ── Preview sau nạp ──────────────────────────────────────
+        Label lblAfterTitle = new Label("SAU KHI NẠP");
+        lblAfterTitle.setStyle("-fx-font-size:11px; -fx-font-weight:900; -fx-text-fill:#64748B;");
+        Label lblAfterVal = new Label(VND.format((long) curBalance) + " đ");
+        lblAfterVal.setStyle("-fx-font-size:22px; -fx-font-weight:900; -fx-text-fill:#2563EB;");
 
-        root.getChildren().addAll(title, subtitle, inputBox, infoBox);
-        pane.setContent(root);
-        pane.setPrefWidth(560);
+        txtAmount.textProperty().addListener((obs, oldVal, newVal) -> {
+            long add = 0;
+            if (!newVal.isEmpty()) {
+                try { add = Long.parseLong(newVal); } catch (NumberFormatException ignored) {}
+            }
+            lblAfterVal.setText(VND.format((long) curBalance + add) + " đ");
+        });
 
-        Button submitBtn = (Button) pane.lookupButton(submitBtnType);
-        submitBtn.getStyleClass().add("btn-primary");
-        Button cancelBtn = (Button) pane.lookupButton(ButtonType.CANCEL);
-        cancelBtn.setText("Hủy bỏ");
-        cancelBtn.getStyleClass().add("btn-outline");
+        VBox afterCard = new VBox(4, lblAfterTitle, lblAfterVal);
+        afterCard.setStyle(
+                "-fx-background-color: linear-gradient(to bottom right, #FFFFFF, #EFF6FF);" +
+                        "-fx-background-radius: 18;" +
+                        "-fx-border-color: #BFDBFE;" +
+                        "-fx-border-radius: 18;" +
+                        "-fx-padding: 14 20;");
 
-        submitBtn.addEventFilter(ActionEvent.ACTION, e -> {
+        HBox cardsRow = new HBox(12, balanceCard, afterCard);
+        HBox.setHgrow(balanceCard, Priority.ALWAYS);
+        HBox.setHgrow(afterCard, Priority.ALWAYS);
+        balanceCard.setMaxWidth(Double.MAX_VALUE);
+        afterCard.setMaxWidth(Double.MAX_VALUE);
+
+        VBox inputSection = new VBox(8, lblAmountHint, txtAmount, lblFormatted, quickRow, lblError);
+
+        VBox body = new VBox(16, cardsRow, inputSection);
+        body.setStyle("-fx-padding: 22 24;");
+
+        // ── Footer buttons ───────────────────────────────────────
+        Button btnCancel = new Button("Hủy");
+        btnCancel.setStyle(
+                "-fx-background-color:#FFFFFF; -fx-border-color:#CBD5E1;" +
+                        "-fx-border-radius:14; -fx-background-radius:14;" +
+                        "-fx-text-fill:#475569; -fx-font-weight:900;" +
+                        "-fx-font-size:14px; -fx-padding: 12 24; -fx-cursor:hand;");
+
+        Button btnSubmit = new Button("💰  Nạp ngay");
+        btnSubmit.setStyle(
+                "-fx-background-color: linear-gradient(to right, #10B981, #059669);" +
+                        "-fx-text-fill:white; -fx-font-weight:900; -fx-font-size:14px;" +
+                        "-fx-background-radius:14; -fx-padding: 12 28; -fx-cursor:hand;" +
+                        "-fx-effect: dropshadow(three-pass-box, rgba(16,185,129,0.32), 14, 0, 0, 5);");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        HBox footer = new HBox(10, spacer, btnCancel, btnSubmit);
+        footer.setAlignment(Pos.CENTER_RIGHT);
+        footer.setStyle(
+                "-fx-background-color:#F8FAFC;" +
+                        "-fx-padding: 16 24 20 24;" +
+                        "-fx-border-color: #E2E8F0 transparent transparent transparent;" +
+                        "-fx-border-width: 1 0 0 0;");
+
+        VBox root = new VBox(header, body, footer);
+        root.setStyle(
+                "-fx-background-color:white;" +
+                        "-fx-background-radius:24;" +
+                        "-fx-border-radius:24;" +
+                        "-fx-border-color:#E2E8F0;" +
+                        "-fx-effect: dropshadow(three-pass-box, rgba(15,23,42,0.18), 34, 0.16, 0, 14);");
+
+        // ── Stage ────────────────────────────────────────────────
+        javafx.scene.Scene scene = new javafx.scene.Scene(root);
+        scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        // apply app.css
+        try {
+            java.net.URL css = getClass().getResource("/client/views/app.css");
+            if (css != null) scene.getStylesheets().add(css.toExternalForm());
+        } catch (Exception ignored) {}
+
+        Stage popup = new Stage();
+        popup.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+        popup.initStyle(javafx.stage.StageStyle.TRANSPARENT);
+        popup.setTitle("Nạp tiền vào ví");
+        popup.setScene(scene);
+        popup.setWidth(500);
+        popup.setResizable(false);
+
+        btnCancel.setOnAction(e -> popup.close());
+        btnSubmit.setOnAction(e -> {
             String text = txtAmount.getText().trim();
             if (text.isEmpty()) {
                 lblError.setText("❌ Vui lòng nhập số tiền!");
-                e.consume();
                 return;
             }
+            double amount;
             try {
-                double amount = Double.parseDouble(text);
-                if (amount <= 0) {
-                    lblError.setText("❌ Số tiền phải lớn hơn 0!");
-                    e.consume();
-                }
-            } catch (Exception ex) {
+                amount = Double.parseDouble(text);
+            } catch (NumberFormatException ex) {
                 lblError.setText("❌ Dữ liệu không hợp lệ!");
-                e.consume();
+                return;
             }
+            if (amount <= 0) {
+                lblError.setText("❌ Số tiền phải lớn hơn 0!");
+                return;
+            }
+            if (amount > 1_000_000_000) {
+                lblError.setText("❌ Tối đa 1.000.000.000 đ mỗi lần nạp!");
+                return;
+            }
+            popup.close();
+            executeDeposit(amount);
         });
 
-        dialog.setResultConverter(button -> {
-            if (button != submitBtnType) return null;
-            Map<String, Object> data = new LinkedHashMap<>();
-            data.put("amount", Double.parseDouble(txtAmount.getText().trim()));
-            data.put("note", txtNote.getText() == null ? "" : txtNote.getText().trim());
-            return data;
-        });
-        dialog.showAndWait().ifPresent(this::sendDepositRequest);
+        // Enter để submit
+        txtAmount.setOnAction(e -> btnSubmit.fire());
+
+        popup.show();
+        // Focus vào ô nhập ngay
+        Platform.runLater(txtAmount::requestFocus);
     }
 
-    private Button quickAmountButton(TextField txtAmount, long amount) {
-        Button button = new Button("+" + (amount >= 1_000_000 ? (amount / 1_000_000) + "tr" : (amount / 1000) + "k"));
-        button.getStyleClass().add("btn-outline");
-        button.setOnAction(e -> txtAmount.setText(String.valueOf(amount)));
-        return button;
-    }
-
-    private void sendDepositRequest(Map<String, Object> data) {
-        ClientMain.registerListener("DEPOSIT_REQUEST_CREATED", payload -> {
-            ClientMain.unregisterListener("DEPOSIT_REQUEST_CREATED");
+    private void executeDeposit(double amount) {
+        ClientMain.registerListener("DEPOSIT_SUCCESS", payload -> {
+            ClientMain.unregisterListener("DEPOSIT_SUCCESS");
             ClientMain.unregisterListener("DEPOSIT_FAILED");
             Platform.runLater(() -> {
-                refreshBalance();
-                showInfo("Đã gửi yêu cầu", "✅ Yêu cầu nạp tiền đã được gửi tới Admin.\n\nTiền sẽ chỉ cộng vào ví sau khi Admin duyệt.");
+                try {
+                    com.google.gson.reflect.TypeToken<java.util.Map<String, Object>> tt =
+                            new com.google.gson.reflect.TypeToken<>() {};
+                    java.util.Map<String, Object> result = gson.fromJson(payload, tt.getType());
+                    if (result != null && result.get("newBalance") instanceof Number n) {
+                        double newBal = n.doubleValue();
+                        UserSession.getInstance().setBalance(newBal);
+                        updateBalanceLabels(newBal);
+                    } else {
+                        refreshBalance();
+                    }
+                } catch (Exception ignored) {
+                    refreshBalance();
+                }
+                showInfo("Nạp tiền thành công",
+                        "✅ Đã nạp " + VND.format((long) amount) + " đ vào ví!\n\nSố dư đã được cập nhật.");
             });
         });
 
         ClientMain.registerListener("DEPOSIT_FAILED", payload -> {
-            ClientMain.unregisterListener("DEPOSIT_REQUEST_CREATED");
+            ClientMain.unregisterListener("DEPOSIT_SUCCESS");
             ClientMain.unregisterListener("DEPOSIT_FAILED");
-            Platform.runLater(() -> showError("❌ Gửi yêu cầu nạp tiền thất bại!\n\n" + payload));
+            Platform.runLater(() -> showError("❌ Nạp tiền thất bại!\n\n" + payload));
         });
 
-        new Thread(() -> ClientMain.send(gson.toJson(new MessageDTO("DEPOSIT", gson.toJson(data)))), "deposit-request").start();
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("amount", amount);
+        new Thread(() -> ClientMain.send(gson.toJson(new MessageDTO("DEPOSIT", gson.toJson(data)))),
+                "deposit").start();
     }
 
     private void updateDashboardStats() {
@@ -625,7 +765,7 @@ public class AuctionListController implements Initializable {
         ClientMain.unregisterListener("AUCTION_FINISHED");
         ClientMain.unregisterListener("ERROR");
         ClientMain.unregisterListener("WON_AUCTIONS");
-        ClientMain.unregisterListener("DEPOSIT_REQUEST_CREATED");
+        ClientMain.unregisterListener("DEPOSIT_SUCCESS");
         ClientMain.unregisterListener("DEPOSIT_FAILED");
     }
 

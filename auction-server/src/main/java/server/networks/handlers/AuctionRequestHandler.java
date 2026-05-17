@@ -1,6 +1,14 @@
 package server.networks.handlers;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.google.gson.Gson;
+
 import server.models.auction.AuctionRoom;
 import server.models.auction.AuctionStatus;
 import server.models.items.Item;
@@ -11,32 +19,28 @@ import server.networks.dto.MessageDTO;
 import server.services.AuctionService;
 import server.services.ItemService;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 /**
  * AuctionRequestHandler — Xử lý toàn bộ request liên quan đến phiên đấu giá.
  *
- * Sau refactor, class này chỉ chứa logic nghiệp vụ thuần túy.
- *   Parse payload and utility → PayloadParser
- *   Chuyển đổi AuctionRoom → Map → AuctionMapper
+ * <p>Sau refactor, class này chỉ chứa logic nghiệp vụ thuần túy:
+ *
+ * <ul>
+ *   <li>Parse payload và utility số → {@link PayloadParser}
+ *   <li>Chuyển đổi AuctionRoom → Map → {@link AuctionMapper}
+ * </ul>
  */
 public class AuctionRequestHandler {
 
     private final AuctionService auctionService;
-    private final ItemService    itemService;
-    private final Gson           gson = new Gson();
+    private final ItemService itemService;
+    private final Gson gson = new Gson();
 
     public AuctionRequestHandler(AuctionService auctionService, ItemService itemService) {
         this.auctionService = auctionService;
-        this.itemService    = itemService;
+        this.itemService = itemService;
     }
 
-    // ── Bidder actions ────────────────────────────────────────────────────────
+    // ─── Bidder actions ──────────────────────────────────────────────────────
 
     public MessageDTO handleBid(MessageDTO request, User loggedInUser) {
         if (!(loggedInUser instanceof Bidder bidder)) {
@@ -49,17 +53,20 @@ public class AuctionRequestHandler {
                 return new MessageDTO("BID_FAILED", "Số tiền đặt giá phải lớn hơn 0.");
             }
             if (loggedInUser.getAccountBalance().compareTo(bid.amount()) < 0) {
-                return new MessageDTO("BID_FAILED",
+                return new MessageDTO(
+                        "BID_FAILED",
                         "Số dư ví không đủ! Bạn đang có: "
                                 + loggedInUser.getAccountBalance().toPlainString() + "đ.");
             }
 
-            String result = auctionService.handleBidRequest(bid.roomId(), bidder, bid.amount().doubleValue());
+            String result = auctionService.handleBidRequest(
+                    bid.roomId(), bidder, bid.amount().doubleValue());
             if (!"SUCCESS".equals(result)) {
                 return new MessageDTO("BID_FAILED", result);
             }
 
-            broadcast("UPDATE_PRICE",
+            broadcast(
+                    "UPDATE_PRICE",
                     bid.roomId() + ":" + bid.amount().toPlainString() + ":" + bidder.getUsername());
 
             return new MessageDTO("BID_SUCCESS", "Đặt giá thành công.");
@@ -71,7 +78,7 @@ public class AuctionRequestHandler {
         }
     }
 
-    // ── Query — danh sách và chi tiết phòng ──────────────────────────────────
+    // ─── Query: danh sách & chi tiết phòng ───────────────────────────────────
 
     public MessageDTO handleGetDetail(MessageDTO request) {
         try {
@@ -81,7 +88,8 @@ public class AuctionRequestHandler {
             if (room == null) {
                 return new MessageDTO("ERROR", "Không tìm thấy phòng: " + roomId);
             }
-            return new MessageDTO("AUCTION_DETAIL_DATA", gson.toJson(AuctionMapper.toDetailMap(room)));
+            return new MessageDTO(
+                    "AUCTION_DETAIL_DATA", gson.toJson(AuctionMapper.toDetailMap(room)));
 
         } catch (Exception e) {
             return new MessageDTO("ERROR", "Lỗi lấy chi tiết: " + e.getMessage());
@@ -95,7 +103,6 @@ public class AuctionRequestHandler {
                             || r.getStatus() == AuctionStatus.RUNNING)
                     .map(AuctionMapper::toListMap)
                     .collect(Collectors.toList());
-
             return new MessageDTO("AUCTION_LIST", gson.toJson(result));
         } catch (Exception e) {
             return new MessageDTO("ERROR", "Lỗi lấy danh sách: " + e.getMessage());
@@ -107,7 +114,6 @@ public class AuctionRequestHandler {
             List<Map<String, Object>> result = auctionService.getActiveRooms().stream()
                     .map(AuctionMapper::toListMap)
                     .collect(Collectors.toList());
-
             return new MessageDTO("AUCTION_LIST", gson.toJson(result));
         } catch (Exception e) {
             return new MessageDTO("ERROR", "Lỗi lấy danh sách: " + e.getMessage());
@@ -119,7 +125,6 @@ public class AuctionRequestHandler {
             String statusStr = request.getPayload() != null
                     ? request.getPayload().trim().toUpperCase()
                     : "";
-
             AuctionStatus targetStatus = AuctionMapper.parseStatus(statusStr);
 
             List<Map<String, Object>> result = auctionService.getActiveRooms().stream()
@@ -136,20 +141,22 @@ public class AuctionRequestHandler {
     public MessageDTO handleGetBidHistory(MessageDTO request, User loggedInUser) {
         try {
             int roomId = (int) PayloadParser.parseIdPayload(request.getPayload(), "roomId");
-            return new MessageDTO("BID_HISTORY", gson.toJson(auctionService.getBidHistory(roomId)));
+            return new MessageDTO(
+                    "BID_HISTORY", gson.toJson(auctionService.getBidHistory(roomId)));
         } catch (Exception e) {
             return new MessageDTO("ERROR", "Lỗi lấy lịch sử: " + e.getMessage());
         }
     }
 
     public MessageDTO handleGetMyAuctions(MessageDTO request, User loggedInUser) {
-        if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
+        if (loggedInUser == null) {
+            return new MessageDTO("ERROR", "Chưa đăng nhập");
+        }
         try {
             List<Map<String, Object>> result = auctionService.getActiveRooms().stream()
                     .filter(r -> r.getSellerID() == loggedInUser.getUserId())
                     .map(AuctionMapper::toListMap)
                     .collect(Collectors.toList());
-
             return new MessageDTO("MY_AUCTIONS", gson.toJson(result));
         } catch (Exception e) {
             return new MessageDTO("ERROR", "Lỗi: " + e.getMessage());
@@ -157,7 +164,9 @@ public class AuctionRequestHandler {
     }
 
     public MessageDTO handleGetMyWonAuctions(MessageDTO request, User loggedInUser) {
-        if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập");
+        if (loggedInUser == null) {
+            return new MessageDTO("ERROR", "Chưa đăng nhập");
+        }
         try {
             List<Map<String, Object>> result = auctionService.getActiveRooms().stream()
                     .filter(r -> (r.getStatus() == AuctionStatus.PAID
@@ -166,24 +175,25 @@ public class AuctionRequestHandler {
                             && r.getCurrentWinner().getUserId() == loggedInUser.getUserId())
                     .map(AuctionMapper::toWonMap)
                     .collect(Collectors.toList());
-
             return new MessageDTO("WON_AUCTIONS", gson.toJson(result));
         } catch (Exception e) {
             return new MessageDTO("ERROR", "Lỗi lấy kho vật phẩm: " + e.getMessage());
         }
     }
 
-    // ── Seller actions ────────────────────────────────────────────────────────
+    // ─── Seller actions ──────────────────────────────────────────────────────
 
     public MessageDTO handleCreateAuction(MessageDTO request, User loggedInUser) {
         if (!(loggedInUser instanceof Seller seller)) {
-            return new MessageDTO("CREATE_AUCTION_FAILED", "Chỉ Seller mới được tạo phiên đấu giá!");
+            return new MessageDTO(
+                    "CREATE_AUCTION_FAILED", "Chỉ Seller mới được tạo phiên đấu giá!");
         }
         try {
             CreateAuctionPayload p = parseCreateAuctionPayload(request);
 
             if (p.durationMinutes() <= 0) {
-                return new MessageDTO("CREATE_AUCTION_FAILED", "Thời lượng phiên đấu giá phải lớn hơn 0 phút.");
+                return new MessageDTO(
+                        "CREATE_AUCTION_FAILED", "Thời lượng phiên đấu giá phải lớn hơn 0 phút.");
             }
 
             Item item = itemService.findById(p.itemId());
@@ -194,13 +204,14 @@ public class AuctionRequestHandler {
                 return new MessageDTO("CREATE_AUCTION_FAILED", "Bạn không sở hữu sản phẩm này.");
             }
 
-            LocalDateTime startDateTime = LocalDateTime.parse(p.startTime());
-            if (startDateTime.isBefore(LocalDateTime.now())) {
-                return new MessageDTO("CREATE_AUCTION_FAILED", "Không thể tạo phiên đấu giá trong quá khứ.");
+            LocalDateTime start = LocalDateTime.parse(p.startTime());
+            if (start.isBefore(LocalDateTime.now())) {
+                return new MessageDTO(
+                        "CREATE_AUCTION_FAILED", "Không thể tạo phiên đấu giá trong quá khứ.");
             }
 
             auctionService.createAuction(
-                    seller.getUserId(), item, startDateTime, startDateTime.plusMinutes(p.durationMinutes()));
+                    seller.getUserId(), item, start, start.plusMinutes(p.durationMinutes()));
 
             return new MessageDTO("CREATE_AUCTION_SUCCESS", "Tạo phòng đấu giá thành công!");
 
@@ -213,7 +224,8 @@ public class AuctionRequestHandler {
 
     public MessageDTO handleDeleteAuction(MessageDTO request, User loggedInUser) {
         if (!(loggedInUser instanceof Seller)) {
-            return new MessageDTO("DELETE_AUCTION_FAILED", "Chỉ Seller mới được hủy phiên đấu giá!");
+            return new MessageDTO(
+                    "DELETE_AUCTION_FAILED", "Chỉ Seller mới được hủy phiên đấu giá!");
         }
         try {
             int auctionId = (int) PayloadParser.parseIdPayload(request.getPayload(), "auctionId");
@@ -221,7 +233,8 @@ public class AuctionRequestHandler {
 
             if ("SUCCESS".equals(result)) {
                 broadcast("AUCTION_CANCELED", String.valueOf(auctionId));
-                return new MessageDTO("DELETE_AUCTION_SUCCESS", "Đã hủy phiên đấu giá #" + auctionId);
+                return new MessageDTO(
+                        "DELETE_AUCTION_SUCCESS", "Đã hủy phiên đấu giá #" + auctionId);
             }
             return new MessageDTO("DELETE_AUCTION_FAILED", result);
 
@@ -230,7 +243,7 @@ public class AuctionRequestHandler {
         }
     }
 
-    // ── Admin actions ─────────────────────────────────────────────────────────
+    // ─── Admin actions ───────────────────────────────────────────────────────
 
     public MessageDTO handleAdminCancelAuction(MessageDTO request, User loggedInUser) {
         if (!isAdmin(loggedInUser)) {
@@ -242,32 +255,25 @@ public class AuctionRequestHandler {
 
             if ("SUCCESS".equals(result)) {
                 broadcast("AUCTION_CANCELED", String.valueOf(auctionId));
-                return new MessageDTO("ADMIN_CANCEL_AUCTION_SUCCESS", "Đã hủy phiên đấu giá #" + auctionId);
+                return new MessageDTO(
+                        "ADMIN_CANCEL_AUCTION_SUCCESS", "Đã hủy phiên đấu giá #" + auctionId);
             }
             return new MessageDTO("ADMIN_CANCEL_AUCTION_FAILED", result);
 
         } catch (Exception e) {
-            return new MessageDTO("ADMIN_CANCEL_AUCTION_FAILED", "Lỗi hủy phiên: " + e.getMessage());
+            return new MessageDTO(
+                    "ADMIN_CANCEL_AUCTION_FAILED", "Lỗi hủy phiên: " + e.getMessage());
         }
     }
 
-    public MessageDTO handleGetAdminStats(MessageDTO request, User loggedInUser,
-                                          int totalUsers, int pendingDeposits) {
-        if (!isAdmin(loggedInUser)) return new MessageDTO("ERROR", "Không có quyền truy cập!");
+    public MessageDTO handleGetAdminStats(MessageDTO request, User loggedInUser, int totalUsers) {
+        if (!isAdmin(loggedInUser)) {
+            return new MessageDTO("ERROR", "Không có quyền truy cập!");
+        }
         try {
-            BigDecimal grossSales = auctionService.getActiveRooms().stream()
-                    .filter(r -> r.getStatus() == AuctionStatus.PAID)
-                    .map(r -> r.getCurrentPrice() != null ? r.getCurrentPrice() : BigDecimal.ZERO)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            BigDecimal platformRevenue = grossSales.multiply(new BigDecimal("0.05"));
-
             Map<String, Object> stats = new LinkedHashMap<>();
             stats.put("totalUsers",       totalUsers);
             stats.put("totalItems",       itemService.countAll());
-            stats.put("revenue",          platformRevenue.longValue());
-            stats.put("grossSales",       grossSales.longValue());
-            stats.put("pendingDeposits",  pendingDeposits);
             stats.put("paidAuctions",     countByStatus(AuctionStatus.PAID));
             stats.put("canceledAuctions", countByStatus(AuctionStatus.CANCELED));
 
@@ -277,61 +283,7 @@ public class AuctionRequestHandler {
         }
     }
 
-    public MessageDTO handleGetAdminRevenueReport(MessageDTO request, User loggedInUser) {
-        if (!isAdmin(loggedInUser)) return new MessageDTO("ERROR", "Không có quyền truy cập!");
-        try {
-            BigDecimal grossSales = BigDecimal.ZERO;
-            BigDecimal platformFee = BigDecimal.ZERO;
-            int paidCount = 0, runningCount = 0, canceledCount = 0, openCount = 0, finishedUnpaidCount = 0;
-            List<Map<String, Object>> rows = new java.util.ArrayList<>();
-
-            for (AuctionRoom r : auctionService.getActiveRooms()) {
-                BigDecimal price = r.getCurrentPrice() != null ? r.getCurrentPrice() : BigDecimal.ZERO;
-                BigDecimal fee   = BigDecimal.ZERO;
-
-                switch (r.getStatus() != null ? r.getStatus() : AuctionStatus.OPEN) {
-                    case PAID     -> { paidCount++;   grossSales = grossSales.add(price);
-                        fee = price.multiply(new BigDecimal("0.05"));
-                        platformFee = platformFee.add(fee); }
-                    case RUNNING  -> runningCount++;
-                    case CANCELED -> canceledCount++;
-                    case OPEN     -> openCount++;
-                    case FINISHED -> finishedUnpaidCount++;
-                }
-
-                Map<String, Object> row = new LinkedHashMap<>();
-                row.put("auctionId",    r.getId());
-                row.put("itemName",     r.getItem() != null ? r.getItem().getName() : "N/A");
-                row.put("sellerId",     r.getSellerID());
-                row.put("winner",       r.getCurrentWinner() != null ? r.getCurrentWinner().getUsername() : "");
-                row.put("finalPrice",   price.doubleValue());
-                row.put("platformFee",  fee.doubleValue());
-                row.put("sellerPayout", price.subtract(fee).doubleValue());
-                row.put("status",       r.getStatus() != null ? r.getStatus().name() : "UNKNOWN");
-                row.put("startTime",    r.getStarttime() != null ? r.getStarttime().toString() : "");
-                row.put("endTime",      r.getEndTime()   != null ? r.getEndTime().toString()   : "");
-                rows.add(row);
-            }
-
-            Map<String, Object> report = new LinkedHashMap<>();
-            report.put("grossSales",         grossSales.doubleValue());
-            report.put("platformRevenue",    platformFee.doubleValue());
-            report.put("sellerPayout",       grossSales.subtract(platformFee).doubleValue());
-            report.put("paidCount",          paidCount);
-            report.put("runningCount",       runningCount);
-            report.put("openCount",          openCount);
-            report.put("canceledCount",      canceledCount);
-            report.put("finishedUnpaidCount", finishedUnpaidCount);
-            report.put("feePercent",         5);
-            report.put("rows",               rows);
-
-            return new MessageDTO("ADMIN_REVENUE_REPORT", gson.toJson(report));
-        } catch (Exception e) {
-            return new MessageDTO("ERROR", "Lỗi lấy báo cáo doanh thu: " + e.getMessage());
-        }
-    }
-
-    // ── Parse payload (logic đặc thù của handler này) ────────────────────────
+    // ─── Parse payload (logic đặc thù của handler này) ───────────────────────
 
     private BidPayload parseBidPayload(MessageDTO request) {
         String payload = PayloadParser.requirePayload(request);
@@ -344,18 +296,24 @@ public class AuctionRequestHandler {
                     : PayloadParser.getLong(data, "auctionId");
 
             BigDecimal amount;
-            if      (PayloadParser.hasKey(data, "amount"))    amount = PayloadParser.getBigDecimal(data, "amount");
-            else if (PayloadParser.hasKey(data, "bidAmount")) amount = PayloadParser.getBigDecimal(data, "bidAmount");
-            else if (PayloadParser.hasKey(data, "price"))     amount = PayloadParser.getBigDecimal(data, "price");
-            else throw new IllegalArgumentException("Thiếu số tiền đặt giá.");
+            if (PayloadParser.hasKey(data, "amount")) {
+                amount = PayloadParser.getBigDecimal(data, "amount");
+            } else if (PayloadParser.hasKey(data, "bidAmount")) {
+                amount = PayloadParser.getBigDecimal(data, "bidAmount");
+            } else if (PayloadParser.hasKey(data, "price")) {
+                amount = PayloadParser.getBigDecimal(data, "price");
+            } else {
+                throw new IllegalArgumentException("Thiếu số tiền đặt giá.");
+            }
 
             return new BidPayload(roomId, amount);
         }
 
         // Legacy format: "roomId:amount"
         String[] parts = payload.split(":");
-        if (parts.length < 2) throw new IllegalArgumentException("Payload BID không hợp lệ: " + payload);
-
+        if (parts.length < 2) {
+            throw new IllegalArgumentException("Payload BID không hợp lệ: " + payload);
+        }
         long roomId = (long) Double.parseDouble(PayloadParser.cleanNumberText(parts[0]));
         BigDecimal amount = new BigDecimal(PayloadParser.cleanNumberText(parts[1]));
         return new BidPayload(roomId, amount);
@@ -367,11 +325,13 @@ public class AuctionRequestHandler {
         if (payload.startsWith("{")) {
             Map<String, Object> data = PayloadParser.parseJsonPayload(request);
 
-            int    itemId          = PayloadParser.getInt(data, "itemId");
-            String startTime       = PayloadParser.getString(data, "startTime", "");
-            int    durationMinutes = PayloadParser.getInt(data, "durationMinutes");
+            int itemId          = PayloadParser.getInt(data, "itemId");
+            String startTime    = PayloadParser.getString(data, "startTime", "");
+            int durationMinutes = PayloadParser.getInt(data, "durationMinutes");
 
-            if (startTime.isBlank()) throw new IllegalArgumentException("Thiếu startTime.");
+            if (startTime.isBlank()) {
+                throw new IllegalArgumentException("Thiếu startTime.");
+            }
             return new CreateAuctionPayload(itemId, startTime, durationMinutes);
         }
 
@@ -382,13 +342,14 @@ public class AuctionRequestHandler {
             throw new IllegalArgumentException("Payload tạo phiên không hợp lệ.");
         }
 
-        int    itemId          = (int) PayloadParser.toLong(payload.substring(0, firstColon));
-        String startTime       = payload.substring(firstColon + 1, lastColon).trim();
-        int    durationMinutes = Integer.parseInt(PayloadParser.cleanNumberText(payload.substring(lastColon + 1)));
+        int itemId          = (int) PayloadParser.toLong(payload.substring(0, firstColon));
+        String startTime    = payload.substring(firstColon + 1, lastColon).trim();
+        int durationMinutes =
+                Integer.parseInt(PayloadParser.cleanNumberText(payload.substring(lastColon + 1)));
         return new CreateAuctionPayload(itemId, startTime, durationMinutes);
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
+    // ─── Private helpers ─────────────────────────────────────────────────────
 
     private void broadcast(String action, String payload) {
         auctionService.getBroadcaster().broadcast(gson.toJson(new MessageDTO(action, payload)));
@@ -396,14 +357,15 @@ public class AuctionRequestHandler {
 
     private long countByStatus(AuctionStatus status) {
         return auctionService.getActiveRooms().stream()
-                .filter(r -> r.getStatus() == status).count();
+                .filter(r -> r.getStatus() == status)
+                .count();
     }
 
     private boolean isAdmin(User user) {
         return user != null && "ADMIN".equalsIgnoreCase(user.getRole());
     }
 
-    // ── Payload DTOs (record cho gọn) ─────────────────────────────────────────
+    // ─── Payload DTOs ────────────────────────────────────────────────────────
 
     private record BidPayload(long roomId, BigDecimal amount) {}
 

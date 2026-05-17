@@ -32,8 +32,6 @@
                 <Button fx:id="btnOverview" maxWidth="Infinity" text="📊   Tổng quan" onAction="#showOverview" styleClass="sidebar-btn"/>
                 <Button fx:id="btnUsers" maxWidth="Infinity" text="👥   Người dùng" onAction="#showUsers" styleClass="sidebar-btn"/>
                 <Button fx:id="btnAuctions" maxWidth="Infinity" text="⚖   Phiên đấu giá" onAction="#showAuctions" styleClass="sidebar-btn"/>
-                <Button fx:id="btnDeposits" maxWidth="Infinity" text="💳   Duyệt nạp tiền" onAction="#showDeposits" styleClass="sidebar-btn"/>
-                <Button fx:id="btnReports" maxWidth="Infinity" text="📈   Báo cáo doanh thu" onAction="#showReports" styleClass="sidebar-btn"/>
                 <Button fx:id="btnSettings" maxWidth="Infinity" text="⚙   Cài đặt" onAction="#showSettings" styleClass="sidebar-btn"/>
             </VBox>
 
@@ -46,7 +44,7 @@
             <HBox alignment="CENTER_LEFT" spacing="16" styleClass="topbar">
                 <VBox spacing="3">
                     <Label fx:id="lblPageTitle" text="Tổng quan hệ thống" styleClass="page-title"/>
-                    <Label text="Quản lý user, duyệt tiền, kiểm duyệt phiên và theo dõi doanh thu" styleClass="page-subtitle"/>
+                    <Label text="Quản lý user và kiểm duyệt phiên đấu giá" styleClass="page-subtitle"/>
                 </VBox>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button text="↻ Tải lại" onAction="#handleReload" styleClass="btn-outline"/>
@@ -58,10 +56,8 @@
 
                     <GridPane hgap="16" vgap="16">
                         <columnConstraints>
-                            <ColumnConstraints percentWidth="25"/>
-                            <ColumnConstraints percentWidth="25"/>
-                            <ColumnConstraints percentWidth="25"/>
-                            <ColumnConstraints percentWidth="25"/>
+                            <ColumnConstraints percentWidth="50"/>
+                            <ColumnConstraints percentWidth="50"/>
                         </columnConstraints>
                         <VBox GridPane.columnIndex="0" spacing="6" styleClass="stat-blue-card">
                             <Label text="Tổng người dùng" styleClass="stat-title"/>
@@ -72,16 +68,6 @@
                             <Label text="Tổng sản phẩm" styleClass="stat-title"/>
                             <Label fx:id="lblTotalItems" text="0" styleClass="stat-value"/>
                             <Label text="Sản phẩm đã đăng" styleClass="stat-subtitle"/>
-                        </VBox>
-                        <VBox GridPane.columnIndex="2" spacing="6" styleClass="stat-green-card">
-                            <Label text="Doanh thu phí sàn" styleClass="stat-title"/>
-                            <Label fx:id="lblRevenue" text="0 đ" styleClass="stat-value" wrapText="true"/>
-                            <Label text="Ước tính 5% phiên đã thanh toán" styleClass="stat-subtitle"/>
-                        </VBox>
-                        <VBox GridPane.columnIndex="3" spacing="6" styleClass="stat-purple-card">
-                            <Label text="Yêu cầu nạp chờ duyệt" styleClass="stat-title"/>
-                            <Label fx:id="lblPendingDeposits" text="0" styleClass="stat-value"/>
-                            <Label text="Cần Admin kiểm tra" styleClass="stat-subtitle"/>
                         </VBox>
                     </GridPane>
 
@@ -102,13 +88,6 @@
                         <HBox fx:id="auctionActionBar" spacing="10" alignment="CENTER_RIGHT" visible="false" managed="false">
                             <Region HBox.hgrow="ALWAYS"/>
                             <Button text="🚫 Hủy phiên đã chọn" onAction="#handleCancelSelectedAuction" styleClass="btn-danger"/>
-                        </HBox>
-
-                        <HBox fx:id="depositActionBar" spacing="10" alignment="CENTER_RIGHT" visible="false" managed="false">
-                            <Label text="Chỉ yêu cầu ở trạng thái Chờ duyệt mới có thể xử lý." styleClass="text-muted"/>
-                            <Region HBox.hgrow="ALWAYS"/>
-                            <Button text="✅ Duyệt" onAction="#handleApproveDeposit" styleClass="btn-primary"/>
-                            <Button text="❌ Từ chối" onAction="#handleRejectDeposit" styleClass="btn-danger"/>
                         </HBox>
 
                         <TableView fx:id="tableUsers" prefHeight="430" VBox.vgrow="ALWAYS" styleClass="table-view-custom">
@@ -132,73 +111,6 @@
                             </columns>
                             <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
                         </TableView>
-
-                        <TableView fx:id="tableDeposits" prefHeight="430" VBox.vgrow="ALWAYS" styleClass="table-view-custom" visible="false" managed="false">
-                            <columns>
-                                <TableColumn fx:id="colDepositId" text="Mã YC" prefWidth="80"/>
-                                <TableColumn fx:id="colDepositUser" text="Người gửi" prefWidth="180"/>
-                                <TableColumn fx:id="colDepositAmount" text="Số tiền" prefWidth="150"/>
-                                <TableColumn fx:id="colDepositStatus" text="Trạng thái" prefWidth="130"/>
-                                <TableColumn fx:id="colDepositCreated" text="Thời gian gửi" prefWidth="190"/>
-                                <TableColumn fx:id="colDepositNote" text="Ghi chú" prefWidth="260"/>
-                            </columns>
-                            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
-                        </TableView>
-
-                        <VBox fx:id="revenuePane" visible="false" managed="false" spacing="18" VBox.vgrow="ALWAYS">
-                            <GridPane hgap="16" vgap="16">
-                                <columnConstraints>
-                                    <ColumnConstraints percentWidth="25"/>
-                                    <ColumnConstraints percentWidth="25"/>
-                                    <ColumnConstraints percentWidth="25"/>
-                                    <ColumnConstraints percentWidth="25"/>
-                                </columnConstraints>
-                                <VBox GridPane.columnIndex="0" spacing="6" styleClass="mini-report-card">
-                                    <Label text="Tổng giao dịch thành công" styleClass="stat-title"/>
-                                    <Label fx:id="lblGrossSales" text="0 đ" styleClass="report-value"/>
-                                </VBox>
-                                <VBox GridPane.columnIndex="1" spacing="6" styleClass="mini-report-card">
-                                    <Label text="Phí sàn ước tính" styleClass="stat-title"/>
-                                    <Label fx:id="lblPlatformRevenue" text="0 đ" styleClass="report-value"/>
-                                </VBox>
-                                <VBox GridPane.columnIndex="2" spacing="6" styleClass="mini-report-card">
-                                    <Label text="Tiền về seller" styleClass="stat-title"/>
-                                    <Label fx:id="lblSellerPayout" text="0 đ" styleClass="report-value"/>
-                                </VBox>
-                                <VBox GridPane.columnIndex="3" spacing="6" styleClass="mini-report-card">
-                                    <Label text="Số phiên đã thanh toán" styleClass="stat-title"/>
-                                    <Label fx:id="lblPaidCount" text="0 phiên" styleClass="report-value"/>
-                                </VBox>
-                            </GridPane>
-
-                            <HBox spacing="16">
-                                <VBox HBox.hgrow="ALWAYS" spacing="6" styleClass="mini-report-card">
-                                    <Label text="Tiền nạp đã duyệt" styleClass="stat-title"/>
-                                    <Label fx:id="lblDepositApproved" text="0 đ" styleClass="report-value"/>
-                                </VBox>
-                                <VBox HBox.hgrow="ALWAYS" spacing="6" styleClass="mini-report-card">
-                                    <Label text="Tiền nạp chờ duyệt" styleClass="stat-title"/>
-                                    <Label fx:id="lblDepositPending" text="0 đ" styleClass="report-value"/>
-                                </VBox>
-                                <VBox HBox.hgrow="ALWAYS" spacing="6" styleClass="mini-report-card">
-                                    <Label text="Tiền nạp bị từ chối" styleClass="stat-title"/>
-                                    <Label fx:id="lblDepositRejected" text="0 đ" styleClass="report-value"/>
-                                </VBox>
-                            </HBox>
-
-                            <Label text="Chi tiết từng phiên" styleClass="section-title"/>
-                            <TableView fx:id="tableRevenue" prefHeight="360" VBox.vgrow="ALWAYS" styleClass="table-view-custom">
-                                <columns>
-                                    <TableColumn fx:id="colRevenueAuction" text="Phiên" prefWidth="80"/>
-                                    <TableColumn fx:id="colRevenueItem" text="Sản phẩm" prefWidth="240"/>
-                                    <TableColumn fx:id="colRevenueFinal" text="Giá chốt" prefWidth="140"/>
-                                    <TableColumn fx:id="colRevenueFee" text="Phí sàn" prefWidth="140"/>
-                                    <TableColumn fx:id="colRevenueSeller" text="Seller nhận" prefWidth="140"/>
-                                    <TableColumn fx:id="colRevenueStatus" text="Trạng thái" prefWidth="120"/>
-                                </columns>
-                                <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
-                            </TableView>
-                        </VBox>
 
                         <VBox fx:id="settingsPane" visible="false" managed="false" spacing="22" styleClass="card" VBox.vgrow="ALWAYS">
                             <VBox spacing="4">

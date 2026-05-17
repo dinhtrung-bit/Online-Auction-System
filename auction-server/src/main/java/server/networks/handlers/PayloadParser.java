@@ -1,35 +1,37 @@
 package server.networks.handlers;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
-import server.networks.dto.MessageDTO;
-
 import java.math.BigDecimal;
 import java.util.Map;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+
+import server.networks.dto.MessageDTO;
+
 /**
- * PayloadParser — Utility dùng chung để đọc và trích xuất dữ liệu từ MessageDTO payload.
+ * Utility tĩnh dùng chung để parse và validate dữ liệu trong {@link MessageDTO} payload.
  *
- * Tập trung 3 nhóm chức năng:
- *   1. Parse raw payload (JSON hoặc legacy colon-format) thành Map / primitive
- *   2. Extract typed values từ Map (getInt, getLong, getBigDecimal, getString...)
- *   3. Làm sạch chuỗi số tiền (cleanNumberText) — xử lý VND, dấu chấm/phẩy, scientific
+ * <p>Tập trung ba nhóm chức năng:
  *
- * Tất cả method đều là static — không cần khởi tạo instance.
+ * <ol>
+ *   <li>Parse raw payload (JSON hoặc legacy colon-format) thành Map / primitive.
+ *   <li>Trích xuất giá trị có kiểu từ Map: {@code getInt}, {@code getLong},
+ *       {@code getBigDecimal}, {@code getString}.
+ *   <li>Làm sạch chuỗi số tiền: xử lý ký hiệu VND, dấu chấm/phẩy nhóm, và scientific notation.
+ * </ol>
  */
 public final class PayloadParser {
 
     private static final Gson GSON = new Gson();
+    private static final BigDecimal ZERO = BigDecimal.ZERO;
 
-    private PayloadParser() {}
+    private PayloadParser() {
+        // utility class — không cho khởi tạo
+    }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // 1. Parse payload thành Map hoặc trích xuất primitive
-    // ─────────────────────────────────────────────────────────────────────────
+    // ─── 1. Parse payload thành Map hoặc primitive ────────────────────────────
 
-    /**
-     * Lấy payload từ request, ném IllegalArgumentException nếu rỗng.
-     */
+    /** Lấy payload từ request, ném {@link IllegalArgumentException} nếu rỗng. */
     public static String requirePayload(MessageDTO request) {
         if (request == null
                 || request.getPayload() == null
@@ -39,9 +41,7 @@ public final class PayloadParser {
         return request.getPayload().trim();
     }
 
-    /**
-     * Parse payload JSON thành Map. Payload phải bắt đầu bằng '{'.
-     */
+    /** Parse payload JSON thành {@code Map<String, Object>}. Payload phải bắt đầu bằng {@code '{'}. */
     @SuppressWarnings("unchecked")
     public static Map<String, Object> parseJsonPayload(MessageDTO request) {
         String payload = requirePayload(request);
@@ -62,11 +62,13 @@ public final class PayloadParser {
     }
 
     /**
-     * Parse payload thành long ID.
-     * Hỗ trợ cả JSON object ({"roomId":1} / {"auctionId":1}) lẫn plain number string.
+     * Parse payload thành ID kiểu {@code long}.
      *
-     * @param payload  raw payload string
-     * @param jsonKey  tên field chính (vd "roomId"), tự fallback sang "auctionId"/"roomId"
+     * <p>Hỗ trợ cả JSON object ({@code {"roomId":1}} hoặc {@code {"auctionId":1}}) lẫn plain
+     * number string. Tự động fallback giữa {@code roomId} và {@code auctionId}.
+     *
+     * @param payload raw payload string
+     * @param jsonKey tên field chính (vd {@code "roomId"})
      */
     public static long parseIdPayload(String payload, String jsonKey) {
         if (payload == null || payload.trim().isEmpty()) {
@@ -74,31 +76,32 @@ public final class PayloadParser {
         }
 
         String raw = payload.trim();
-
-        if (raw.startsWith("{")) {
-            try {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> data = GSON.fromJson(raw, Map.class);
-                Object value = data != null ? data.get(jsonKey) : null;
-
-                if (value == null && "roomId".equals(jsonKey))    value = data != null ? data.get("auctionId") : null;
-                if (value == null && "auctionId".equals(jsonKey)) value = data != null ? data.get("roomId")    : null;
-
-                if (value == null) {
-                    throw new IllegalArgumentException("Thiếu " + jsonKey + ".");
-                }
-                return toLong(value);
-            } catch (JsonSyntaxException e) {
-                throw new IllegalArgumentException("Payload JSON sai định dạng.");
-            }
+        if (!raw.startsWith("{")) {
+            return toLong(raw);
         }
 
-        return toLong(raw);
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> data = GSON.fromJson(raw, Map.class);
+            Object value = data != null ? data.get(jsonKey) : null;
+
+            if (value == null && "roomId".equals(jsonKey)) {
+                value = data != null ? data.get("auctionId") : null;
+            }
+            if (value == null && "auctionId".equals(jsonKey)) {
+                value = data != null ? data.get("roomId") : null;
+            }
+            if (value == null) {
+                throw new IllegalArgumentException("Thiếu " + jsonKey + ".");
+            }
+            return toLong(value);
+
+        } catch (JsonSyntaxException e) {
+            throw new IllegalArgumentException("Payload JSON sai định dạng.");
+        }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // 2. Extract typed values từ Map
-    // ─────────────────────────────────────────────────────────────────────────
+    // ─── 2. Extract typed values từ Map ───────────────────────────────────────
 
     public static boolean hasKey(Map<String, Object> data, String key) {
         return data != null && data.containsKey(key) && data.get(key) != null;
@@ -106,7 +109,9 @@ public final class PayloadParser {
 
     public static String getString(Map<String, Object> data, String key, String defaultValue) {
         Object value = data.get(key);
-        if (value == null) return defaultValue;
+        if (value == null) {
+            return defaultValue;
+        }
         String text = String.valueOf(value).trim();
         return text.isEmpty() ? defaultValue : text;
     }
@@ -123,7 +128,15 @@ public final class PayloadParser {
         return toLong(value);
     }
 
+    /** Lấy {@link BigDecimal} dương từ Map. Ném nếu thiếu, không parse được, hoặc {@code <= 0}. */
     public static BigDecimal getBigDecimal(Map<String, Object> data, String key) {
+        BigDecimal value = getBigDecimalAllowNegative(data, key);
+        validatePositive(value, key);
+        return value;
+    }
+
+    /** Lấy {@link BigDecimal} từ Map, cho phép giá trị âm hoặc 0 (vd: delta điều chỉnh ví). */
+    public static BigDecimal getBigDecimalAllowNegative(Map<String, Object> data, String key) {
         Object value = data.get(key);
         if (value == null) {
             throw new IllegalArgumentException("Thiếu trường bắt buộc: " + key);
@@ -135,24 +148,34 @@ public final class PayloadParser {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // 3. Làm sạch chuỗi số
-    // ─────────────────────────────────────────────────────────────────────────
+    // ─── 3. Validation ───────────────────────────────────────────────────────
+
+    public static void validatePositive(BigDecimal value, String fieldName) {
+        if (value == null || value.compareTo(ZERO) <= 0) {
+            throw new IllegalArgumentException(fieldName + " phải lớn hơn 0.");
+        }
+    }
+
+    // ─── 4. Làm sạch chuỗi số ─────────────────────────────────────────────────
 
     /**
-     * Chuyển chuỗi số tiền (có thể có ký hiệu VND, dấu chấm/phẩy nhóm, hay
-     * scientific notation) về dạng BigDecimal-parseable.
+     * Chuyển chuỗi số tiền về dạng có thể parse thành {@link BigDecimal}.
      *
-     * Ví dụ:
-     *   "5000000.0"   → "5000000.0"  (Gson double)
-     *   "5.000.000"   → "5000000"    (VN grouping)
-     *   "5,000,000"   → "5000000"    (EN grouping)
-     *   "5.000.000,50"→ "5000000.50" (VN với decimal)
-     *   "5,000,000.50"→ "5000000.50" (EN với decimal)
-     *   "5.0E7"       → "50000000"   (scientific notation)
+     * <p>Hỗ trợ các định dạng:
+     *
+     * <ul>
+     *   <li>{@code "5000000.0"} → {@code "5000000.0"} (Gson serialize double)
+     *   <li>{@code "5.000.000"} → {@code "5000000"} (VN grouping)
+     *   <li>{@code "5,000,000"} → {@code "5000000"} (EN grouping)
+     *   <li>{@code "5.000.000,50"} → {@code "5000000.50"} (VN có decimal)
+     *   <li>{@code "5,000,000.50"} → {@code "5000000.50"} (EN có decimal)
+     *   <li>{@code "5.0E7"} → {@code "50000000"} (scientific notation)
+     * </ul>
      */
     public static String cleanNumberText(String text) {
-        if (text == null) return "";
+        if (text == null) {
+            return "";
+        }
 
         String cleaned = text
                 .replace("đ", "")
@@ -161,32 +184,33 @@ public final class PayloadParser {
                 .replace(" ", "")
                 .trim();
 
-        if (cleaned.isEmpty()) return "";
+        if (cleaned.isEmpty()) {
+            return "";
+        }
 
-        // Scientific notation (vd "5.0E7") — chuyển sang plain string trước khi xử lý separator
+        // Scientific notation — chuyển sang plain string trước khi xử lý separator.
         if (cleaned.matches("^-?\\d+(\\.\\d+)?[eE]-?\\d+$")) {
             try {
                 return new BigDecimal(cleaned).toPlainString();
             } catch (NumberFormatException ignored) {
-                // fallback xuống logic dưới
+                // fallback xuống logic xử lý separator bên dưới
             }
         }
 
         boolean hasComma = cleaned.contains(",");
-        boolean hasDot   = cleaned.contains(".");
+        boolean hasDot = cleaned.contains(".");
 
         if (hasComma && hasDot) {
-            // Có cả hai → dấu xuất hiện sau cùng là decimal, dấu còn lại là grouping
+            // Có cả hai → dấu xuất hiện sau cùng là decimal, dấu còn lại là grouping.
             int lastComma = cleaned.lastIndexOf(',');
-            int lastDot   = cleaned.lastIndexOf('.');
+            int lastDot = cleaned.lastIndexOf('.');
             if (lastDot > lastComma) {
-                cleaned = cleaned.replace(",", "");          // "," là grouping
+                cleaned = cleaned.replace(",", "");
             } else {
-                cleaned = cleaned.replace(".", "")           // "." là grouping
-                        .replace(',', '.');         // "," là decimal → đổi sang "."
+                cleaned = cleaned.replace(".", "").replace(',', '.');
             }
         } else if (hasComma) {
-            // Chỉ có "," — decimal khi xuất hiện đúng 1 lần và sau nó 1–2 chữ số
+            // Chỉ có "," — decimal khi xuất hiện đúng 1 lần và sau nó 1-2 chữ số.
             int count = cleaned.length() - cleaned.replace(",", "").length();
             int afterLen = cleaned.length() - cleaned.lastIndexOf(',') - 1;
             boolean isGrouping = cleaned.matches(".*,\\d{3}(?!\\d).*");
@@ -196,23 +220,22 @@ public final class PayloadParser {
                 cleaned = cleaned.replace(",", "");
             }
         } else if (hasDot) {
-            // Chỉ có "." — grouping khi có nhiều hơn 1 chấm, hoặc đúng 3 chữ số sau chấm duy nhất
-            int count    = cleaned.length() - cleaned.replace(".", "").length();
+            // Chỉ có "." — grouping khi >1 chấm hoặc đúng 3 chữ số sau chấm duy nhất.
+            int count = cleaned.length() - cleaned.replace(".", "").length();
             int afterLen = cleaned.length() - cleaned.lastIndexOf('.') - 1;
             if (count > 1 || afterLen == 3) {
                 cleaned = cleaned.replace(".", "");
             }
-            // else: giữ nguyên (vd "5000000.0" hay "1.5")
         }
 
         return cleaned.replaceAll("[^0-9.\\-]", "").trim();
     }
 
-    /**
-     * Làm sạch chuỗi để parse thành long/int (không giữ dấu chấm thập phân).
-     */
+    /** Phiên bản đơn giản cho số nguyên — xóa hết dấu phẩy, dấu chấm, ký hiệu VND. */
     public static String cleanIntegerText(String text) {
-        if (text == null) return "";
+        if (text == null) {
+            return "";
+        }
         return text
                 .replace("đ", "")
                 .replace("VND", "")
@@ -223,29 +246,22 @@ public final class PayloadParser {
                 .trim();
     }
 
+    // ─── 5. Internal helpers ─────────────────────────────────────────────────
+
     /**
-     * Kiểm tra và validate giá trị BigDecimal > 0.
+     * Chuyển Object về {@code long}. Xử lý cả {@link Number} lẫn String, kể cả khi Gson
+     * serialize số nguyên thành chuỗi dạng {@code "1.0"}.
      */
-    public static void validatePositive(BigDecimal value, String fieldName) {
-        if (value == null || value.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException(fieldName + " phải lớn hơn 0.");
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Internal helpers
-    // ─────────────────────────────────────────────────────────────────────────
-
     public static long toLong(Object value) {
         if (value == null) {
             throw new IllegalArgumentException("Giá trị số không được null.");
         }
-        if (value instanceof Number) {
-            return ((Number) value).longValue();
+        if (value instanceof Number n) {
+            return n.longValue();
         }
+
         try {
             String raw = String.valueOf(value).trim();
-            // Gson đôi khi serialize integer thành "1.0" — bỏ phần thập phân nếu chỉ là ".0"
             if (raw.matches("-?\\d+\\.0+")) {
                 raw = raw.substring(0, raw.indexOf('.'));
             }
