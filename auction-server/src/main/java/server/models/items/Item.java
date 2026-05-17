@@ -6,14 +6,14 @@ import java.math.BigDecimal;
 
 public abstract class Item implements Serializable {
     //protected Seller seller;
-    protected int itemId;
-    protected String name;
-    protected Seller seller;
-    protected BigDecimal startingPrice;
+    private int itemId;
+    private String name;
+    private Seller seller;
+    private BigDecimal startingPrice;
     // protected BigDecimal currenthightestprice;
-    protected String description;
-    protected String imagePath;
-    protected BigDecimal bidIncrement = BigDecimal.ZERO;
+    private String description;
+    private String imagePath;
+    private BigDecimal bidIncrement = BigDecimal.ZERO;
     public Item(int itemId, String name, BigDecimal startingPrice,String description) {
         this.itemId = itemId;
         this.name = name;

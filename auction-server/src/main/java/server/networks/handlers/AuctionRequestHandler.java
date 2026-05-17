@@ -678,14 +678,63 @@ public class AuctionRequestHandler {
             return "";
         }
 
-        return text
+        // 1) Loại bỏ ký tự tiền tệ và khoảng trắng
+        String cleaned = text
                 .replace("đ", "")
                 .replace("VND", "")
                 .replace("VNĐ", "")
-                .replace(",", "")
-                .replace(".", "")
-                .replaceAll("[^0-9\\-]", "")
+                .replace(" ", "")
                 .trim();
+
+        if (cleaned.isEmpty()) {
+            return "";
+        }
+
+        // 2) Scientific notation (vd "5.0E7") -> dùng BigDecimal để chuyển sang plain string
+        if (cleaned.matches("^-?\\d+(\\.\\d+)?[eE]-?\\d+$")) {
+            try {
+                return new BigDecimal(cleaned).toPlainString();
+            } catch (NumberFormatException ignored) {
+                // fallback xuống dưới
+            }
+        }
+
+        boolean hasComma = cleaned.contains(",");
+        boolean hasDot = cleaned.contains(".");
+
+        if (hasComma && hasDot) {
+            int lastComma = cleaned.lastIndexOf(',');
+            int lastDot = cleaned.lastIndexOf('.');
+            if (lastDot > lastComma) {
+                cleaned = cleaned.replace(",", "");
+            } else {
+                cleaned = cleaned.replace(".", "")
+                        .replace(',', '.');
+            }
+        } else if (hasComma) {
+            int count = cleaned.length() - cleaned.replace(",", "").length();
+            int lastComma = cleaned.lastIndexOf(',');
+            int afterLen = cleaned.length() - lastComma - 1;
+            if (count == 1 && afterLen >= 1 && afterLen <= 3
+                    && !cleaned.matches(".*,\\d{3}(?!\\d).*")) {
+                cleaned = cleaned.replace(',', '.');
+            } else {
+                cleaned = cleaned.replace(",", "");
+            }
+        } else if (hasDot) {
+            int count = cleaned.length() - cleaned.replace(".", "").length();
+            int lastDot = cleaned.lastIndexOf('.');
+            int afterLen = cleaned.length() - lastDot - 1;
+            if (count > 1) {
+                cleaned = cleaned.replace(".", "");
+            } else if (afterLen == 3) {
+                cleaned = cleaned.replace(".", "");
+            }
+        }
+
+        cleaned = cleaned.replaceAll("[^0-9.\\-]", "");
+
+        return cleaned.trim();
     }
 
     private boolean isAdmin(User user) {

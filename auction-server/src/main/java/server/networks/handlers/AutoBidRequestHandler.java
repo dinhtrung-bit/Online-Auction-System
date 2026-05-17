@@ -217,14 +217,75 @@ public class AutoBidRequestHandler {
             return "";
         }
 
-        return text
+        // 1) Loại bỏ ký tự tiền tệ và khoảng trắng
+        String cleaned = text
                 .replace("đ", "")
                 .replace("VND", "")
                 .replace("VNĐ", "")
-                .replace(",", "")
-                .replace(".", "")
-                .replaceAll("[^0-9\\-]", "")
+                .replace(" ", "")
                 .trim();
+
+        if (cleaned.isEmpty()) {
+            return "";
+        }
+
+        // 2) Xử lý scientific notation (vd "5.0E7") bằng BigDecimal trước khi clean
+        //    để tránh mất chính xác và để chuyển thành dạng plain (5.0E7 -> 50000000)
+        if (cleaned.matches("^-?\\d+(\\.\\d+)?[eE]-?\\d+$")) {
+            try {
+                return new java.math.BigDecimal(cleaned).toPlainString();
+            } catch (NumberFormatException ignored) {
+                // fallback xuống dưới
+            }
+        }
+
+        // 3) Xác định separator:
+        //    - Nếu có CẢ dấu "," và "." -> dấu xuất hiện sau cùng là decimal,
+        //      dấu còn lại là grouping (cách nhóm hàng nghìn) -> xóa.
+        //    - Nếu chỉ có 1 loại dấu:
+        //         * Coi là DECIMAL khi chỉ xuất hiện 1 lần và sau dấu có 1-3 chữ số (vd: 5000000.0, 1.5)
+        //         * Còn lại coi là grouping (vd: 5.000.000 VN style, 5,000,000 EN style) -> xóa
+        boolean hasComma = cleaned.contains(",");
+        boolean hasDot = cleaned.contains(".");
+
+        if (hasComma && hasDot) {
+            int lastComma = cleaned.lastIndexOf(',');
+            int lastDot = cleaned.lastIndexOf('.');
+            if (lastDot > lastComma) {
+                cleaned = cleaned.replace(",", "");          // "," là grouping
+            } else {
+                cleaned = cleaned.replace(".", "")           // "." là grouping
+                        .replace(',', '.');         // "," là decimal -> đổi sang "."
+            }
+        } else if (hasComma) {
+            int count = cleaned.length() - cleaned.replace(",", "").length();
+            int lastComma = cleaned.lastIndexOf(',');
+            int afterLen = cleaned.length() - lastComma - 1;
+            if (count == 1 && afterLen >= 1 && afterLen <= 3
+                    && !cleaned.matches(".*,\\d{3}(?!\\d).*")) {
+                cleaned = cleaned.replace(',', '.');         // decimal
+            } else {
+                cleaned = cleaned.replace(",", "");          // grouping
+            }
+        } else if (hasDot) {
+            int count = cleaned.length() - cleaned.replace(".", "").length();
+            int lastDot = cleaned.lastIndexOf('.');
+            int afterLen = cleaned.length() - lastDot - 1;
+            // Nhiều hơn 1 dấu chấm -> chắc chắn là grouping (VN: "5.000.000")
+            // 1 dấu chấm và phần sau đúng 3 chữ số -> coi là grouping (vd "5.000")
+            // 1 dấu chấm và phần sau khác 3 chữ số -> coi là decimal (vd "5000000.0", "1.5")
+            if (count > 1) {
+                cleaned = cleaned.replace(".", "");
+            } else if (afterLen == 3) {
+                cleaned = cleaned.replace(".", "");
+            }
+            // còn lại giữ nguyên dấu chấm vì đó là decimal hợp lệ
+        }
+
+        // 4) Loại bỏ mọi ký tự không phải số / dấu chấm / dấu trừ
+        cleaned = cleaned.replaceAll("[^0-9.\\-]", "");
+
+        return cleaned.trim();
     }
 
     private static class AutoBidPayload {

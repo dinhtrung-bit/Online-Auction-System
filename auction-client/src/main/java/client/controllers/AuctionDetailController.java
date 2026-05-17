@@ -739,9 +739,11 @@ public class AuctionDetailController implements Initializable {
                 });
 
                 Map<String, Object> payload = new LinkedHashMap<>();
-                payload.put("auctionId", parseDoubleSafe(currentRoomId, 0));
-                payload.put("maxBid", cfg.maxBid);
-                payload.put("step", cfg.increment);
+                // Dùng long/int thay vì double để Gson serialize ra số nguyên thuần
+                // (tránh "5000000.0" gây nhầm lẫn bên parse số ở server)
+                payload.put("auctionId", (long) parseDoubleSafe(currentRoomId, 0));
+                payload.put("maxBid", (long) cfg.maxBid);
+                payload.put("step", (long) cfg.increment);
 
                 sendAsync("SET_AUTO_BID", gson.toJson(payload));
             });
