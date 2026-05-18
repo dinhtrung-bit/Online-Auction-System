@@ -1,13 +1,20 @@
 package client.controllers;
 
 import client.models.item.Art;
+import client.models.item.Electronics;
 import client.models.item.Item;
-import client.networks.ClientMain;
 import client.models.user.UserSession;
-import client.networks.MessageDTO;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import javafx.application.Platform;
+import client.services.RequestResponse;
+import client.services.ServerGateway;
+import client.utils.DateTimes;
+import client.utils.MapAccessor;
+import client.utils.MoneyFormatter;
+import client.utils.SafeParser;
+import client.utils.StatusMapper;
+import client.utils.dialogs.CreateAuctionDialog;
+import client.utils.dialogs.Dialogs;
+import client.utils.dialogs.StyledComponents;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -21,33 +28,48 @@ import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
+/**
+ * SellerDashboardController — Quản lý màn hình Seller.
+ *
+ * <p><b>Refactor v2:</b>
+ * <ul>
+ *   <li>Toàn bộ form tạo phiên đấu giá tách hẳn sang
+ *       {@link CreateAuctionDialog}.
+ *   <li>Network qua {@link ServerGateway} + {@link RequestResponse}
+ *       (CRUD sản phẩm + auction).
+ *   <li>Format/parse qua {@link MoneyFormatter}, {@link DateTimes},
+ *       {@link SafeParser}, {@link StatusMapper}, {@link MapAccessor}.
+ *   <li>Dialog/alert qua {@link Dialogs}, {@link StyledComponents}.
+ * </ul>
+ */
 public class SellerDashboardController {
 
-    private String formatVND(double amount) {
-        return String.format("%,.0f đ", amount).replace(",", ".");
-    }
-
+    // ─── FXML — Inventory table ─────────────────────────────────────
     @FXML private TableView<Item> tableItems;
     @FXML private TableColumn<Item, String> colId;
     @FXML private TableColumn<Item, String> colName;
@@ -55,52 +77,47 @@ public class SellerDashboardController {
     @FXML private TableColumn<Item, String> colWinner;
     @FXML private TableColumn<Item, String> colStatus;
 
-    @FXML private VBox inventoryView;
-    @FXML private VBox reportView;
-    @FXML private Button btnInventory;
-    @FXML private Button btnReport;
-    @FXML private Button btnEditProduct;
-    @FXML private Button btnDeleteProduct;
-    @FXML private Button btnStartAuction;
-    @FXML private Button btnCancelAuction;
+    // ─── FXML — Layout ──────────────────────────────────────────────
+    @FXML private VBox inventoryView, reportView;
+    @FXML private Button btnInventory, btnReport;
+    @FXML private Button btnEditProduct, btnDeleteProduct, btnStartAuction, btnCancelAuction;
 
+    // ─── FXML — Filter ──────────────────────────────────────────────
     @FXML private TextField txtProductSearch;
     @FXML private ComboBox<String> cmbProductStatusFilter;
+
+    // ─── FXML — Header ──────────────────────────────────────────────
     @FXML private Label lblSellerName;
-    @FXML private Label lblSellerItemsCount;
-    @FXML private Label lblSellerRunningCount;
-    @FXML private Label lblSellerRevenueMini;
+    @FXML private Label lblSellerItemsCount, lblSellerRunningCount, lblSellerRevenueMini;
 
-    @FXML private Label lblTotalItems;
-    @FXML private Label lblRunningAuctions;
-    @FXML private Label lblFinishedAuctions;
-    @FXML private Label lblTotalRevenue;
-
+    // ─── FXML — Report ──────────────────────────────────────────────
+    @FXML private Label lblTotalItems, lblRunningAuctions, lblFinishedAuctions, lblTotalRevenue;
     @FXML private BarChart<String, Number> revenueBarChart;
     @FXML private PieChart statusPieChart;
 
+    // ─── FXML — Selected product panel ──────────────────────────────
     @FXML private ImageView sellerProductImage;
     @FXML private VBox sellerProductImagePlaceholder;
-    @FXML private Label lblSelectedProductName;
-    @FXML private Label lblSelectedProductId;
-    @FXML private Label lblSelectedProductCategory;
-    @FXML private Label lblSelectedProductDescription;
-    @FXML private Label lblSelectedProductPrice;
-    @FXML private Label lblSelectedAuctionStatus;
-    @FXML private Label lblSelectedAuctionPrice;
-    @FXML private Label lblSelectedAuctionWinner;
-    @FXML private Label lblSelectedAuctionEndTime;
-    @FXML private Button btnOpenAuctionRoom;
-    @FXML private Button btnQuickStartAuction;
+    @FXML private Label lblSelectedProductName, lblSelectedProductId;
+    @FXML private Label lblSelectedProductCategory, lblSelectedProductDescription, lblSelectedProductPrice;
+    @FXML private Label lblSelectedAuctionStatus, lblSelectedAuctionPrice;
+    @FXML private Label lblSelectedAuctionWinner, lblSelectedAuctionEndTime;
+    @FXML private Button btnOpenAuctionRoom, btnQuickStartAuction;
 
+    // ─── State ──────────────────────────────────────────────────────
     private ObservableList<Item> itemList;
-    private final Gson gson = new Gson();
     private final Map<String, Map<String, Object>> auctionMap = new HashMap<>();
 
-    // Hàng đợi roomId các phiên đấu giá vừa kết thúc — chờ MY_AUCTIONS reload xong
-    // để biết ai thắng và bao nhiêu rồi mới hiện thông báo cho Seller.
-    private final java.util.Queue<Long> pendingFinishedNotifications =
-            new java.util.concurrent.ConcurrentLinkedQueue<>();
+    /**
+     * Hàng đợi roomId các phiên đấu giá vừa kết thúc — chờ MY_AUCTIONS reload
+     * xong để biết ai thắng và bao nhiêu rồi mới hiện thông báo cho Seller.
+     */
+    private final Queue<Long> pendingFinishedNotifications = new ConcurrentLinkedQueue<>();
+
+    private static final List<String> EVENT_ACTIONS = List.of(
+            "AUCTION_STARTED", "AUCTION_FINISHED", "AUCTION_CANCELED", "ERROR");
+
+    // ─── Init ───────────────────────────────────────────────────────
 
     @FXML
     public void initialize() {
@@ -115,14 +132,28 @@ public class SellerDashboardController {
         if (cmbProductStatusFilter != null) {
             cmbProductStatusFilter.getItems().setAll(
                     "TẤT CẢ", "Chưa đăng", "Sắp bắt đầu", "Đang đấu giá",
-                    "Kết thúc", "Đã thanh toán", "Đã hủy"
-            );
+                    "Kết thúc", "Đã thanh toán", "Đã hủy");
             cmbProductStatusFilter.setValue("TẤT CẢ");
         }
 
+        setupTablePlaceholder();
+        setupTableColumns();
+        setupTableSelectionAndKeys();
+
+        updateActionButtons();
+        updateSelectedProductPanel(null);
+
+        registerLifecycleListeners();
+        loadMyItemsFromServer();
+    }
+
+    private void setupTablePlaceholder() {
         Label emptyLabel = new Label("Kho hàng đang trống. Hãy thêm sản phẩm mới!");
         emptyLabel.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 14px; -fx-font-style: italic;");
         tableItems.setPlaceholder(emptyLabel);
+    }
+
+    private void setupTableSelectionAndKeys() {
         tableItems.getSelectionModel().selectedItemProperty().addListener((obs, oldItem, newItem) -> {
             updateActionButtons();
             updateSelectedProductPanel(newItem);
@@ -130,30 +161,36 @@ public class SellerDashboardController {
         tableItems.setOnKeyPressed(event -> {
             switch (event.getCode()) {
                 case DELETE -> handleDeleteProduct();
-                case F5 -> handleRefreshInventory();
-                default -> { }
+                case F5     -> handleRefreshInventory();
+                default     -> { }
             }
         });
+        tableItems.setRowFactory(tv -> {
+            TableRow<Item> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) handleEditProduct();
+            });
+            return row;
+        });
+    }
 
+    private void setupTableColumns() {
         colId.setCellValueFactory(new PropertyValueFactory<>("itemId"));
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
 
         colPrice.setCellValueFactory(cellData -> {
             Item item = cellData.getValue();
             Map<String, Object> auction = auctionMap.get(item.getItemId());
-
             double price = auction != null && auction.get("currentPrice") != null
-                    ? Double.parseDouble(auction.get("currentPrice").toString())
+                    ? SafeParser.numberFrom(auction.get("currentPrice"), item.getStartingPrice())
                     : item.getStartingPrice();
-
-            return new javafx.beans.property.SimpleObjectProperty<>(price);
+            return new SimpleObjectProperty<>(price);
         });
 
-        colPrice.setCellFactory(column -> new TableCell<Item, Double>() {
-            @Override
-            protected void updateItem(Double price, boolean empty) {
+        colPrice.setCellFactory(column -> new TableCell<>() {
+            @Override protected void updateItem(Double price, boolean empty) {
                 super.updateItem(price, empty);
-                setText(empty || price == null ? null : formatVND(price));
+                setText(empty || price == null ? null : MoneyFormatter.formatViaPattern(price));
             }
         });
 
@@ -161,295 +198,170 @@ public class SellerDashboardController {
         colWinner.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getDetails()));
 
-        colWinner.setCellFactory(column -> new TableCell<Item, String>() {
+        colWinner.setCellFactory(column -> new TableCell<>() {
             private final Label label = new Label();
+            { label.setWrapText(true); label.setStyle("-fx-text-fill: #334155; -fx-line-spacing: 3px;"); }
 
-            {
-                label.setWrapText(true);
-                label.setStyle("-fx-text-fill: #334155; -fx-line-spacing: 3px;");
-            }
-
-            @Override
-            protected void updateItem(String text, boolean empty) {
+            @Override protected void updateItem(String text, boolean empty) {
                 super.updateItem(text, empty);
-
-                if (empty || text == null || text.isBlank()) {
-                    setGraphic(null);
-                } else {
-                    label.setText(text);
-                    label.setMaxWidth(colWinner.getWidth() - 20);
-                    setGraphic(label);
-                }
+                if (empty || text == null || text.isBlank()) { setGraphic(null); return; }
+                label.setText(text);
+                label.setMaxWidth(colWinner.getWidth() - 20);
+                setGraphic(label);
             }
         });
 
         colStatus.setCellValueFactory(cellData -> {
             Item item = cellData.getValue();
-            Map<String, Object> auction = auctionMap.get(item.getItemId());
-
-            String status = auction != null && auction.get("status") != null
-                    ? auction.get("status").toString()
-                    : "NONE";
-
-            return new SimpleStringProperty(statusToText(status));
+            String status = getRawAuctionStatus(item);
+            return new SimpleStringProperty(StatusMapper.toSellerText(status));
         });
 
-        colStatus.setCellFactory(column -> new TableCell<Item, String>() {
-            @Override
-            protected void updateItem(String status, boolean empty) {
+        colStatus.setCellFactory(column -> new TableCell<>() {
+            @Override protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
-
-                if (empty || status == null) {
-                    setGraphic(null);
-                    return;
-                }
-
+                if (empty || status == null) { setGraphic(null); return; }
                 Label badge = new Label(status);
-                badge.setStyle(stylForStatus(status));
+                badge.setStyle(StatusMapper.sellerBadgeStyle(status));
                 setGraphic(badge);
             }
         });
+    }
 
-        tableItems.setRowFactory(tv -> {
-            TableRow<Item> row = new TableRow<>();
-            row.setOnMouseClicked(event -> {
-                if (event.getClickCount() == 2 && !row.isEmpty()) {
-                    handleEditProduct();
-                }
-            });
-            return row;
+    // ─── Lifecycle listeners (luôn-active suốt phiên) ──────────────
+
+    private void registerLifecycleListeners() {
+        ServerGateway.onString("AUCTION_STARTED", payload -> loadMyAuctionsFromServer());
+
+        // Khi phòng của Seller kết thúc — broadcast payload là roomId.
+        // Reload danh sách rồi mới show thông báo chi tiết (winner, giá cuối).
+        ServerGateway.onString("AUCTION_FINISHED", payload -> {
+            try { pendingFinishedNotifications.add(Long.parseLong(payload.trim())); }
+            catch (Exception ignored) {}
+            loadMyAuctionsFromServer();
         });
 
-        updateActionButtons();
-        updateSelectedProductPanel(null);
-
-        ClientMain.registerListener("AUCTION_STARTED", payload ->
-                Platform.runLater(this::loadMyAuctionsFromServer));
-
-        // Khi phòng đấu giá của Seller kết thúc — broadcast payload chỉ là roomId.
-        // Reload danh sách rồi tìm phòng đó để show thông báo chi tiết (ai thắng, giá cuối).
-        ClientMain.registerListener("AUCTION_FINISHED", payload -> {
+        // Khi Admin hủy phòng — reload + thông báo.
+        ServerGateway.onString("AUCTION_CANCELED", payload -> {
             try {
-                long finishedRoomId = Long.parseLong(payload.trim());
-                pendingFinishedNotifications.add(finishedRoomId);
+                long roomId = Long.parseLong(payload.trim());
+                Dialogs.warn("Phiên đấu giá bị hủy",
+                        "⚠️ Phiên đấu giá #" + roomId + " đã bị quản trị viên hủy.");
             } catch (Exception ignored) {}
-            Platform.runLater(this::loadMyAuctionsFromServer);
+            loadMyAuctionsFromServer();
         });
 
-        // Khi Admin hủy phòng của Seller — cũng cần reload + thông báo
-        ClientMain.registerListener("AUCTION_CANCELED", payload -> {
-            try {
-                long canceledRoomId = Long.parseLong(payload.trim());
-                Platform.runLater(() -> {
-                    Alert a = new Alert(Alert.AlertType.WARNING);
-                    a.setTitle("Phiên đấu giá bị hủy");
-                    a.setHeaderText(null);
-                    a.setContentText("⚠️ Phiên đấu giá #" + canceledRoomId + " đã bị quản trị viên hủy.");
-                    a.showAndWait();
-                });
-            } catch (Exception ignored) {}
-            Platform.runLater(this::loadMyAuctionsFromServer);
-        });
-
-        // Bắt mọi lỗi chung từ server
-        ClientMain.registerListener("ERROR", payload ->
-                Platform.runLater(() -> {
-                    Alert a = new Alert(Alert.AlertType.ERROR);
-                    a.setTitle("Lỗi từ máy chủ");
-                    a.setHeaderText(null);
-                    a.setContentText(payload);
-                    a.showAndWait();
-                })
-        );
-
-        loadMyItemsFromServer();
+        ServerGateway.onString("ERROR", payload ->
+                Dialogs.error("Lỗi từ máy chủ", payload));
     }
 
-    private String statusToText(String status) {
-        return switch (status) {
-            case "OPEN" -> "⏳ Sắp bắt đầu";
-            case "RUNNING" -> "🔴 Đang đấu giá";
-            case "FINISHED" -> "✅ Kết thúc";
-            case "PAID" -> "💰 Đã thanh toán";
-            case "CANCELED" -> "❌ Đã hủy";
-            default -> "📦 Chưa đăng";
-        };
-    }
-
-    private String stylForStatus(String status) {
-        String base = "-fx-padding: 3 8; -fx-background-radius: 5; -fx-font-weight: bold; -fx-font-size: 11px;";
-
-        return switch (status) {
-            case "🔴 Đang đấu giá" -> base + "-fx-background-color: #dcfce7; -fx-text-fill: #166534;";
-            case "⏳ Sắp bắt đầu" -> base + "-fx-background-color: #fef9c3; -fx-text-fill: #854d0e;";
-            case "✅ Kết thúc" -> base + "-fx-background-color: #f1f5f9; -fx-text-fill: #64748b;";
-            case "💰 Đã thanh toán" -> base + "-fx-background-color: #dbeafe; -fx-text-fill: #1e40af;";
-            case "❌ Đã hủy" -> base + "-fx-background-color: #fee2e2; -fx-text-fill: #991b1b;";
-            default -> base + "-fx-background-color: #f1f5f9; -fx-text-fill: #64748b;";
-        };
-    }
+    // ─── Load data từ server ────────────────────────────────────────
 
     private void loadMyItemsFromServer() {
-        ClientMain.registerListener("MY_ITEMS", payload -> {
-            ClientMain.unregisterListener("MY_ITEMS");
-
-            try {
-                Type listType = new TypeToken<List<Map<String, Object>>>() {}.getType();
-                List<Map<String, Object>> list = gson.fromJson(payload, listType);
-
-                Platform.runLater(() -> {
-                    itemList.clear();
-
-                    if (list != null) {
-                        for (Map<String, Object> m : list) {
-                            String itemId = m.get("itemId") != null ? m.get("itemId").toString() : "";
-                            String name = m.get("name") != null ? m.get("name").toString() : "";
-                            String description = m.get("description") != null ? m.get("description").toString() : "";
-
-                            String categoryInfo = "";
-
-                            if (m.get("categoryInfo") != null) {
-                                categoryInfo = m.get("categoryInfo").toString();
-                            } else if (m.get("CategoryInfo") != null) {
-                                categoryInfo = m.get("CategoryInfo").toString();
-                            } else if (m.get("category") != null) {
-                                categoryInfo = m.get("category").toString();
-                            }
-
-                            double price = m.get("startingPrice") != null
-                                    ? Double.parseDouble(m.get("startingPrice").toString())
-                                    : 0;
-
-                            Item item = categoryInfo != null && categoryInfo.toUpperCase().contains("ELECT")
-                                    ? new client.models.item.Electronics(itemId, name, price, 0)
-                                    : new Art(itemId, name, price, categoryInfo);
-                            item.setCategory(categoryInfo == null || categoryInfo.isBlank() ? "ART" : categoryInfo);
-                            item.setDescription(description);
-
-                            if (m.get("bidIncrement") != null) {
-                                item.setBidIncrement(Double.parseDouble(m.get("bidIncrement").toString()));
-                            }
-
-                            if (m.get("imagePath") != null) {
-                                item.setImagePath(m.get("imagePath").toString());
-                            }
-
-                            itemList.add(item);
-                        }
-                    }
-
-                    applyProductFilters();
-                    updateMiniStats();
-                    loadMyAuctionsFromServer();
-
-                    if (reportView != null && reportView.isVisible()) {
-                        updateReport();
-                    }
-                });
-            } catch (Exception e) {
-                System.err.println("Lỗi parse MY_ITEMS: " + e.getMessage());
+        ServerGateway.onMapList("MY_ITEMS", list -> {
+            ServerGateway.off("MY_ITEMS");
+            itemList.clear();
+            if (list != null) {
+                for (Map<String, Object> m : list) {
+                    Item item = mapToItem(m);
+                    if (item != null) itemList.add(item);
+                }
             }
+            applyProductFilters();
+            updateMiniStats();
+            loadMyAuctionsFromServer();
+            if (reportView != null && reportView.isVisible()) updateReport();
         });
 
-        // [Fix Lag] Defer network call sang sau khi UI render xong
-        Platform.runLater(() ->
-                new Thread(() ->
-                        ClientMain.send(gson.toJson(new MessageDTO("GET_MY_ITEMS", "")))
-                ).start()
-        );
+        // [Fix Lag] defer network call sang sau khi UI render xong
+        javafx.application.Platform.runLater(() ->
+                ServerGateway.sendAsync("GET_MY_ITEMS", ""));
     }
 
     private void loadMyAuctionsFromServer() {
-        ClientMain.registerListener("MY_AUCTIONS", payload -> {
-            ClientMain.unregisterListener("MY_AUCTIONS");
+        ServerGateway.onMapList("MY_AUCTIONS", list -> {
+            ServerGateway.off("MY_AUCTIONS");
+            auctionMap.clear();
+            Map<Long, Map<String, Object>> byAuctionId = new HashMap<>();
 
-            try {
-                Type listType = new TypeToken<List<Map<String, Object>>>() {}.getType();
-                List<Map<String, Object>> list = gson.fromJson(payload, listType);
-
-                Platform.runLater(() -> {
-                    auctionMap.clear();
-
-                    // Index theo cả itemId (cho table) lẫn auctionId (để tra notify)
-                    Map<Long, Map<String, Object>> byAuctionId = new HashMap<>();
-                    if (list != null) {
-                        for (Map<String, Object> a : list) {
-                            String itemId = a.get("itemId") != null ? a.get("itemId").toString() : "";
-                            auctionMap.put(itemId, a);
-                            if (a.get("auctionId") != null) {
-                                try {
-                                    long aid = ((Number) a.get("auctionId")).longValue();
-                                    byAuctionId.put(aid, a);
-                                } catch (Exception ignored) {}
-                            }
-                        }
+            if (list != null) {
+                for (Map<String, Object> a : list) {
+                    String itemId = MapAccessor.getString(a, "itemId");
+                    auctionMap.put(itemId, a);
+                    if (a.get("auctionId") != null) {
+                        try { byAuctionId.put(MapAccessor.getLong(a, "auctionId", 0), a); }
+                        catch (Exception ignored) {}
                     }
+                }
+            }
 
-                    applyProductFilters();
-                    updateMiniStats();
-                    updateSelectedProductPanel(tableItems.getSelectionModel().getSelectedItem());
+            applyProductFilters();
+            updateMiniStats();
+            updateSelectedProductPanel(tableItems.getSelectionModel().getSelectedItem());
 
-                    if (reportView != null && reportView.isVisible()) {
-                        updateReport();
-                    }
+            if (reportView != null && reportView.isVisible()) updateReport();
 
-                    // Xử lý notification cho các phiên vừa kết thúc
-                    Long finishedId;
-                    while ((finishedId = pendingFinishedNotifications.poll()) != null) {
-                        Map<String, Object> room = byAuctionId.get(finishedId);
-                        if (room != null) {
-                            showAuctionFinishedNotification(finishedId, room);
-                        }
-                    }
-                });
-            } catch (Exception e) {
-                System.err.println("Lỗi parse MY_AUCTIONS: " + e.getMessage());
+            // Hiện notification cho các phiên vừa kết thúc
+            Long finishedId;
+            while ((finishedId = pendingFinishedNotifications.poll()) != null) {
+                Map<String, Object> room = byAuctionId.get(finishedId);
+                if (room != null) showAuctionFinishedNotification(finishedId, room);
             }
         });
+        ServerGateway.sendAsync("GET_MY_AUCTIONS", "");
+    }
 
-        new Thread(() ->
-                ClientMain.send(gson.toJson(new MessageDTO("GET_MY_AUCTIONS", "")))
-        ).start();
+    /** Convert payload Map → Item (Art / Electronics). */
+    private Item mapToItem(Map<String, Object> m) {
+        String itemId      = MapAccessor.getString(m, "itemId");
+        String name        = MapAccessor.getString(m, "name");
+        String description = MapAccessor.getString(m, "description");
+        String categoryInfo = MapAccessor.getString(m, "categoryInfo",
+                MapAccessor.getString(m, "CategoryInfo",
+                        MapAccessor.getString(m, "category", "")));
+        double price = MapAccessor.getDouble(m, "startingPrice");
+
+        Item item = categoryInfo.toUpperCase().contains("ELECT")
+                ? new Electronics(itemId, name, price, 0)
+                : new Art(itemId, name, price, categoryInfo);
+        item.setCategory(categoryInfo.isBlank() ? "ART" : categoryInfo);
+        item.setDescription(description);
+        if (m.get("bidIncrement") != null)
+            item.setBidIncrement(MapAccessor.getDouble(m, "bidIncrement"));
+        if (m.get("imagePath") != null)
+            item.setImagePath(MapAccessor.getString(m, "imagePath"));
+        return item;
     }
 
     /**
-     * Hiển thị thông báo cho Seller khi phiên đấu giá của họ kết thúc.
-     * Phân biệt 2 trường hợp: bán được (có winner) và không có ai bid (CANCELED).
+     * Hiển thị thông báo cho Seller khi phiên đấu giá kết thúc.
+     * Phân biệt 2 trường hợp: bán được (có winner) và không có ai bid.
      */
     private void showAuctionFinishedNotification(long roomId, Map<String, Object> room) {
-        String itemName = room.get("itemName") != null ? room.get("itemName").toString() : "?";
-        String winner   = room.get("currentWinner") != null ? room.get("currentWinner").toString() : "";
-        String status   = room.get("status") != null ? room.get("status").toString() : "";
-        double price    = room.get("currentPrice") != null
-                ? ((Number) room.get("currentPrice")).doubleValue() : 0;
+        String itemName = MapAccessor.getString(room, "itemName", "?");
+        String winner   = MapAccessor.getString(room, "currentWinner", "");
+        String status   = MapAccessor.getString(room, "status", "");
+        double price    = MapAccessor.getDouble(room, "currentPrice");
 
-        Alert a;
         if ("CANCELED".equalsIgnoreCase(status) || winner.isEmpty()) {
-            a = new Alert(Alert.AlertType.WARNING);
-            a.setTitle("Phiên đấu giá kết thúc");
-            a.setContentText(
-                    "😔 Phiên #" + roomId + " (" + itemName + ") đã kết thúc nhưng không có người mua.\n\n" +
-                            "Bạn có thể tạo lại phiên đấu giá mới."
-            );
+            Dialogs.warn("Phiên đấu giá kết thúc",
+                    "😔 Phiên #" + roomId + " (" + itemName + ") đã kết thúc nhưng không có người mua.\n\n"
+                            + "Bạn có thể tạo lại phiên đấu giá mới.");
         } else {
-            a = new Alert(Alert.AlertType.INFORMATION);
-            a.setTitle("Bán hàng thành công!");
-            a.setContentText(
-                    "🎉 Phiên #" + roomId + " (" + itemName + ") đã kết thúc!\n\n" +
-                            "Người thắng: " + winner + "\n" +
-                            "Giá cuối:    " + formatVND(price)
-            );
+            Dialogs.info("Bán hàng thành công!",
+                    "🎉 Phiên #" + roomId + " (" + itemName + ") đã kết thúc!\n\n"
+                            + "Người thắng: " + winner + "\n"
+                            + "Giá cuối:    " + MoneyFormatter.formatViaPattern(price));
         }
-        a.setHeaderText(null);
-        a.show();
     }
+
+    // ─── Add/Edit/Delete product ────────────────────────────────────
 
     @FXML
     private void showAddProductDialog() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/add-product-dialog.fxml"));
             Parent root = loader.load();
-
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Thêm Sản Phẩm Mới");
             dialogStage.initModality(Modality.APPLICATION_MODAL);
@@ -459,266 +371,32 @@ public class SellerDashboardController {
 
             AddProductController controller = loader.getController();
             Item newItem = controller.getResultItem();
+            if (newItem == null) return;
 
-            if (newItem != null) {
-                ClientMain.registerListener("ADD_ITEM_SUCCESS", payload -> {
-                    ClientMain.unregisterListener("ADD_ITEM_SUCCESS");
-                    ClientMain.unregisterListener("ADD_ITEM_FAILED");
-
-                    Platform.runLater(() -> {
-                        showAlert("Thành công", "Đã thêm sản phẩm!");
+            RequestResponse.exchange()
+                    .request("ADD_ITEM", new com.google.gson.Gson().toJson(newItem))
+                    .onSuccess(p -> {
+                        Dialogs.info("Thành công", "Đã thêm sản phẩm!");
                         loadMyItemsFromServer();
-                    });
-                });
-
-                ClientMain.registerListener("ADD_ITEM_FAILED", payload -> {
-                    ClientMain.unregisterListener("ADD_ITEM_SUCCESS");
-                    ClientMain.unregisterListener("ADD_ITEM_FAILED");
-                    Platform.runLater(() -> showAlert("Lỗi", "Thêm thất bại: " + payload));
-                });
-
-                ClientMain.send(gson.toJson(new MessageDTO("ADD_ITEM", gson.toJson(newItem))));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            showAlert("Lỗi hệ thống", "Không thể mở form thêm sản phẩm.");
-        }
-    }
-
-    @FXML
-    private void handleStartAuction() {
-        Item selectedItem = tableItems.getSelectionModel().getSelectedItem();
-
-        if (selectedItem == null) {
-            showAlert("Nhắc nhở", "Vui lòng chọn sản phẩm để tạo phiên đấu giá!");
-            return;
-        }
-
-        Dialog<String> dialog = new Dialog<>();
-        dialog.setTitle("Tạo phiên đấu giá");
-        dialog.setHeaderText(null);
-
-        ButtonType btnOk = new ButtonType("🚀 Bắt đầu", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(btnOk, ButtonType.CANCEL);
-
-        VBox root = new VBox(18);
-        root.setPadding(new javafx.geometry.Insets(25));
-        root.setStyle("""
-                -fx-background-color: white;
-                -fx-background-radius: 18;
-                """);
-
-        VBox header = new VBox(6);
-        Label title = new Label("Tạo phiên đấu giá");
-        title.setStyle("""
-                -fx-font-size: 24px;
-                -fx-font-weight: bold;
-                -fx-text-fill: #0f172a;
-                """);
-
-        Label subTitle = new Label("Thiết lập thời gian bắt đầu và thời lượng phiên đấu giá");
-        subTitle.setStyle("""
-                -fx-font-size: 13px;
-                -fx-text-fill: #64748b;
-                """);
-
-        Label productName = new Label("📦 Sản phẩm: " + selectedItem.getName());
-        productName.setStyle("""
-                -fx-background-color: #eff6ff;
-                -fx-text-fill: #1d4ed8;
-                -fx-font-weight: bold;
-                -fx-padding: 10 14;
-                -fx-background-radius: 10;
-                """);
-
-        header.getChildren().addAll(title, subTitle, productName);
-
-        GridPane grid = new GridPane();
-        grid.setHgap(14);
-        grid.setVgap(14);
-
-        DatePicker datePicker = new DatePicker(java.time.LocalDate.now());
-
-        TextField txtTime = new TextField(
-                java.time.LocalTime.now()
-                        .plusMinutes(5)
-                        .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
-        );
-
-        TextField txtDuration = new TextField("30");
-
-        datePicker.setMaxWidth(Double.MAX_VALUE);
-        txtTime.setMaxWidth(Double.MAX_VALUE);
-        txtDuration.setMaxWidth(Double.MAX_VALUE);
-
-        String inputStyle = """
-                -fx-background-color: #f8fafc;
-                -fx-border-color: #cbd5e1;
-                -fx-border-radius: 10;
-                -fx-background-radius: 10;
-                -fx-padding: 10;
-                -fx-font-size: 14px;
-                """;
-
-        datePicker.setStyle(inputStyle);
-        txtTime.setStyle(inputStyle);
-        txtDuration.setStyle(inputStyle);
-
-        Label lblDate = createAuctionLabel("Ngày bắt đầu");
-        Label lblTime = createAuctionLabel("Giờ bắt đầu");
-        Label lblDuration = createAuctionLabel("Thời gian đấu giá");
-
-        grid.add(lblDate, 0, 0);
-        grid.add(datePicker, 1, 0);
-
-        grid.add(lblTime, 0, 1);
-        grid.add(txtTime, 1, 1);
-
-        grid.add(lblDuration, 0, 2);
-        grid.add(txtDuration, 1, 2);
-
-        ColumnConstraints c1 = new ColumnConstraints();
-        c1.setPrefWidth(150);
-
-        ColumnConstraints c2 = new ColumnConstraints();
-        c2.setPrefWidth(260);
-        c2.setHgrow(Priority.ALWAYS);
-
-        grid.getColumnConstraints().addAll(c1, c2);
-
-        Label note = new Label("Gợi ý: thời gian nên đặt sau hiện tại vài phút để bidder kịp tham gia.");
-        note.setWrapText(true);
-        note.setStyle("""
-                -fx-background-color: #fefce8;
-                -fx-text-fill: #854d0e;
-                -fx-padding: 10 14;
-                -fx-background-radius: 10;
-                -fx-font-size: 12px;
-                """);
-
-        root.getChildren().addAll(header, grid, note);
-
-        dialog.getDialogPane().setContent(root);
-        dialog.getDialogPane().setPrefWidth(520);
-        dialog.getDialogPane().setStyle("""
-                -fx-background-color: white;
-                -fx-background-radius: 18;
-                """);
-
-        Button okButton = (Button) dialog.getDialogPane().lookupButton(btnOk);
-        okButton.setStyle("""
-                -fx-background-color: #10b981;
-                -fx-text-fill: white;
-                -fx-font-weight: bold;
-                -fx-background-radius: 10;
-                -fx-padding: 10 22;
-                -fx-cursor: hand;
-                """);
-
-        Button cancelButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
-        cancelButton.setText("Hủy bỏ");
-        cancelButton.setStyle("""
-                -fx-background-color: #f1f5f9;
-                -fx-text-fill: #475569;
-                -fx-font-weight: bold;
-                -fx-background-radius: 10;
-                -fx-padding: 10 22;
-                -fx-cursor: hand;
-                """);
-
-        dialog.setResultConverter(btn -> {
-            if (btn == btnOk) {
-                com.google.gson.JsonObject payloadObj = new com.google.gson.JsonObject();
-                payloadObj.addProperty("itemId", selectedItem.getItemId());
-                payloadObj.addProperty("startTime", datePicker.getValue() + "T" + txtTime.getText());
-                payloadObj.addProperty("durationMinutes", txtDuration.getText());
-                return payloadObj.toString();
-            }
-            return null;
-        });
-
-        dialog.showAndWait().ifPresent(payloadJson -> {
-            // 1. Đăng ký lắng nghe phản hồi từ Server TRƯỚC khi gửi
-            ClientMain.registerListener("CREATE_AUCTION_SUCCESS", p -> {
-                ClientMain.unregisterListener("CREATE_AUCTION_SUCCESS");
-                ClientMain.unregisterListener("CREATE_AUCTION_FAILED");
-
-                Platform.runLater(() -> {
-                    showAlert("Thành công", "Phiên đấu giá đã được tạo thành công!");
-                    loadMyAuctionsFromServer();
-                });
-            });
-
-            ClientMain.registerListener("CREATE_AUCTION_FAILED", p -> {
-                ClientMain.unregisterListener("CREATE_AUCTION_SUCCESS");
-                ClientMain.unregisterListener("CREATE_AUCTION_FAILED");
-                Platform.runLater(() -> showAlert("Lỗi", "Tạo phiên thất bại: " + p));
-            });
-
-            // 2. Gửi duy nhất payloadJson (đối tượng JSON đã tạo ở ResultConverter)
-            new Thread(() ->
-                    ClientMain.send(gson.toJson(new MessageDTO("CREATE_AUCTION", payloadJson)))
-            ).start();
-        });
-    }
-    private String normalizeIdText(Object value) {
-        if (value == null) return "";
-
-        try {
-            if (value instanceof Number) {
-                return String.valueOf(((Number) value).intValue());
-            }
-
-            String text = value.toString().trim();
-
-            if (text.matches("\\d+\\.0+")) {
-                return text.substring(0, text.indexOf('.'));
-            }
-
-            return String.valueOf((int) Double.parseDouble(text));
+                    })
+                    .onFailed(p -> Dialogs.error("Lỗi", "Thêm thất bại: " + p))
+                    .send();
         } catch (Exception e) {
-            return value.toString().trim();
+            e.printStackTrace();
+            Dialogs.error("Lỗi hệ thống", "Không thể mở form thêm sản phẩm.");
         }
     }
-
-    private int parseItemIdForRequest(String itemId) {
-        if (itemId == null || itemId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Thiếu itemId sản phẩm.");
-        }
-
-        String text = itemId.trim();
-
-        if (text.matches("\\d+\\.0+")) {
-            text = text.substring(0, text.indexOf('.'));
-        }
-
-        return (int) Double.parseDouble(text);
-    }
-
-    private Label createAuctionLabel(String text) {
-        Label label = new Label(text);
-        label.setStyle("""
-                -fx-font-weight: bold;
-                -fx-text-fill: #334155;
-                -fx-font-size: 13px;
-                """);
-        return label;
-    }
-
 
     @FXML
     private void handleEditProduct() {
         Item selectedItem = tableItems.getSelectionModel().getSelectedItem();
-
         if (selectedItem == null) {
-            showAlert("Nhắc nhở", "Vui lòng chọn một sản phẩm để chỉnh sửa!");
+            Dialogs.warn("Nhắc nhở", "Vui lòng chọn một sản phẩm để chỉnh sửa!");
             return;
         }
-
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/add-product-dialog.fxml"));
             Parent root = loader.load();
-
             AddProductController controller = loader.getController();
             controller.setEditData(selectedItem);
 
@@ -728,219 +406,167 @@ public class SellerDashboardController {
             dialogStage.showAndWait();
 
             Item updatedItem = controller.getResultItem();
+            if (updatedItem == null) return;
+            final int finalIndex = itemList.indexOf(selectedItem);
 
-            if (updatedItem != null) {
-                final Item finalUpdated = updatedItem;
-                final int  finalIndex   = itemList.indexOf(selectedItem);
-
-                ClientMain.registerListener("UPDATE_ITEM_SUCCESS", payload -> {
-                    ClientMain.unregisterListener("UPDATE_ITEM_SUCCESS");
-                    ClientMain.unregisterListener("UPDATE_ITEM_FAILED");
-                    Platform.runLater(() -> {
-                        itemList.set(finalIndex, finalUpdated);
+            RequestResponse.exchange()
+                    .request("UPDATE_ITEM", new com.google.gson.Gson().toJson(updatedItem))
+                    .onSuccess(p -> {
+                        itemList.set(finalIndex, updatedItem);
                         applyProductFilters();
                         updateMiniStats();
-                        showSuccess("Cập nhật sản phẩm thành công!");
-                    });
-                });
-
-                ClientMain.registerListener("UPDATE_ITEM_FAILED", payload -> {
-                    ClientMain.unregisterListener("UPDATE_ITEM_SUCCESS");
-                    ClientMain.unregisterListener("UPDATE_ITEM_FAILED");
-                    Platform.runLater(() ->
-                            showAlert("Cập nhật thất bại", "Server báo lỗi: " + payload)
-                    );
-                });
-
-                ClientMain.send(gson.toJson(new MessageDTO(
-                        "UPDATE_ITEM",
-                        gson.toJson(updatedItem)
-                )));
-            }
+                        Dialogs.info("Thành công", "Cập nhật sản phẩm thành công!");
+                    })
+                    .onFailed(p -> Dialogs.error("Cập nhật thất bại", "Server báo lỗi: " + p))
+                    .send();
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert("Lỗi hệ thống", "Không thể mở form sửa sản phẩm.");
+            Dialogs.error("Lỗi hệ thống", "Không thể mở form sửa sản phẩm.");
         }
     }
+
+    @FXML void handleEditProduct(ActionEvent event) { handleEditProduct(); }
 
     @FXML
     private void handleDeleteProduct() {
         Item selectedItem = tableItems.getSelectionModel().getSelectedItem();
-
         if (selectedItem == null) {
-            showAlert("Nhắc nhở", "Vui lòng chọn một sản phẩm để xóa!");
+            Dialogs.warn("Nhắc nhở", "Vui lòng chọn một sản phẩm để xóa!");
             return;
         }
+        if (!Dialogs.confirm("Xác nhận xóa",
+                "Xóa sản phẩm: " + selectedItem.getName() + "\nBạn có chắc chắn muốn xóa?")) return;
 
-        Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmDialog.setTitle("Xác nhận xóa");
-        confirmDialog.setHeaderText("Xóa sản phẩm: " + selectedItem.getName());
-        confirmDialog.setContentText("Bạn có chắc chắn muốn xóa?");
-
-        Optional<ButtonType> result = confirmDialog.showAndWait();
-
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            final Item toDelete = selectedItem;
-
-            ClientMain.registerListener("DELETE_ITEM_SUCCESS", payload -> {
-                ClientMain.unregisterListener("DELETE_ITEM_SUCCESS");
-                ClientMain.unregisterListener("DELETE_ITEM_FAILED");
-                Platform.runLater(() -> {
+        final Item toDelete = selectedItem;
+        RequestResponse.exchange()
+                .request("DELETE_ITEM", selectedItem.getItemId())
+                .onSuccess(p -> {
                     itemList.remove(toDelete);
                     applyProductFilters();
                     updateMiniStats();
                     if (reportView != null && reportView.isVisible()) updateReport();
-                    showSuccess("Đã xóa sản phẩm \"" + toDelete.getName() + "\".");
-                });
-            });
+                    Dialogs.info("Thành công", "Đã xóa sản phẩm \"" + toDelete.getName() + "\".");
+                })
+                .onFailed(p -> Dialogs.error("Xóa thất bại", "Server báo lỗi: " + p))
+                .send();
+    }
 
-            ClientMain.registerListener("DELETE_ITEM_FAILED", payload -> {
-                ClientMain.unregisterListener("DELETE_ITEM_SUCCESS");
-                ClientMain.unregisterListener("DELETE_ITEM_FAILED");
-                Platform.runLater(() ->
-                        showAlert("Xóa thất bại", "Server báo lỗi: " + payload)
-                );
-            });
+    // ─── Create / Cancel auction ────────────────────────────────────
 
-            ClientMain.send(gson.toJson(new MessageDTO("DELETE_ITEM", selectedItem.getItemId())));
+    @FXML
+    private void handleStartAuction() {
+        Item selectedItem = tableItems.getSelectionModel().getSelectedItem();
+        if (selectedItem == null) {
+            Dialogs.warn("Nhắc nhở", "Vui lòng chọn sản phẩm để tạo phiên đấu giá!");
+            return;
         }
+
+        Optional<String> payload = CreateAuctionDialog.show(selectedItem);
+        payload.ifPresent(payloadJson ->
+                RequestResponse.exchange()
+                        .request("CREATE_AUCTION", payloadJson)
+                        .onSuccess(p -> {
+                            Dialogs.info("Thành công", "Phiên đấu giá đã được tạo thành công!");
+                            loadMyAuctionsFromServer();
+                        })
+                        .onFailed(p -> Dialogs.error("Lỗi", "Tạo phiên thất bại: " + p))
+                        .send());
     }
 
     @FXML
     private void handleCancelAuction() {
         Item selectedItem = tableItems.getSelectionModel().getSelectedItem();
-
         if (selectedItem == null) {
-            showAlert("Nhắc nhở", "Vui lòng chọn sản phẩm có phiên đấu giá để hủy!");
+            Dialogs.warn("Nhắc nhở", "Vui lòng chọn sản phẩm có phiên đấu giá để hủy!");
             return;
         }
 
         Map<String, Object> auction = auctionMap.get(selectedItem.getItemId());
         if (auction == null || auction.get("auctionId") == null) {
-            showAlert("Không có phiên", "Sản phẩm này chưa có phiên đấu giá nào!");
+            Dialogs.warn("Không có phiên", "Sản phẩm này chưa có phiên đấu giá nào!");
             return;
         }
 
-        String status = auction.get("status") != null ? auction.get("status").toString() : "";
+        String status = MapAccessor.getString(auction, "status", "");
         if (status.equals("PAID") || status.equals("FINISHED") || status.equals("CANCELED")) {
-            showAlert("Không thể hủy",
-                    "Phiên đấu giá đã ở trạng thái " + statusToText(status) + " — không thể hủy.");
+            Dialogs.warn("Không thể hủy",
+                    "Phiên đấu giá đã ở trạng thái " + StatusMapper.toSellerText(status) + " — không thể hủy.");
             return;
         }
 
-        // Lấy auctionId an toàn (server trả về kiểu Number)
         int auctionId;
-        try {
-            auctionId = ((Number) auction.get("auctionId")).intValue();
-        } catch (Exception e) {
-            showAlert("Lỗi dữ liệu", "Không đọc được ID phiên đấu giá.");
+        try { auctionId = MapAccessor.getInt(auction, "auctionId"); }
+        catch (Exception e) {
+            Dialogs.error("Lỗi dữ liệu", "Không đọc được ID phiên đấu giá.");
             return;
         }
 
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Xác nhận hủy phiên");
-        confirm.setHeaderText("Hủy phiên đấu giá: " + selectedItem.getName());
-        confirm.setContentText(
-                "Phiên #" + auctionId + " sẽ bị hủy.\n"
+        if (!Dialogs.confirm("Xác nhận hủy phiên",
+                "Hủy phiên đấu giá: " + selectedItem.getName() + "\n"
+                        + "Phiên #" + auctionId + " sẽ bị hủy.\n"
                         + "Lưu ý: nếu phiên đang chạy đã có người đặt giá, server sẽ từ chối.\n\n"
-                        + "Bạn chắc chắn chứ?");
+                        + "Bạn chắc chắn chứ?")) return;
 
-        Optional<ButtonType> result = confirm.showAndWait();
-        if (result.isEmpty() || result.get() != ButtonType.OK) return;
-
-        ClientMain.registerListener("DELETE_AUCTION_SUCCESS", payload -> {
-            ClientMain.unregisterListener("DELETE_AUCTION_SUCCESS");
-            ClientMain.unregisterListener("DELETE_AUCTION_FAILED");
-            Platform.runLater(() -> {
-                showSuccess(payload);
-                loadMyAuctionsFromServer();
-            });
-        });
-
-        ClientMain.registerListener("DELETE_AUCTION_FAILED", payload -> {
-            ClientMain.unregisterListener("DELETE_AUCTION_SUCCESS");
-            ClientMain.unregisterListener("DELETE_AUCTION_FAILED");
-            Platform.runLater(() ->
-                    showAlert("Hủy phiên thất bại", "Server báo: " + payload)
-            );
-        });
-
-        ClientMain.send(gson.toJson(new MessageDTO("DELETE_AUCTION", String.valueOf(auctionId))));
+        RequestResponse.exchange()
+                .request("DELETE_AUCTION", String.valueOf(auctionId))
+                .onSuccess(p -> {
+                    Dialogs.info("Thành công", p);
+                    loadMyAuctionsFromServer();
+                })
+                .onFailed(p -> Dialogs.error("Hủy phiên thất bại", "Server báo: " + p))
+                .send();
     }
+
+    // ─── Logout ─────────────────────────────────────────────────────
 
     @FXML
     private void handleLogout() {
-        ClientMain.unregisterListener("AUCTION_STARTED");
-        ClientMain.unregisterListener("AUCTION_FINISHED");
-        ClientMain.unregisterListener("AUCTION_CANCELED");
-        ClientMain.unregisterListener("ERROR");
-
+        ServerGateway.off(EVENT_ACTIONS.toArray(String[]::new));
         UserSession.getInstance().logout();
-
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/login.fxml"));
             Parent root = loader.load();
-
             Scene currentScene = tableItems.getScene();
             currentScene.setRoot(root);
-
             Stage stage = (Stage) currentScene.getWindow();
             stage.setTitle("Đăng nhập - AuctionVN");
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            showAlert("Lỗi hệ thống", "Không thể tải màn hình đăng nhập!");
+            Dialogs.error("Lỗi hệ thống", "Không thể tải màn hình đăng nhập!");
         }
     }
 
-    @FXML
-    void handleEditProduct(ActionEvent event) {
-        handleEditProduct();
-    }
+    // ─── Inventory / Report nav ─────────────────────────────────────
 
-    @FXML
-    private void handleShowInventory() {
-        inventoryView.setVisible(true);
-        inventoryView.setManaged(true);
-
-        reportView.setVisible(false);
-        reportView.setManaged(false);
-
+    @FXML private void handleShowInventory() {
+        inventoryView.setVisible(true);  inventoryView.setManaged(true);
+        reportView.setVisible(false);    reportView.setManaged(false);
         setSellerNavActive(btnInventory);
     }
 
-    @FXML
-    private void handleShowReport() {
-        inventoryView.setVisible(false);
-        inventoryView.setManaged(false);
-
-        reportView.setVisible(true);
-        reportView.setManaged(true);
-
+    @FXML private void handleShowReport() {
+        inventoryView.setVisible(false); inventoryView.setManaged(false);
+        reportView.setVisible(true);     reportView.setManaged(true);
         setSellerNavActive(btnReport);
-
         updateReport();
     }
 
-    @FXML
-    private void handleRefreshReport() {
+    @FXML private void handleRefreshReport() {
         loadMyItemsFromServer();
         loadMyAuctionsFromServer();
         updateReport();
     }
 
-    @FXML
-    private void handleRefreshInventory() {
+    @FXML private void handleRefreshInventory() {
         loadMyItemsFromServer();
         loadMyAuctionsFromServer();
     }
 
-    @FXML
-    private void handleProductSearch() {
-        applyProductFilters();
-    }
+    // ─── Filter / search ────────────────────────────────────────────
 
-    @FXML
-    private void handleClearProductFilter(ActionEvent event) {
+    @FXML private void handleProductSearch() { applyProductFilters(); }
+
+    @FXML private void handleClearProductFilter(ActionEvent event) {
         if (txtProductSearch != null) txtProductSearch.clear();
         if (cmbProductStatusFilter != null) cmbProductStatusFilter.setValue("TẤT CẢ");
         applyProductFilters();
@@ -951,18 +577,18 @@ public class SellerDashboardController {
 
         String keyword = txtProductSearch == null ? "" : txtProductSearch.getText().trim().toLowerCase();
         String filter = cmbProductStatusFilter == null || cmbProductStatusFilter.getValue() == null
-                ? "TẤT CẢ"
-                : cmbProductStatusFilter.getValue();
+                ? "TẤT CẢ" : cmbProductStatusFilter.getValue();
 
         ObservableList<Item> filtered = FXCollections.observableArrayList();
         for (Item item : itemList) {
-            String statusText = statusToText(getRawAuctionStatus(item));
+            String statusText = StatusMapper.toSellerText(getRawAuctionStatus(item));
             boolean matchKeyword = keyword.isEmpty()
-                    || safe(item.getItemId()).toLowerCase().contains(keyword)
-                    || safe(item.getName()).toLowerCase().contains(keyword)
-                    || safe(item.getDescription()).toLowerCase().contains(keyword)
-                    || safe(item.getDetails()).toLowerCase().contains(keyword);
-            boolean matchStatus = "TẤT CẢ".equals(filter) || statusText.toLowerCase().contains(filter.toLowerCase());
+                    || SafeParser.safe(item.getItemId()).toLowerCase().contains(keyword)
+                    || SafeParser.safe(item.getName()).toLowerCase().contains(keyword)
+                    || SafeParser.safe(item.getDescription()).toLowerCase().contains(keyword)
+                    || SafeParser.safe(item.getDetails()).toLowerCase().contains(keyword);
+            boolean matchStatus = "TẤT CẢ".equals(filter)
+                    || statusText.toLowerCase().contains(filter.toLowerCase());
 
             if (matchKeyword && matchStatus) filtered.add(item);
         }
@@ -976,67 +602,68 @@ public class SellerDashboardController {
         if (item == null) return "NONE";
         Map<String, Object> auction = auctionMap.get(item.getItemId());
         return auction != null && auction.get("status") != null
-                ? auction.get("status").toString()
-                : "NONE";
+                ? auction.get("status").toString() : "NONE";
     }
+
+    // ─── Action buttons state ───────────────────────────────────────
 
     private void updateActionButtons() {
         Item selectedItem = tableItems == null ? null : tableItems.getSelectionModel().getSelectedItem();
         boolean hasSelection = selectedItem != null;
         String status = hasSelection ? getRawAuctionStatus(selectedItem) : "NONE";
-        boolean canStart = hasSelection && ("NONE".equals(status) || "CANCELED".equals(status) || "FINISHED".equals(status) || "PAID".equals(status));
-        boolean canCancel = hasSelection && ("OPEN".equals(status) || "RUNNING".equals(status));
+        boolean canStart  = hasSelection && (status.equals("NONE")
+                || status.equals("CANCELED") || status.equals("FINISHED") || status.equals("PAID"));
+        boolean canCancel = hasSelection && (status.equals("OPEN") || status.equals("RUNNING"));
 
-        if (btnEditProduct != null) btnEditProduct.setDisable(!hasSelection);
-        if (btnDeleteProduct != null) btnDeleteProduct.setDisable(!hasSelection);
-        if (btnStartAuction != null) btnStartAuction.setDisable(!canStart);
+        if (btnEditProduct       != null) btnEditProduct.setDisable(!hasSelection);
+        if (btnDeleteProduct     != null) btnDeleteProduct.setDisable(!hasSelection);
+        if (btnStartAuction      != null) btnStartAuction.setDisable(!canStart);
         if (btnQuickStartAuction != null) btnQuickStartAuction.setDisable(!canStart);
-        if (btnCancelAuction != null) btnCancelAuction.setDisable(!canCancel);
-        if (btnOpenAuctionRoom != null) btnOpenAuctionRoom.setDisable(!hasSelection || auctionMap.get(selectedItem.getItemId()) == null);
+        if (btnCancelAuction     != null) btnCancelAuction.setDisable(!canCancel);
+        if (btnOpenAuctionRoom   != null) btnOpenAuctionRoom.setDisable(
+                !hasSelection || auctionMap.get(selectedItem.getItemId()) == null);
     }
+
+    // ─── Selected product panel ─────────────────────────────────────
 
     private void updateSelectedProductPanel(Item item) {
         if (item == null) {
-            if (lblSelectedProductName != null) lblSelectedProductName.setText("Chưa chọn sản phẩm");
-            if (lblSelectedProductId != null) lblSelectedProductId.setText("ID: --");
-            if (lblSelectedProductCategory != null) lblSelectedProductCategory.setText("--");
-            if (lblSelectedProductDescription != null) lblSelectedProductDescription.setText("Chọn một sản phẩm để xem mô tả, trạng thái phiên và thao tác nhanh.");
-            if (lblSelectedProductPrice != null) lblSelectedProductPrice.setText("--");
-            if (lblSelectedAuctionStatus != null) lblSelectedAuctionStatus.setText("--");
-            if (lblSelectedAuctionPrice != null) lblSelectedAuctionPrice.setText("--");
-            if (lblSelectedAuctionWinner != null) lblSelectedAuctionWinner.setText("--");
-            if (lblSelectedAuctionEndTime != null) lblSelectedAuctionEndTime.setText("--");
+            setText(lblSelectedProductName,        "Chưa chọn sản phẩm");
+            setText(lblSelectedProductId,          "ID: --");
+            setText(lblSelectedProductCategory,    "--");
+            setText(lblSelectedProductDescription, "Chọn một sản phẩm để xem mô tả, trạng thái phiên và thao tác nhanh.");
+            setText(lblSelectedProductPrice,       "--");
+            setText(lblSelectedAuctionStatus,      "--");
+            setText(lblSelectedAuctionPrice,       "--");
+            setText(lblSelectedAuctionWinner,      "--");
+            setText(lblSelectedAuctionEndTime,     "--");
             showSellerImagePlaceholder();
             return;
         }
 
         Map<String, Object> auction = auctionMap.get(item.getItemId());
-        String category = normalizeCategory(item.getCategory());
-        if (lblSelectedProductName != null) lblSelectedProductName.setText(item.getName());
-        if (lblSelectedProductId != null) lblSelectedProductId.setText("ID: " + item.getItemId());
-        if (lblSelectedProductCategory != null) lblSelectedProductCategory.setText(category);
-        if (lblSelectedProductDescription != null) {
-            String desc = safe(item.getDescription());
-            lblSelectedProductDescription.setText(desc.isBlank() ? "Chưa có mô tả." : desc);
-        }
-        if (lblSelectedProductPrice != null) lblSelectedProductPrice.setText(formatVND(item.getStartingPrice()));
+        String category = StatusMapper.normalizeCategory(item.getCategory());
+        setText(lblSelectedProductName,     item.getName());
+        setText(lblSelectedProductId,       "ID: " + item.getItemId());
+        setText(lblSelectedProductCategory, category);
+        String desc = SafeParser.safe(item.getDescription());
+        setText(lblSelectedProductDescription, desc.isBlank() ? "Chưa có mô tả." : desc);
+        setText(lblSelectedProductPrice, MoneyFormatter.formatViaPattern(item.getStartingPrice()));
 
         if (auction != null) {
-            String status = auction.get("status") != null ? auction.get("status").toString() : "NONE";
-            double price = auction.get("currentPrice") != null
-                    ? Double.parseDouble(auction.get("currentPrice").toString())
-                    : item.getStartingPrice();
-            String winner = auction.get("currentWinner") != null ? auction.get("currentWinner").toString() : "--";
-            String endTime = auction.get("endTime") != null ? auction.get("endTime").toString() : "";
-            if (lblSelectedAuctionStatus != null) lblSelectedAuctionStatus.setText(statusToText(status));
-            if (lblSelectedAuctionPrice != null) lblSelectedAuctionPrice.setText(formatVND(price));
-            if (lblSelectedAuctionWinner != null) lblSelectedAuctionWinner.setText(winner == null || winner.isBlank() ? "Chưa có" : winner);
-            if (lblSelectedAuctionEndTime != null) lblSelectedAuctionEndTime.setText(formatDateTime(endTime));
+            String status   = MapAccessor.getString(auction, "status", "NONE");
+            double price    = MapAccessor.getDouble(auction, "currentPrice", item.getStartingPrice());
+            String winner   = MapAccessor.getString(auction, "currentWinner", "--");
+            String endTime  = MapAccessor.getString(auction, "endTime", "");
+            setText(lblSelectedAuctionStatus,  StatusMapper.toSellerText(status));
+            setText(lblSelectedAuctionPrice,   MoneyFormatter.formatViaPattern(price));
+            setText(lblSelectedAuctionWinner,  winner.isBlank() ? "Chưa có" : winner);
+            setText(lblSelectedAuctionEndTime, DateTimes.format(endTime));
         } else {
-            if (lblSelectedAuctionStatus != null) lblSelectedAuctionStatus.setText("📦 Chưa đăng");
-            if (lblSelectedAuctionPrice != null) lblSelectedAuctionPrice.setText(formatVND(item.getStartingPrice()));
-            if (lblSelectedAuctionWinner != null) lblSelectedAuctionWinner.setText("Chưa có");
-            if (lblSelectedAuctionEndTime != null) lblSelectedAuctionEndTime.setText("--");
+            setText(lblSelectedAuctionStatus,  "📦 Chưa đăng");
+            setText(lblSelectedAuctionPrice,   MoneyFormatter.formatViaPattern(item.getStartingPrice()));
+            setText(lblSelectedAuctionWinner,  "Chưa có");
+            setText(lblSelectedAuctionEndTime, "--");
         }
         loadSellerProductImage(item.getImagePath());
     }
@@ -1044,7 +671,9 @@ public class SellerDashboardController {
     private void loadSellerProductImage(String path) {
         try {
             if (path != null && !path.isBlank() && sellerProductImage != null) {
-                Image img = new Image(path.startsWith("file:") || path.startsWith("http") ? path : new File(path).toURI().toString(), true);
+                Image img = new Image(
+                        path.startsWith("file:") || path.startsWith("http")
+                                ? path : new File(path).toURI().toString(), true);
                 sellerProductImage.setImage(img);
                 if (!img.isError()) {
                     if (sellerProductImagePlaceholder != null) {
@@ -1066,39 +695,20 @@ public class SellerDashboardController {
         }
     }
 
-    private String normalizeCategory(String category) {
-        if (category == null || category.isBlank()) return "--";
-        return switch (category.toUpperCase()) {
-            case "ART" -> "Nghệ thuật";
-            case "ELECTRONIC", "ELECTRONICS" -> "Đồ điện tử";
-            case "VEHICLE" -> "Phương tiện";
-            default -> category;
-        };
-    }
-
-    private String formatDateTime(String value) {
-        if (value == null || value.isBlank()) return "--";
-        try {
-            return LocalDateTime.parse(value).format(DateTimeFormatter.ofPattern("HH:mm · dd/MM/yyyy"));
-        } catch (Exception e) {
-            return value.replace('T', ' ');
-        }
-    }
-
     @FXML
     private void handleOpenAuctionRoom() {
         Item selectedItem = tableItems.getSelectionModel().getSelectedItem();
         if (selectedItem == null) {
-            showAlert("Nhắc nhở", "Vui lòng chọn sản phẩm có phiên đấu giá!");
+            Dialogs.warn("Nhắc nhở", "Vui lòng chọn sản phẩm có phiên đấu giá!");
             return;
         }
         Map<String, Object> auction = auctionMap.get(selectedItem.getItemId());
         if (auction == null || auction.get("auctionId") == null) {
-            showAlert("Không có phiên", "Sản phẩm này chưa có phòng đấu giá để xem.");
+            Dialogs.warn("Không có phiên", "Sản phẩm này chưa có phòng đấu giá để xem.");
             return;
         }
         try {
-            int auctionId = ((Number) auction.get("auctionId")).intValue();
+            int auctionId = MapAccessor.getInt(auction, "auctionId");
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/auction-detail.fxml"));
             Parent root = loader.load();
             AuctionDetailController controller = loader.getController();
@@ -1109,7 +719,7 @@ public class SellerDashboardController {
             stage.setTitle("Phòng đấu giá #" + auctionId + " - AuctionVN");
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert("Lỗi hệ thống", "Không thể mở phòng đấu giá.");
+            Dialogs.error("Lỗi hệ thống", "Không thể mở phòng đấu giá.");
         }
     }
 
@@ -1117,7 +727,7 @@ public class SellerDashboardController {
     private void handleShowSelectedProductDetail() {
         Item selectedItem = tableItems == null ? null : tableItems.getSelectionModel().getSelectedItem();
         if (selectedItem == null) {
-            showAlert("Chưa chọn sản phẩm", "Hãy chọn một sản phẩm trong bảng để xem thông tin đầy đủ.");
+            Dialogs.warn("Chưa chọn sản phẩm", "Hãy chọn một sản phẩm trong bảng để xem thông tin đầy đủ.");
             return;
         }
 
@@ -1125,74 +735,89 @@ public class SellerDashboardController {
         VBox content = new VBox(16);
         content.setPadding(new Insets(4));
 
-        Label title = new Label(safe(selectedItem.getName()).isBlank() ? "Sản phẩm" : selectedItem.getName());
+        Label title = new Label(SafeParser.safe(selectedItem.getName()).isBlank()
+                ? "Sản phẩm" : selectedItem.getName());
         title.getStyleClass().add("popup-main-title");
         Label subtitle = new Label("Thông tin chi tiết dành cho Seller — có thể cuộn để đọc mô tả dài.");
         subtitle.getStyleClass().add("popup-subtitle");
 
         GridPane grid = new GridPane();
-        grid.setHgap(14);
-        grid.setVgap(10);
-        addInfoRow(grid, 0, "Mã sản phẩm", safe(selectedItem.getItemId()));
-        addInfoRow(grid, 1, "Danh mục", normalizeCategory(selectedItem.getCategory()));
-        addInfoRow(grid, 2, "Giá khởi điểm", formatVND(selectedItem.getStartingPrice()));
-        addInfoRow(grid, 3, "Bước giá", selectedItem.getBidIncrement() > 0 ? formatVND(selectedItem.getBidIncrement()) : "--");
-        addInfoRow(grid, 4, "Trạng thái phiên", auction == null ? "📦 Chưa đăng" : statusToText(String.valueOf(auction.getOrDefault("status", "NONE"))));
-        addInfoRow(grid, 5, "Giá hiện tại", auction == null ? formatVND(selectedItem.getStartingPrice()) : formatVND(numberFrom(auction.get("currentPrice"), selectedItem.getStartingPrice())));
-        addInfoRow(grid, 6, "Người dẫn đầu", auction == null ? "Chưa có" : safe(String.valueOf(auction.getOrDefault("currentWinner", "Chưa có"))));
-        addInfoRow(grid, 7, "Thời gian kết thúc", auction == null ? "--" : formatDateTime(String.valueOf(auction.getOrDefault("endTime", ""))));
-        addInfoRow(grid, 8, "Mã phiên", auction == null ? "--" : String.valueOf(auction.getOrDefault("auctionId", "--")));
+        grid.setHgap(14); grid.setVgap(10);
+        StyledComponents.addInfoRow(grid, 0, "Mã sản phẩm",  SafeParser.safe(selectedItem.getItemId()));
+        StyledComponents.addInfoRow(grid, 1, "Danh mục",      StatusMapper.normalizeCategory(selectedItem.getCategory()));
+        StyledComponents.addInfoRow(grid, 2, "Giá khởi điểm", MoneyFormatter.formatViaPattern(selectedItem.getStartingPrice()));
+        StyledComponents.addInfoRow(grid, 3, "Bước giá",
+                selectedItem.getBidIncrement() > 0 ? MoneyFormatter.formatViaPattern(selectedItem.getBidIncrement()) : "--");
+        StyledComponents.addInfoRow(grid, 4, "Trạng thái phiên",
+                auction == null ? "📦 Chưa đăng"
+                        : StatusMapper.toSellerText(MapAccessor.getString(auction, "status", "NONE")));
+        StyledComponents.addInfoRow(grid, 5, "Giá hiện tại",
+                auction == null
+                        ? MoneyFormatter.formatViaPattern(selectedItem.getStartingPrice())
+                        : MoneyFormatter.formatViaPattern(MapAccessor.getDouble(auction, "currentPrice", selectedItem.getStartingPrice())));
+        StyledComponents.addInfoRow(grid, 6, "Người dẫn đầu",
+                auction == null ? "Chưa có"
+                        : MapAccessor.getString(auction, "currentWinner", "Chưa có"));
+        StyledComponents.addInfoRow(grid, 7, "Thời gian kết thúc",
+                auction == null ? "--" : DateTimes.format(MapAccessor.getString(auction, "endTime")));
+        StyledComponents.addInfoRow(grid, 8, "Mã phiên",
+                auction == null ? "--" : MapAccessor.getString(auction, "auctionId", "--"));
 
         Label descTitle = new Label("Mô tả sản phẩm");
         descTitle.getStyleClass().add("section-title");
-        TextArea descArea = readonlyTextArea(safe(selectedItem.getDescription()).isBlank() ? "Chưa có mô tả." : selectedItem.getDescription(), 220);
+        TextArea descArea = StyledComponents.readonlyArea(
+                SafeParser.safe(selectedItem.getDescription()).isBlank()
+                        ? "Chưa có mô tả." : selectedItem.getDescription(), 220);
 
-        Label hint = new Label("Mẹo thao tác: có thể double-click sản phẩm trong bảng để sửa, phím Delete để xóa, F5 để làm mới kho hàng.");
+        Label hint = new Label("Mẹo thao tác: double-click sản phẩm để sửa, Delete để xóa, F5 để làm mới.");
         hint.setWrapText(true);
         hint.getStyleClass().add("popup-hint");
 
         content.getChildren().addAll(title, subtitle, grid, descTitle, descArea, hint);
-        showCustomDialog("Chi tiết sản phẩm", content, 760, 650);
+        StyledComponents.showScrollable("Chi tiết sản phẩm", content, 760, 650);
     }
 
     @FXML
     private void handleShowSelectedProductImage() {
         Item selectedItem = tableItems == null ? null : tableItems.getSelectionModel().getSelectedItem();
         if (selectedItem == null) {
-            showAlert("Chưa chọn sản phẩm", "Hãy chọn một sản phẩm để xem ảnh lớn.");
+            Dialogs.warn("Chưa chọn sản phẩm", "Hãy chọn một sản phẩm để xem ảnh lớn.");
             return;
         }
 
         Image image = sellerProductImage == null ? null : sellerProductImage.getImage();
         if (image == null && selectedItem.getImagePath() != null && !selectedItem.getImagePath().isBlank()) {
             try {
-                image = new Image(selectedItem.getImagePath().startsWith("file:") || selectedItem.getImagePath().startsWith("http")
-                        ? selectedItem.getImagePath()
-                        : new File(selectedItem.getImagePath()).toURI().toString(), true);
+                image = new Image(
+                        selectedItem.getImagePath().startsWith("file:") || selectedItem.getImagePath().startsWith("http")
+                                ? selectedItem.getImagePath()
+                                : new File(selectedItem.getImagePath()).toURI().toString(), true);
             } catch (Exception ignored) { }
         }
 
         if (image == null) {
-            showAlert("Ảnh sản phẩm", "Sản phẩm này chưa có ảnh hoặc đường dẫn ảnh không đọc được.");
+            Dialogs.warn("Ảnh sản phẩm", "Sản phẩm này chưa có ảnh hoặc đường dẫn ảnh không đọc được.");
             return;
         }
 
         VBox content = new VBox(14);
         content.setAlignment(Pos.CENTER);
-        Label title = new Label(safe(selectedItem.getName()).isBlank() ? "Ảnh sản phẩm" : selectedItem.getName());
+        Label title = new Label(SafeParser.safe(selectedItem.getName()).isBlank()
+                ? "Ảnh sản phẩm" : selectedItem.getName());
         title.getStyleClass().add("popup-main-title");
         ImageView preview = new ImageView(image);
-        preview.setFitWidth(760);
-        preview.setFitHeight(520);
-        preview.setPreserveRatio(true);
-        preview.setSmooth(true);
+        preview.setFitWidth(760); preview.setFitHeight(520);
+        preview.setPreserveRatio(true); preview.setSmooth(true);
         preview.getStyleClass().add("popup-image-preview");
-        Label path = new Label(safe(selectedItem.getImagePath()).isBlank() ? "Không có đường dẫn ảnh." : selectedItem.getImagePath());
+        Label path = new Label(SafeParser.safe(selectedItem.getImagePath()).isBlank()
+                ? "Không có đường dẫn ảnh." : selectedItem.getImagePath());
         path.setWrapText(true);
         path.getStyleClass().add("popup-subtitle");
         content.getChildren().addAll(title, preview, path);
-        showCustomDialog("Xem ảnh sản phẩm", content, 860, 720);
+        StyledComponents.showScrollable("Xem ảnh sản phẩm", content, 860, 720);
     }
+
+    // ─── Stats ──────────────────────────────────────────────────────
 
     private void updateMiniStats() {
         int totalItems = itemList == null ? 0 : itemList.size();
@@ -1204,177 +829,77 @@ public class SellerDashboardController {
             for (Item item : itemList) {
                 Map<String, Object> auction = auctionMap.get(item.getItemId());
                 if (auction == null) continue;
-
-                String status = auction.get("status") != null ? auction.get("status").toString() : "NONE";
-                double price = auction.get("currentPrice") != null
-                        ? Double.parseDouble(auction.get("currentPrice").toString())
-                        : item.getStartingPrice();
-
+                String status = MapAccessor.getString(auction, "status", "NONE");
+                double price = MapAccessor.getDouble(auction, "currentPrice", item.getStartingPrice());
                 if ("RUNNING".equals(status)) running++;
                 if ("FINISHED".equals(status) || "PAID".equals(status)) {
-                    finished++;
-                    totalRevenue += price;
+                    finished++; totalRevenue += price;
                 }
             }
         }
 
-        if (lblSellerItemsCount != null) lblSellerItemsCount.setText(String.valueOf(totalItems));
-        if (lblSellerRunningCount != null) lblSellerRunningCount.setText(String.valueOf(running));
-        if (lblSellerRevenueMini != null) lblSellerRevenueMini.setText(formatVND(totalRevenue));
-        if (lblTotalItems != null) lblTotalItems.setText(String.valueOf(totalItems));
-        if (lblRunningAuctions != null) lblRunningAuctions.setText(String.valueOf(running));
-        if (lblFinishedAuctions != null) lblFinishedAuctions.setText(String.valueOf(finished));
-        if (lblTotalRevenue != null) lblTotalRevenue.setText(formatVND(totalRevenue));
+        setText(lblSellerItemsCount,  String.valueOf(totalItems));
+        setText(lblSellerRunningCount, String.valueOf(running));
+        setText(lblSellerRevenueMini, MoneyFormatter.formatViaPattern(totalRevenue));
+        setText(lblTotalItems,        String.valueOf(totalItems));
+        setText(lblRunningAuctions,   String.valueOf(running));
+        setText(lblFinishedAuctions,  String.valueOf(finished));
+        setText(lblTotalRevenue,      MoneyFormatter.formatViaPattern(totalRevenue));
     }
 
     private void setSellerNavActive(Button active) {
-        for (Button button : java.util.List.of(btnInventory, btnReport)) {
+        for (Button button : List.of(btnInventory, btnReport)) {
             if (button == null) continue;
             button.getStyleClass().remove("nav-button-active");
             if (!button.getStyleClass().contains("nav-button")) button.getStyleClass().add("nav-button");
         }
         if (active != null) {
             active.getStyleClass().remove("nav-button");
-            if (!active.getStyleClass().contains("nav-button-active")) active.getStyleClass().add("nav-button-active");
+            if (!active.getStyleClass().contains("nav-button-active"))
+                active.getStyleClass().add("nav-button-active");
         }
-    }
-
-    private String safe(String value) {
-        return value == null ? "" : value;
     }
 
     private void updateReport() {
         int totalItems = itemList == null ? 0 : itemList.size();
-        int running = 0;
-        int finished = 0;
+        int running = 0, finished = 0;
         double totalRevenue = 0;
 
         revenueBarChart.getData().clear();
         statusPieChart.getData().clear();
 
         XYChart.Series<String, Number> revenueSeries = new XYChart.Series<>();
-
         if (itemList != null) {
             for (Item item : itemList) {
                 Map<String, Object> auction = auctionMap.get(item.getItemId());
-
                 double price = item.getStartingPrice();
                 String status = "NONE";
-
                 if (auction != null) {
-                    if (auction.get("currentPrice") != null) {
-                        price = Double.parseDouble(auction.get("currentPrice").toString());
-                    }
-
-                    if (auction.get("status") != null) {
-                        status = auction.get("status").toString();
-                    }
+                    price  = MapAccessor.getDouble(auction, "currentPrice", price);
+                    status = MapAccessor.getString(auction, "status", "NONE");
                 }
-
-                if ("RUNNING".equals(status)) {
-                    running++;
-                }
-
+                if ("RUNNING".equals(status)) running++;
                 if ("FINISHED".equals(status) || "PAID".equals(status)) {
-                    finished++;
-                    totalRevenue += price;
+                    finished++; totalRevenue += price;
                 }
-
                 revenueSeries.getData().add(new XYChart.Data<>(item.getName(), price));
             }
         }
 
-        lblTotalItems.setText(String.valueOf(totalItems));
-        lblRunningAuctions.setText(String.valueOf(running));
-        lblFinishedAuctions.setText(String.valueOf(finished));
-        lblTotalRevenue.setText(formatVND(totalRevenue));
+        setText(lblTotalItems,       String.valueOf(totalItems));
+        setText(lblRunningAuctions,  String.valueOf(running));
+        setText(lblFinishedAuctions, String.valueOf(finished));
+        setText(lblTotalRevenue,     MoneyFormatter.formatViaPattern(totalRevenue));
 
         revenueBarChart.getData().add(revenueSeries);
 
         int notStarted = Math.max(totalItems - running - finished, 0);
-
         statusPieChart.getData().add(new PieChart.Data("Đang đấu giá", running));
         statusPieChart.getData().add(new PieChart.Data("Đã kết thúc", finished));
         statusPieChart.getData().add(new PieChart.Data("Chưa đăng", notStarted));
     }
 
-    private void showAlert(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        if (content != null && content.length() > 180) {
-            TextArea area = readonlyTextArea(content, 220);
-            area.setPrefWidth(520);
-            alert.getDialogPane().setContent(area);
-        } else {
-            alert.setContentText(content);
-        }
-        alert.showAndWait();
-    }
-
-    private void showSuccess(String content) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Thành công");
-        alert.setHeaderText(null);
-        if (content != null && content.length() > 180) {
-            TextArea area = readonlyTextArea(content, 220);
-            area.setPrefWidth(520);
-            alert.getDialogPane().setContent(area);
-        } else {
-            alert.setContentText(content);
-        }
-        alert.showAndWait();
-    }
-
-    private void addInfoRow(GridPane grid, int row, String label, String value) {
-        Label left = new Label(label);
-        left.getStyleClass().add("spec-label");
-        Label right = new Label(value == null || value.isBlank() || "null".equalsIgnoreCase(value) ? "--" : value);
-        right.setWrapText(true);
-        right.getStyleClass().add("spec-value");
-        grid.add(left, 0, row);
-        grid.add(right, 1, row);
-    }
-
-    private TextArea readonlyTextArea(String text, double prefHeight) {
-        TextArea area = new TextArea(text == null ? "" : text);
-        area.setWrapText(true);
-        area.setEditable(false);
-        area.setPrefHeight(prefHeight);
-        area.getStyleClass().add("readonly-area");
-        return area;
-    }
-
-    private void showCustomDialog(String title, VBox content, double width, double height) {
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.setTitle(title);
-        dialog.getDialogPane().getStyleClass().add("modern-dialog-pane");
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-
-        ScrollPane scroll = new ScrollPane(content);
-        scroll.setFitToWidth(true);
-        scroll.setPannable(true);
-        scroll.setPrefViewportWidth(width);
-        scroll.setPrefViewportHeight(height);
-        scroll.getStyleClass().addAll("clean-scroll", "popup-scroll");
-
-        dialog.getDialogPane().setContent(scroll);
-        dialog.getDialogPane().setPrefWidth(width + 40);
-        dialog.getDialogPane().setPrefHeight(height + 120);
-        if (tableItems != null && tableItems.getScene() != null) {
-            dialog.initOwner(tableItems.getScene().getWindow());
-        }
-        Button close = (Button) dialog.getDialogPane().lookupButton(ButtonType.CLOSE);
-        if (close != null) {
-            close.setText("Đóng");
-            close.getStyleClass().add("btn-primary");
-        }
-        dialog.showAndWait();
-    }
-
-    private double numberFrom(Object value, double fallback) {
-        if (value instanceof Number n) return n.doubleValue();
-        try { return value == null ? fallback : Double.parseDouble(value.toString()); }
-        catch (Exception e) { return fallback; }
+    private void setText(Label label, String text) {
+        if (label != null) label.setText(text);
     }
 }
