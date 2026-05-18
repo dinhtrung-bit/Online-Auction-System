@@ -45,6 +45,10 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Separator;
+import javafx.scene.layout.Priority;
 
 /**
  * AdminDashboardController — Điều khiển màn hình quản trị.
@@ -348,6 +352,7 @@ public class AdminDashboardController implements Initializable {
     @FXML
     void handleAdjustSelectedUserBalance(ActionEvent event) {
         UserViewModel selected = tableUsers.getSelectionModel().getSelectedItem();
+
         if (selected == null) {
             showAlert(Alert.AlertType.WARNING, "Chưa chọn người dùng",
                     "Hãy chọn người dùng cần điều chỉnh ví.");
@@ -356,36 +361,345 @@ public class AdminDashboardController implements Initializable {
 
         Dialog<Map<String, Object>> dialog = new Dialog<>();
         dialog.setTitle("Điều chỉnh ví người dùng");
-        dialog.setHeaderText("User #" + selected.getId() + " - " + selected.getUsername()
-                + "\nSố dư hiện tại: " + formatMoney(selected.getBalance()));
 
         ButtonType ok = new ButtonType("Lưu điều chỉnh", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(ok, ButtonType.CANCEL);
 
+        double currentBalance = selected.getBalance();
+
+        Label icon = new Label("💳");
+        icon.setStyle(
+                "-fx-font-size: 34px;" +
+                        "-fx-background-color: linear-gradient(to bottom right, #DBEAFE, #EDE9FE);" +
+                        "-fx-background-radius: 999;" +
+                        "-fx-min-width: 68px;" +
+                        "-fx-min-height: 68px;" +
+                        "-fx-alignment: center;"
+        );
+
+        Label title = new Label("Điều chỉnh ví người dùng");
+        title.setStyle(
+                "-fx-font-size: 22px;" +
+                        "-fx-font-weight: 900;" +
+                        "-fx-text-fill: #0F172A;"
+        );
+
+        Label subTitle = new Label("Cộng hoặc trừ tiền trực tiếp vào ví của tài khoản được chọn.");
+        subTitle.setWrapText(true);
+        subTitle.setStyle(
+                "-fx-font-size: 13px;" +
+                        "-fx-text-fill: #64748B;"
+        );
+
+        VBox titleBox = new VBox(4, title, subTitle);
+        HBox header = new HBox(16, icon, titleBox);
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        Label userLabel = new Label("USER #" + selected.getId());
+        userLabel.setStyle(
+                "-fx-font-size: 11px;" +
+                        "-fx-font-weight: 900;" +
+                        "-fx-text-fill: #2563EB;" +
+                        "-fx-background-color: #DBEAFE;" +
+                        "-fx-background-radius: 999;" +
+                        "-fx-padding: 5 10;"
+        );
+
+        Label usernameLabel = new Label(selected.getUsername());
+        usernameLabel.setStyle(
+                "-fx-font-size: 20px;" +
+                        "-fx-font-weight: 900;" +
+                        "-fx-text-fill: #111827;"
+        );
+
+        Label roleLabel = new Label(selected.getRole());
+        roleLabel.setStyle(
+                "-fx-font-size: 11px;" +
+                        "-fx-font-weight: 900;" +
+                        "-fx-text-fill: #7C3AED;" +
+                        "-fx-background-color: #F3E8FF;" +
+                        "-fx-background-radius: 999;" +
+                        "-fx-padding: 5 10;"
+        );
+
+        HBox userTop = new HBox(8, userLabel, roleLabel);
+        userTop.setAlignment(Pos.CENTER_LEFT);
+
+        VBox userInfo = new VBox(8, userTop, usernameLabel);
+        userInfo.setStyle(
+                "-fx-background-color: #F8FAFC;" +
+                        "-fx-background-radius: 18;" +
+                        "-fx-border-color: #E2E8F0;" +
+                        "-fx-border-radius: 18;" +
+                        "-fx-padding: 16;"
+        );
+
+        Label currentTitle = new Label("SỐ DƯ HIỆN TẠI");
+        currentTitle.setStyle(
+                "-fx-font-size: 11px;" +
+                        "-fx-font-weight: 900;" +
+                        "-fx-text-fill: #64748B;"
+        );
+
+        Label currentValue = new Label(formatMoney(currentBalance));
+        currentValue.setStyle(
+                "-fx-font-size: 24px;" +
+                        "-fx-font-weight: 900;" +
+                        "-fx-text-fill: #059669;"
+        );
+
+        VBox currentCard = new VBox(5, currentTitle, currentValue);
+        currentCard.setStyle(
+                "-fx-background-color: #ECFDF5;" +
+                        "-fx-background-radius: 18;" +
+                        "-fx-border-color: #A7F3D0;" +
+                        "-fx-border-radius: 18;" +
+                        "-fx-padding: 16;"
+        );
+
+        Label afterTitle = new Label("SỐ DƯ SAU ĐIỀU CHỈNH");
+        afterTitle.setStyle(
+                "-fx-font-size: 11px;" +
+                        "-fx-font-weight: 900;" +
+                        "-fx-text-fill: #64748B;"
+        );
+
+        Label afterValue = new Label(formatMoney(currentBalance));
+        afterValue.setStyle(
+                "-fx-font-size: 24px;" +
+                        "-fx-font-weight: 900;" +
+                        "-fx-text-fill: #2563EB;"
+        );
+
+        VBox afterCard = new VBox(5, afterTitle, afterValue);
+        afterCard.setStyle(
+                "-fx-background-color: #EFF6FF;" +
+                        "-fx-background-radius: 18;" +
+                        "-fx-border-color: #BFDBFE;" +
+                        "-fx-border-radius: 18;" +
+                        "-fx-padding: 16;"
+        );
+
+        HBox balanceCards = new HBox(12, currentCard, afterCard);
+        HBox.setHgrow(currentCard, Priority.ALWAYS);
+        HBox.setHgrow(afterCard, Priority.ALWAYS);
+        currentCard.setMaxWidth(Double.MAX_VALUE);
+        afterCard.setMaxWidth(Double.MAX_VALUE);
+
+        Label deltaLabel = new Label("Số tiền cộng/trừ");
+        deltaLabel.setStyle(
+                "-fx-font-size: 13px;" +
+                        "-fx-font-weight: 800;" +
+                        "-fx-text-fill: #334155;"
+        );
+
         TextField txtDelta = new TextField();
         txtDelta.setPromptText("VD: 1000000 hoặc -500000");
-        TextArea txtReason = new TextArea();
-        txtReason.setPromptText("Lý do điều chỉnh...");
-        txtReason.setPrefRowCount(3);
+        txtDelta.setPrefHeight(42);
+        txtDelta.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 12;" +
+                        "-fx-border-color: #CBD5E1;" +
+                        "-fx-border-radius: 12;" +
+                        "-fx-padding: 0 14;" +
+                        "-fx-font-size: 14px;" +
+                        "-fx-font-weight: 700;"
+        );
 
-        VBox box = new VBox(10,
-                new Label("Số tiền cộng/trừ"), txtDelta,
-                new Label("Lý do"), txtReason);
-        box.setPrefWidth(440);
-        dialog.getDialogPane().setContent(box);
+        Label deltaHint = new Label("Nhập số dương để cộng tiền, số âm để trừ tiền.");
+        deltaHint.setStyle(
+                "-fx-font-size: 12px;" +
+                        "-fx-text-fill: #64748B;"
+        );
+
+        Label previewLabel = new Label("Biến động: 0 đ");
+        previewLabel.setStyle(
+                "-fx-font-size: 13px;" +
+                        "-fx-font-weight: 900;" +
+                        "-fx-text-fill: #64748B;"
+        );
+
+        Label reasonLabel = new Label("Lý do điều chỉnh");
+        reasonLabel.setStyle(
+                "-fx-font-size: 13px;" +
+                        "-fx-font-weight: 800;" +
+                        "-fx-text-fill: #334155;"
+        );
+
+        TextArea txtReason = new TextArea();
+        txtReason.setPromptText("Ví dụ: Cộng tiền khuyến mãi, hoàn tiền phiên bị hủy, điều chỉnh sai lệch...");
+        txtReason.setPrefRowCount(4);
+        txtReason.setWrapText(true);
+        txtReason.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 12;" +
+                        "-fx-border-color: #CBD5E1;" +
+                        "-fx-border-radius: 12;" +
+                        "-fx-padding: 8;" +
+                        "-fx-font-size: 13px;"
+        );
+
+        txtDelta.textProperty().addListener((obs, oldVal, newVal) -> {
+            try {
+                double delta = parseMoneyInput(newVal);
+                double after = currentBalance + delta;
+
+                afterValue.setText(formatMoney(after));
+
+                if (delta > 0) {
+                    previewLabel.setText("Biến động: +" + formatMoney(delta));
+                    previewLabel.setStyle(
+                            "-fx-font-size: 13px;" +
+                                    "-fx-font-weight: 900;" +
+                                    "-fx-text-fill: #059669;"
+                    );
+                } else if (delta < 0) {
+                    previewLabel.setText("Biến động: -" + formatMoney(Math.abs(delta)));
+                    previewLabel.setStyle(
+                            "-fx-font-size: 13px;" +
+                                    "-fx-font-weight: 900;" +
+                                    "-fx-text-fill: #DC2626;"
+                    );
+                } else {
+                    previewLabel.setText("Biến động: 0 đ");
+                    previewLabel.setStyle(
+                            "-fx-font-size: 13px;" +
+                                    "-fx-font-weight: 900;" +
+                                    "-fx-text-fill: #64748B;"
+                    );
+                }
+
+                if (after < 0) {
+                    afterValue.setStyle(
+                            "-fx-font-size: 24px;" +
+                                    "-fx-font-weight: 900;" +
+                                    "-fx-text-fill: #DC2626;"
+                    );
+                } else {
+                    afterValue.setStyle(
+                            "-fx-font-size: 24px;" +
+                                    "-fx-font-weight: 900;" +
+                                    "-fx-text-fill: #2563EB;"
+                    );
+                }
+
+            } catch (Exception e) {
+                afterValue.setText("Không hợp lệ");
+                afterValue.setStyle(
+                        "-fx-font-size: 24px;" +
+                                "-fx-font-weight: 900;" +
+                                "-fx-text-fill: #DC2626;"
+                );
+                previewLabel.setText("Vui lòng nhập số hợp lệ.");
+                previewLabel.setStyle(
+                        "-fx-font-size: 13px;" +
+                                "-fx-font-weight: 900;" +
+                                "-fx-text-fill: #DC2626;"
+                );
+            }
+        });
+
+        VBox form = new VBox(
+                10,
+                deltaLabel,
+                txtDelta,
+                deltaHint,
+                previewLabel,
+                new Separator(),
+                reasonLabel,
+                txtReason
+        );
+
+        form.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 18;" +
+                        "-fx-border-color: #E2E8F0;" +
+                        "-fx-border-radius: 18;" +
+                        "-fx-padding: 16;"
+        );
+
+        VBox root = new VBox(18, header, userInfo, balanceCards, form);
+        root.setPadding(new Insets(22));
+        root.setPrefWidth(620);
+        root.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 24;"
+        );
+
+        dialog.getDialogPane().setContent(root);
+        dialog.getDialogPane().setPrefWidth(680);
+        dialog.getDialogPane().setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 24;" +
+                        "-fx-border-color: #E2E8F0;" +
+                        "-fx-border-radius: 24;"
+        );
+
+        Button okButton = (Button) dialog.getDialogPane().lookupButton(ok);
+        Button cancelButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
+
+        if (okButton != null) {
+            okButton.setText("💾 Lưu điều chỉnh");
+            okButton.setStyle(
+                    "-fx-background-color: linear-gradient(to right, #2563EB, #7C3AED);" +
+                            "-fx-text-fill: white;" +
+                            "-fx-font-weight: 900;" +
+                            "-fx-background-radius: 12;" +
+                            "-fx-padding: 10 22;" +
+                            "-fx-cursor: hand;"
+            );
+        }
+
+        if (cancelButton != null) {
+            cancelButton.setText("Hủy");
+            cancelButton.setStyle(
+                    "-fx-background-color: #F1F5F9;" +
+                            "-fx-text-fill: #334155;" +
+                            "-fx-font-weight: 800;" +
+                            "-fx-background-radius: 12;" +
+                            "-fx-padding: 10 18;" +
+                            "-fx-cursor: hand;"
+            );
+        }
 
         dialog.setResultConverter(button -> {
             if (button != ok) {
                 return null;
             }
+
             try {
+                double delta = parseMoneyInput(txtDelta.getText());
+                double after = currentBalance + delta;
+
+                if (delta == 0) {
+                    showAlert(Alert.AlertType.WARNING, "Dữ liệu không hợp lệ",
+                            "Số tiền điều chỉnh phải khác 0.");
+                    return null;
+                }
+
+                if (after < 0) {
+                    showAlert(Alert.AlertType.WARNING, "Số dư không đủ",
+                            "Không thể trừ quá số dư hiện tại của người dùng.");
+                    return null;
+                }
+
+                String reason = txtReason.getText() == null ? "" : txtReason.getText().trim();
+
+                if (reason.isBlank()) {
+                    reason = delta > 0
+                            ? "Admin cộng tiền vào ví"
+                            : "Admin trừ tiền khỏi ví";
+                }
+
                 Map<String, Object> data = new LinkedHashMap<>();
                 data.put("userId", selected.getId());
-                data.put("delta",  Double.parseDouble(txtDelta.getText().trim()));
-                data.put("reason", txtReason.getText() == null ? "" : txtReason.getText().trim());
+                data.put("delta", delta);
+                data.put("reason", reason);
                 return data;
+
             } catch (NumberFormatException e) {
-                showAlert(Alert.AlertType.ERROR, "Sai định dạng", "Số tiền phải là một số hợp lệ.");
+                showAlert(Alert.AlertType.ERROR, "Sai định dạng",
+                        "Số tiền phải là số hợp lệ. Ví dụ: 1000000 hoặc -500000.");
                 return null;
             }
         });
@@ -529,6 +843,34 @@ public class AdminDashboardController implements Initializable {
         } catch (Exception e) {
             return fallback;
         }
+    }
+
+    private double parseMoneyInput(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            throw new NumberFormatException("empty");
+        }
+
+        String raw = text.trim()
+                .replace("đ", "")
+                .replace("VNĐ", "")
+                .replace("VND", "")
+                .replace(" ", "");
+
+        if (raw.matches("-?\\d{1,3}(\\.\\d{3})+(,\\d+)?")) {
+            raw = raw.replace(".", "").replace(",", ".");
+        } else if (raw.matches("-?\\d{1,3}(,\\d{3})+(\\.\\d+)?")) {
+            raw = raw.replace(",", "");
+        } else if (raw.contains(",") && !raw.contains(".")) {
+            raw = raw.replace(",", ".");
+        }
+
+        raw = raw.replaceAll("[^0-9.\\-]", "");
+
+        if (raw.isBlank() || raw.equals("-")) {
+            throw new NumberFormatException("invalid");
+        }
+
+        return Double.parseDouble(raw);
     }
 
     private String formatMoney(double value) {

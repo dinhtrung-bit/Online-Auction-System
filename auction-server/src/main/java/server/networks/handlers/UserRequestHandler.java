@@ -169,16 +169,27 @@ public class UserRequestHandler {
         try {
             Map<String, Object> data = PayloadParser.parseJsonPayload(request);
 
-            int userId         = PayloadParser.getInt(data, "userId");
-            BigDecimal delta   = PayloadParser.getBigDecimalAllowNegative(data, "delta");
-            String reason      = PayloadParser.getString(data, "reason", "Điều chỉnh bởi Admin");
+            int userId = PayloadParser.getInt(data, "userId");
+            BigDecimal delta = PayloadParser.getBigDecimalAllowNegative(data, "delta");
+            String reason = PayloadParser.getString(data, "reason", "Điều chỉnh bởi Admin");
+
+            if (delta.compareTo(BigDecimal.ZERO) == 0) {
+                return new MessageDTO("ADMIN_BALANCE_FAILED", "Số tiền điều chỉnh phải khác 0.");
+            }
 
             BigDecimal newBalance = userService.adminAdjustBalance(userId, delta, admin, reason);
 
             Map<String, Object> result = new LinkedHashMap<>();
-            result.put("userId",     userId);
+            result.put("userId", userId);
+            result.put("delta", delta.doubleValue());
             result.put("newBalance", newBalance.doubleValue());
-            result.put("message",    "Đã điều chỉnh ví người dùng #" + userId);
+            result.put("reason", reason);
+
+            if (delta.compareTo(BigDecimal.ZERO) > 0) {
+                result.put("message", "Đã cộng " + delta.toPlainString() + "đ vào ví người dùng #" + userId);
+            } else {
+                result.put("message", "Đã trừ " + delta.abs().toPlainString() + "đ khỏi ví người dùng #" + userId);
+            }
 
             return new MessageDTO("ADMIN_BALANCE_UPDATED", gson.toJson(result));
 
@@ -188,6 +199,7 @@ public class UserRequestHandler {
             return new MessageDTO("ADMIN_BALANCE_FAILED", "Lỗi hệ thống: " + e.getMessage());
         }
     }
+
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 

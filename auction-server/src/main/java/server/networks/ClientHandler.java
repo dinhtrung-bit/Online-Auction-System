@@ -6,7 +6,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.google.gson.Gson;
@@ -163,6 +165,7 @@ public class ClientHandler implements Runnable {
             MessageDTO response = processor.process(request);
             if (response != null) {
                 send(response);
+                notifyWalletAdjustedIfNeeded(request, response);
             }
         } catch (Exception e) {
             System.err.println(">>> [Handler Error] " + e.getMessage());
@@ -189,6 +192,102 @@ public class ClientHandler implements Runnable {
             return;
         }
         out.println(gson.toJson(dto));
+    }
+    private void sendToThisClient(MessageDTO dto) {
+        if (dto == null || out == null) {
+            return;
+        }
+
+        try {
+            out.println(gson.toJson(dto));
+        } catch (Exception ignored) {
+            // socket có thể đã đóng
+        }
+    }
+
+    private boolean isLoggedInUserId(int userId) {
+        UserHolder holder = this.userHolder;
+
+        if (holder == null || holder.getUser() == null) {
+            return false;
+        }
+
+        return holder.getUser().getUserId() == userId;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void notifyWalletAdjustedIfNeeded(MessageDTO request, MessageDTO response) {
+        if (request == null || response == null) {
+            return;
+        }
+
+        if (!"ADMIN_ADJUST_BALANCE".equals(request.getAction())) {
+            return;
+        }
+
+        if (!"ADMIN_BALANCE_UPDATED".equals(response.getAction())) {
+            return;
+        }
+
+        try {
+            Map<String, Object> requestData = gson.fromJson(request.getPayload(), Map.class);
+            Map<String, Object> responseData = gson.fromJson(response.getPayload(), Map.class);
+
+            if (requestData == null || responseData == null) {
+                return;
+            }
+
+            int targetUserId = getInt(responseData.get("userId"));
+            double delta = getDouble(requestData.get("delta"));
+            double newBalance = getDouble(responseData.get("newBalance"));
+            String reason = String.valueOf(requestData.getOrDefault("reason", "Điều chỉnh bởi Admin"));
+
+            Map<String, Object> notifyPayload = new LinkedHashMap<>();
+            notifyPayload.put("userId", targetUserId);
+            notifyPayload.put("delta", delta);
+            notifyPayload.put("newBalance", newBalance);
+            notifyPayload.put("reason", reason);
+
+            if (delta >= 0) {
+                notifyPayload.put("title", "Ví của bạn vừa được cộng tiền");
+                notifyPayload.put("message", "Admin đã cộng " + formatMoney(delta) + " vào ví của bạn.");
+            } else {
+                notifyPayload.put("title", "Ví của bạn vừa bị trừ tiền");
+                notifyPayload.put("message", "Admin đã trừ " + formatMoney(Math.abs(delta)) + " khỏi ví của bạn.");
+            }
+
+            String jsonPayload = gson.toJson(notifyPayload);
+            MessageDTO notifyMessage = new MessageDTO("WALLET_ADJUSTED", jsonPayload);
+
+            for (ClientHandler client : activeClients) {
+                if (client != null && client.isLoggedInUserId(targetUserId)) {
+                    client.sendToThisClient(notifyMessage);
+                }
+            }
+
+        } catch (Exception e) {
+            System.err.println(">>> [Wallet Notify Error] " + e.getMessage());
+        }
+    }
+
+    private int getInt(Object value) {
+        if (value instanceof Number n) {
+            return n.intValue();
+        }
+
+        return (int) Double.parseDouble(String.valueOf(value));
+    }
+
+    private double getDouble(Object value) {
+        if (value instanceof Number n) {
+            return n.doubleValue();
+        }
+
+        return Double.parseDouble(String.valueOf(value));
+    }
+
+    private String formatMoney(double value) {
+        return String.format("%,.0f đ", value).replace(",", ".");
     }
 
     private void sendError(String message) {

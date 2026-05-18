@@ -133,6 +133,28 @@ public class AuctionListController implements Initializable {
                 System.out.println("Lỗi hiển thị số dư: " + e.getMessage());
             }
         }));
+        ClientMain.registerListener("WALLET_ADJUSTED", payload -> Platform.runLater(() -> {
+            try {
+                Type type = new TypeToken<Map<String, Object>>() {}.getType();
+                Map<String, Object> data = gson.fromJson(payload, type);
+
+                double delta = readDouble(data.get("delta"));
+                double newBalance = readDouble(data.get("newBalance"));
+                String title = String.valueOf(data.getOrDefault("title", "Ví của bạn vừa được cập nhật"));
+                String message = String.valueOf(data.getOrDefault("message", "Số dư ví đã thay đổi."));
+                String reason = String.valueOf(data.getOrDefault("reason", ""));
+
+                UserSession.getInstance().setBalance(newBalance);
+                updateBalanceLabels(newBalance);
+
+                showWalletAdjustedDialog(title, message, delta, newBalance, reason);
+
+            } catch (Exception e) {
+                refreshBalance();
+                showInfo("Ví của bạn vừa được cập nhật",
+                        "Số dư ví đã thay đổi.\nVui lòng bấm Làm mới nếu số dư chưa cập nhật.");
+            }
+        }));
 
         ClientMain.registerListener("ERROR", payload -> Platform.runLater(() -> showError(payload)));
     }
@@ -767,6 +789,7 @@ public class AuctionListController implements Initializable {
         ClientMain.unregisterListener("WON_AUCTIONS");
         ClientMain.unregisterListener("DEPOSIT_SUCCESS");
         ClientMain.unregisterListener("DEPOSIT_FAILED");
+        ClientMain.unregisterListener("WALLET_ADJUSTED");
     }
 
     private int readInt(Object value) {
@@ -799,5 +822,138 @@ public class AuctionListController implements Initializable {
         a.setHeaderText(null);
         a.setContentText(message);
         a.show();
+    }
+    private void showWalletAdjustedDialog(String title, String message, double delta, double newBalance, String reason) {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Thông báo ví");
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+
+        boolean isPlus = delta >= 0;
+
+        Label icon = new Label(isPlus ? "💰" : "⚠️");
+        icon.setStyle(
+                "-fx-font-size: 34px;" +
+                        "-fx-background-color: " + (isPlus ? "#DCFCE7" : "#FEE2E2") + ";" +
+                        "-fx-background-radius: 999;" +
+                        "-fx-min-width: 64;" +
+                        "-fx-min-height: 64;" +
+                        "-fx-alignment: center;"
+        );
+
+        Label lblTitle = new Label(title);
+        lblTitle.setWrapText(true);
+        lblTitle.setStyle(
+                "-fx-font-size: 20px;" +
+                        "-fx-font-weight: 900;" +
+                        "-fx-text-fill: #0F172A;"
+        );
+
+        Label lblMessage = new Label(message);
+        lblMessage.setWrapText(true);
+        lblMessage.setStyle(
+                "-fx-font-size: 14px;" +
+                        "-fx-font-weight: 700;" +
+                        "-fx-text-fill: #475569;"
+        );
+
+        VBox titleBox = new VBox(6, lblTitle, lblMessage);
+        HBox header = new HBox(16, icon, titleBox);
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        String sign = isPlus ? "+" : "-";
+        Label lblDeltaTitle = new Label("BIẾN ĐỘNG");
+        lblDeltaTitle.setStyle("-fx-font-size: 11px; -fx-font-weight: 900; -fx-text-fill: #64748B;");
+
+        Label lblDelta = new Label(sign + VND.format((long) Math.abs(delta)) + " đ");
+        lblDelta.setStyle(
+                "-fx-font-size: 24px;" +
+                        "-fx-font-weight: 900;" +
+                        "-fx-text-fill: " + (isPlus ? "#059669" : "#DC2626") + ";"
+        );
+
+        VBox deltaCard = new VBox(4, lblDeltaTitle, lblDelta);
+        deltaCard.setStyle(
+                "-fx-background-color: " + (isPlus ? "#ECFDF5" : "#FEF2F2") + ";" +
+                        "-fx-background-radius: 18;" +
+                        "-fx-border-color: " + (isPlus ? "#A7F3D0" : "#FECACA") + ";" +
+                        "-fx-border-radius: 18;" +
+                        "-fx-padding: 16 20;"
+        );
+
+        Label lblBalanceTitle = new Label("SỐ DƯ MỚI");
+        lblBalanceTitle.setStyle("-fx-font-size: 11px; -fx-font-weight: 900; -fx-text-fill: #64748B;");
+
+        Label lblNewBalance = new Label(VND.format((long) newBalance) + " đ");
+        lblNewBalance.setStyle(
+                "-fx-font-size: 24px;" +
+                        "-fx-font-weight: 900;" +
+                        "-fx-text-fill: #2563EB;"
+        );
+
+        VBox balanceCard = new VBox(4, lblBalanceTitle, lblNewBalance);
+        balanceCard.setStyle(
+                "-fx-background-color: #EFF6FF;" +
+                        "-fx-background-radius: 18;" +
+                        "-fx-border-color: #BFDBFE;" +
+                        "-fx-border-radius: 18;" +
+                        "-fx-padding: 16 20;"
+        );
+
+        HBox cards = new HBox(12, deltaCard, balanceCard);
+        HBox.setHgrow(deltaCard, Priority.ALWAYS);
+        HBox.setHgrow(balanceCard, Priority.ALWAYS);
+        deltaCard.setMaxWidth(Double.MAX_VALUE);
+        balanceCard.setMaxWidth(Double.MAX_VALUE);
+
+        VBox body = new VBox(18, header, cards);
+
+        if (reason != null && !reason.isBlank() && !"null".equalsIgnoreCase(reason)) {
+            Label lblReasonTitle = new Label("LÝ DO ĐIỀU CHỈNH");
+            lblReasonTitle.setStyle("-fx-font-size: 11px; -fx-font-weight: 900; -fx-text-fill: #64748B;");
+
+            Label lblReason = new Label(reason);
+            lblReason.setWrapText(true);
+            lblReason.setStyle(
+                    "-fx-font-size: 13px;" +
+                            "-fx-text-fill: #334155;" +
+                            "-fx-background-color: #F8FAFC;" +
+                            "-fx-background-radius: 14;" +
+                            "-fx-border-color: #E2E8F0;" +
+                            "-fx-border-radius: 14;" +
+                            "-fx-padding: 12 14;"
+            );
+
+            body.getChildren().addAll(lblReasonTitle, lblReason);
+        }
+
+        body.setPadding(new Insets(22));
+        body.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 22;"
+        );
+
+        dialog.getDialogPane().setContent(body);
+        dialog.getDialogPane().setPrefWidth(520);
+        dialog.getDialogPane().setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 22;" +
+                        "-fx-border-radius: 22;" +
+                        "-fx-border-color: #E2E8F0;"
+        );
+
+        Button okButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.OK);
+        if (okButton != null) {
+            okButton.setText("Đã hiểu");
+            okButton.setStyle(
+                    "-fx-background-color: linear-gradient(to right, #2563EB, #7C3AED);" +
+                            "-fx-text-fill: white;" +
+                            "-fx-font-weight: 900;" +
+                            "-fx-background-radius: 12;" +
+                            "-fx-padding: 10 22;" +
+                            "-fx-cursor: hand;"
+            );
+        }
+
+        dialog.show();
     }
 }
