@@ -12,9 +12,11 @@ import server.utils.Validation;
 public class UserService {
 
     private final UserDAO userDAO;
+    private final WalletService walletService;
 
     public UserService(UserDAO userDAO) {
         this.userDAO = userDAO;
+        this.walletService = new WalletService(userDAO);
     }
 
     public void register(String username, String password, String role) throws Exception {
@@ -40,57 +42,15 @@ public class UserService {
         return user;
     }
 
-    /** Bidder tự nạp tiền vào ví — cộng tiền ngay, không cần Admin duyệt. */
+    /** Giữ nguyên public method cũ, chỉ chuyển xử lý sang WalletService. */
     public BigDecimal selfDeposit(User user, BigDecimal amount) throws Exception {
-        if (user == null) {
-            throw new IllegalArgumentException("Chưa đăng nhập.");
-        }
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Số tiền nạp phải lớn hơn 0.");
-        }
-        if (amount.compareTo(new BigDecimal("1000000000")) > 0) {
-            throw new IllegalArgumentException("Số tiền nạp tối đa mỗi lần là 1.000.000.000 đ.");
-        }
-
-        User fresh = userDAO.findById(user.getUserId());
-        if (fresh == null) {
-            throw new IllegalArgumentException("Không tìm thấy tài khoản.");
-        }
-
-        BigDecimal newBalance = fresh.getAccountBalance().add(amount);
-        fresh.setAccountBalance(newBalance);
-        userDAO.update(fresh);
-
-        System.out.println(">>> [SelfDeposit] user#" + user.getUserId()
-                + " nạp " + amount + " → số dư mới " + newBalance);
-        return newBalance;
+        return walletService.selfDeposit(user, amount);
     }
 
-    /** Admin chỉnh số dư thủ công, có validate và reason để tránh thao tác nhầm. */
+    /** Giữ nguyên public method cũ, chỉ chuyển xử lý sang WalletService. */
     public BigDecimal adminAdjustBalance(int userId, BigDecimal delta, User admin, String reason)
             throws Exception {
-        requireAdmin(admin);
-        if (delta == null || delta.compareTo(BigDecimal.ZERO) == 0) {
-            throw new IllegalArgumentException("Số tiền điều chỉnh phải khác 0.");
-        }
-
-        User target = userDAO.findById(userId);
-        if (target == null) {
-            throw new IllegalArgumentException("Không tìm thấy người dùng.");
-        }
-
-        BigDecimal newBalance = target.getAccountBalance().add(delta);
-        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Không thể trừ quá số dư hiện có.");
-        }
-
-        target.setAccountBalance(newBalance);
-        userDAO.update(target);
-
-        System.out.println(
-                ">>> [Admin Balance] " + admin.getUsername()
-                        + " chỉnh ví user#" + userId + " delta=" + delta + " reason=" + reason);
-        return newBalance;
+        return walletService.adminAdjustBalance(userId, delta, admin, reason);
     }
 
     public User findByUsername(String username) throws Exception {
@@ -103,11 +63,5 @@ public class UserService {
 
     public List<User> findAll() throws Exception {
         return userDAO.findAll();
-    }
-
-    private void requireAdmin(User user) {
-        if (user == null || !"ADMIN".equalsIgnoreCase(user.getRole())) {
-            throw new IllegalArgumentException("Không có quyền Admin.");
-        }
     }
 }

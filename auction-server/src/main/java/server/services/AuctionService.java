@@ -1,19 +1,13 @@
 package server.services;
 
-import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.gson.Gson;
-
-import server.dao.core.DBConnection;
 import server.dao.interfaces.AuctionRoomDAO;
 import server.dao.interfaces.AutoBidDAO;
 import server.dao.interfaces.BidMessageDAO;
@@ -21,29 +15,17 @@ import server.dao.interfaces.ItemDAO;
 import server.dao.interfaces.UserDAO;
 import server.models.auction.AuctionRoom;
 import server.models.auction.AuctionStatus;
-import server.models.auction.AutoBidConfig;
 import server.models.auction.BidRecord;
 import server.models.items.Item;
 import server.models.users.Bidder;
 import server.models.users.User;
-import server.networks.dto.MessageDTO;
 import server.networks.interfaces.BroadcastChannel;
 
 /**
- * AuctionService — Singleton chứa toàn bộ logic nghiệp vụ đấu giá:
- *
- * <ul>
- *   <li>Khởi tạo, hủy, tự động chuyển trạng thái phiên.
- *   <li>Xử lý bid thường và auto-bid (đệ quy, có giới hạn depth).
- *   <li>Settlement: trừ tiền winner, cộng tiền seller trong một transaction.
- * </ul>
+ * Facade chính cho nghiệp vụ đấu giá.
+ * Public API giữ nguyên để các class khác không phải đổi cách gọi.
  */
 public class AuctionService {
-
-    private static final int AUTO_BID_MAX_DEPTH = 20;
-    private static final int ROOM_REMOVE_DELAY_MS = 30_000;
-
-    private static final Gson GSON = new Gson();
 
     private static AuctionService instance;
 
@@ -55,6 +37,12 @@ public class AuctionService {
     private final BroadcastChannel broadcaster;
 
     private final ConcurrentHashMap<Long, AuctionRoom> activeRooms = new ConcurrentHashMap<>();
+
+    private final AuctionNotificationService notificationService;
+    private final AuctionSettlementService settlementService;
+    private final AuctionAutoBidService autoBidService;
+    private final AuctionBidService bidService;
+    private final AuctionStatusService statusService;
 
     private AuctionService(
             AuctionRoomDAO roomDAO,
@@ -69,6 +57,15 @@ public class AuctionService {
         this.userDAO = userDAO;
         this.autoBidDAO = autoBidDAO;
         this.broadcaster = broadcaster;
+
+        this.notificationService = new AuctionNotificationService(broadcaster);
+        this.settlementService = new AuctionSettlementService(roomDAO, userDAO);
+        this.autoBidService = new AuctionAutoBidService(
+                activeRooms, roomDAO, bidDAO, userDAO, autoBidDAO, notificationService);
+        this.bidService = new AuctionBidService(activeRooms, roomDAO, bidDAO, userDAO, autoBidService);
+        this.statusService = new AuctionStatusService(
+                activeRooms, roomDAO, settlementService, notificationService);
+
         loadRoomsFromDatabase();
     }
 
@@ -96,8 +93,6 @@ public class AuctionService {
         return broadcaster;
     }
 
-    // ─── Room loading & queries ──────────────────────────────────────────────
-
     private void loadRoomsFromDatabase() {
         try {
             List<AuctionRoom> rooms = roomDAO.findAll();
@@ -122,8 +117,6 @@ public class AuctionService {
     public AuctionRoom findRoomById(long roomId) {
         return activeRooms.get(roomId);
     }
-
-    // ─── Create / Cancel ─────────────────────────────────────────────────────
 
     public void createAuction(int sellerId, Item item, LocalDateTime startTime, LocalDateTime endTime)
             throws Exception {
@@ -183,318 +176,26 @@ public class AuctionService {
         }
     }
 
-    // ─── Bid request ─────────────────────────────────────────────────────────
-
     public String handleBidRequest(Long roomId, Bidder bidder, double amount) {
-        AuctionRoom room = activeRooms.get(roomId);
-        if (room == null) {
-            return "Không tìm thấy phòng đấu giá.";
-        }
-        if (bidder == null) {
-            return "Người đặt giá không hợp lệ.";
-        }
-
-        BigDecimal bidAmount = BigDecimal.valueOf(amount);
-        if (bidAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            return "Giá đặt phải lớn hơn 0.";
-        }
-
-        synchronized (room) {
-            try {
-                if (room.getSellerID() == bidder.getUserId()) {
-                    return "Seller không được tự bid sản phẩm của mình.";
-                }
-                if (room.getStatus() != AuctionStatus.RUNNING) {
-                    return "Phiên đấu giá chưa chạy hoặc đã kết thúc.";
-                }
-
-                User freshUser = userDAO.findById(bidder.getUserId());
-                if (!(freshUser instanceof Bidder freshBidder)) {
-                    return "Tài khoản không phải Bidder.";
-                }
-                if (freshBidder.getAccountBalance().compareTo(bidAmount) < 0) {
-                    return "Số dư không đủ.";
-                }
-
-                BigDecimal oldPrice = room.getCurrentPrice();
-                room.placeBid(freshBidder, bidAmount);
-                roomDAO.updateWithOptimisticLock(room, oldPrice);
-                bidDAO.insert(new BidRecord(roomId.intValue(), freshBidder.getUserId(), bidAmount));
-
-                processAutoBids(room, freshBidder, 0);
-
-                System.out.println(">>> [Bid] Room " + roomId + ": "
-                        + freshBidder.getUsername() + " bid " + bidAmount);
-                return "SUCCESS";
-
-            } catch (Exception e) {
-                return e.getMessage();
-            }
-        }
+        return bidService.handleBidRequest(roomId, bidder, amount);
     }
-
-    // ─── Auto-bid ────────────────────────────────────────────────────────────
 
     public void registerAutoBid(int auctionId, Bidder bidder, BigDecimal maxBid, BigDecimal step)
             throws Exception {
-        if (bidder == null) {
-            throw new IllegalArgumentException("Bidder không hợp lệ.");
-        }
-        if (maxBid == null || maxBid.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Giá tối đa phải lớn hơn 0.");
-        }
-        if (step == null || step.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Bước nhảy phải lớn hơn 0.");
-        }
-
-        AuctionRoom room = activeRooms.get((long) auctionId);
-        if (room == null) {
-            throw new IllegalArgumentException("Không tìm thấy phiên đấu giá.");
-        }
-        if (room.getSellerID() == bidder.getUserId()) {
-            throw new IllegalArgumentException("Seller không được bật auto bid cho sản phẩm của mình.");
-        }
-
-        AutoBidConfig config = new AutoBidConfig(auctionId, bidder, maxBid, step);
-        autoBidDAO.insert(config);
-        triggerAutoBidsForRoom(auctionId, bidder);
+        autoBidService.registerAutoBid(auctionId, bidder, maxBid, step);
     }
 
     public void cancelAutoBid(int auctionId, int bidderId) throws Exception {
-        autoBidDAO.deleteByAuctionIdAndBidderId(auctionId, bidderId);
+        autoBidService.cancelAutoBid(auctionId, bidderId);
     }
 
     public void triggerAutoBidsForRoom(long roomId, Bidder trigger) {
-        AuctionRoom room = activeRooms.get(roomId);
-        if (room == null) {
-            return;
-        }
-        synchronized (room) {
-            processAutoBids(room, trigger, 0);
-        }
+        autoBidService.triggerAutoBidsForRoom(roomId, trigger);
     }
-
-    private void processAutoBids(AuctionRoom room, Bidder lastBidder, int depth) {
-        if (depth > AUTO_BID_MAX_DEPTH) {
-            return;
-        }
-
-        try {
-            List<AutoBidConfig> autoBids = autoBidDAO.getAutoBidsByAuctionId(room.getId());
-            if (autoBids == null || autoBids.isEmpty()) {
-                return;
-            }
-
-            for (AutoBidConfig config : autoBids) {
-                if (!processSingleAutoBid(room, lastBidder, config, depth)) {
-                    continue;
-                }
-                // Đã có một bid được đặt → dừng vòng và đệ quy.
-                return;
-            }
-        } catch (Exception e) {
-            System.err.println(">>> [AutoBid Error] " + e.getMessage());
-        }
-    }
-
-    /**
-     * Cố gắng thực hiện một AutoBid. Trả {@code true} nếu đã bid thành công (caller sẽ dừng vòng),
-     * {@code false} nếu phải skip (caller xét bidder tiếp theo).
-     */
-    private boolean processSingleAutoBid(
-            AuctionRoom room, Bidder lastBidder, AutoBidConfig config, int depth) throws Exception {
-        Bidder autoBidder = config.getBidder();
-        if (autoBidder == null) {
-            return false;
-        }
-        if (lastBidder != null && autoBidder.getUserId() == lastBidder.getUserId()) {
-            return false;
-        }
-        if (room.getCurrentWinner() != null
-                && room.getCurrentWinner().getUserId() == autoBidder.getUserId()) {
-            return false;
-        }
-        if (room.getSellerID() == autoBidder.getUserId()) {
-            return false;
-        }
-
-        BigDecimal increment = config.getIncrement() != null ? config.getIncrement() : BigDecimal.ONE;
-        BigDecimal nextBid = room.getCurrentPrice().add(increment);
-
-        if (nextBid.compareTo(config.getMaxBid()) > 0) {
-            broadcast("AUTO_BID_EXCEEDED", String.valueOf(room.getId()));
-            return false;
-        }
-
-        User fullUser = userDAO.findById(autoBidder.getUserId());
-        if (!(fullUser instanceof Bidder fullBidder)) {
-            return false;
-        }
-        if (fullBidder.getAccountBalance().compareTo(nextBid) < 0) {
-            return false;
-        }
-
-        BigDecimal oldPrice = room.getCurrentPrice();
-        room.placeAutoBid(fullBidder, nextBid);
-        roomDAO.updateWithOptimisticLock(room, oldPrice);
-        bidDAO.insert(new BidRecord(room.getId(), fullBidder.getUserId(), nextBid));
-
-        broadcast("UPDATE_PRICE",
-                room.getId() + ":" + nextBid.toPlainString() + ":" + fullBidder.getUsername());
-
-        System.out.println(">>> [AutoBid] " + fullBidder.getUsername()
-                + " bid " + nextBid + " vào phòng " + room.getId());
-
-        processAutoBids(room, fullBidder, depth + 1);
-        return true;
-    }
-
-    // ─── Status scheduler & settlement ───────────────────────────────────────
 
     public void autoUpdateStatuses() {
-        LocalDateTime now = LocalDateTime.now();
-        for (AuctionRoom room : activeRooms.values()) {
-            synchronized (room) {
-                try {
-                    processRoomStatusTick(room, now);
-                } catch (Exception e) {
-                    System.err.println(">>> [Auction Status Error] " + e.getMessage());
-                }
-            }
-        }
+        statusService.autoUpdateStatuses();
     }
-
-    private void processRoomStatusTick(AuctionRoom room, LocalDateTime now) {
-        if (room.getStatus() == AuctionStatus.FINISHED
-                || room.getStatus() == AuctionStatus.PAID
-                || room.getStatus() == AuctionStatus.CANCELED) {
-            return;
-        }
-
-        if (room.getStatus() == AuctionStatus.OPEN && !now.isBefore(room.getStarttime())) {
-            room.setStatus(AuctionStatus.RUNNING);
-            updateRoomInDb(room);
-            broadcast("AUCTION_STARTED", String.valueOf(room.getId()));
-            System.out.println(">>> [Auction] Room " + room.getId() + " START.");
-        }
-
-        if (room.getStatus() == AuctionStatus.RUNNING && room.isExpired()) {
-            processAuctionSettlement(room);
-            updateRoomInDb(room);
-            broadcast("AUCTION_FINISHED", String.valueOf(room.getId()));
-            scheduleRemoveRoom(room.getId());
-        }
-    }
-
-    private void processAuctionSettlement(AuctionRoom room) {
-        User winner = room.getCurrentWinner();
-        BigDecimal finalPrice = room.getCurrentPrice();
-
-        if (winner == null || finalPrice == null || finalPrice.compareTo(BigDecimal.ZERO) <= 0) {
-            room.setStatus(AuctionStatus.CANCELED);
-            System.out.println(">>> [Settlement] Room " + room.getId() + " CANCELED: Không có người mua.");
-            return;
-        }
-
-        try (Connection conn = DBConnection.getInstance()) {
-            conn.setAutoCommit(false);
-            try {
-                User freshWinner = userDAO.findById(winner.getUserId());
-                User freshSeller = userDAO.findById(room.getSellerID());
-
-                if (freshWinner == null || freshSeller == null) {
-                    throw new IllegalArgumentException("Không tìm thấy winner hoặc seller.");
-                }
-
-                if (freshWinner.getAccountBalance().compareTo(finalPrice) < 0) {
-                    room.setStatus(AuctionStatus.CANCELED);
-                    roomDAO.update(room);
-                    conn.commit();
-                    System.out.println(">>> [Settlement] Room " + room.getId()
-                            + " CANCELED: Winner không đủ số dư.");
-                    return;
-                }
-
-                subtractBalance(conn, freshWinner.getUserId(), finalPrice);
-                addBalance(conn, freshSeller.getUserId(), finalPrice);
-
-                room.setStatus(AuctionStatus.PAID);
-                roomDAO.update(room);
-                conn.commit();
-
-                System.out.println(">>> [Settlement] Room " + room.getId() + " PAID: "
-                        + freshWinner.getUsername() + " trả " + finalPrice);
-
-            } catch (Exception e) {
-                conn.rollback();
-                room.setStatus(AuctionStatus.CANCELED);
-                try {
-                    roomDAO.update(room);
-                } catch (Exception ignored) {
-                    // bỏ qua — đã rollback transaction chính
-                }
-                throw e;
-            } finally {
-                conn.setAutoCommit(true);
-            }
-        } catch (Exception e) {
-            room.setStatus(AuctionStatus.CANCELED);
-            System.err.println(">>> [Settlement Error] " + e.getMessage());
-        }
-    }
-
-    private void subtractBalance(Connection conn, int userId, BigDecimal amount) throws Exception {
-        String sql = "UPDATE users SET balance = balance - ? WHERE user_id = ? AND balance >= ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setBigDecimal(1, amount);
-            ps.setInt(2, userId);
-            ps.setBigDecimal(3, amount);
-            int rows = ps.executeUpdate();
-            if (rows == 0) {
-                throw new IllegalArgumentException("Số dư không đủ để thanh toán.");
-            }
-        }
-    }
-
-    private void addBalance(Connection conn, int userId, BigDecimal amount) throws Exception {
-        String sql = "UPDATE users SET balance = COALESCE(balance, 0) + ? WHERE user_id = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setBigDecimal(1, amount);
-            ps.setInt(2, userId);
-            int rows = ps.executeUpdate();
-            if (rows == 0) {
-                throw new IllegalArgumentException("Không tìm thấy seller để cộng tiền.");
-            }
-        }
-    }
-
-    private void updateRoomInDb(AuctionRoom room) {
-        BigDecimal oldPrice = room.getCurrentPrice();
-        try {
-            roomDAO.updateWithOptimisticLock(room, oldPrice);
-        } catch (Exception e) {
-            try {
-                roomDAO.update(room);
-            } catch (Exception ignored) {
-                // bỏ qua — không thể update bằng cả 2 cách
-            }
-            System.err.println(">>> [DB Update Room Error] " + e.getMessage());
-        }
-    }
-
-    private void scheduleRemoveRoom(long roomId) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                Thread.sleep(ROOM_REMOVE_DELAY_MS);
-                activeRooms.remove(roomId);
-                System.out.println(">>> [Auction] Đã xóa Room " + roomId + " khỏi RAM.");
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
-    }
-
-    // ─── Bid history ─────────────────────────────────────────────────────────
 
     public List<Map<String, Object>> getBidHistory(int roomId) throws Exception {
         List<BidRecord> bids = bidDAO.getBidHistoryByAuctionRoomId(roomId);
@@ -518,11 +219,5 @@ public class AuctionService {
             result.add(m);
         }
         return result;
-    }
-
-    // ─── Internal helpers ────────────────────────────────────────────────────
-
-    private void broadcast(String action, String payload) {
-        broadcaster.broadcast(GSON.toJson(new MessageDTO(action, payload)));
     }
 }

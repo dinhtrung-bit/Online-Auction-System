@@ -11,19 +11,21 @@ import java.util.Map;
 public class ItemService {
 
     private final ItemDAO itemDAO;
+    private final ItemDataMapper itemDataMapper;
 
     public ItemService(ItemDAO itemDAO) {
         this.itemDAO = itemDAO;
+        this.itemDataMapper = new ItemDataMapper();
     }
 
     public void addItem(Map<String, Object> data, int sellerId) throws Exception {
-        String name = getString(data, "name", "");
-        String description = getString(data, "description", "");
-        String category = getString(data, "category", "ART");
-        BigDecimal price = getMoney(data, "startingPrice");
+        String name = itemDataMapper.getString(data, "name", "");
+        String description = itemDataMapper.getString(data, "description", "");
+        String category = itemDataMapper.getString(data, "category", "ART");
+        BigDecimal price = itemDataMapper.getMoney(data, "startingPrice");
 
         Item item = ItemFactory.createItem(category, 0, name, price, description);
-        applyOptionalClientFields(item, data);
+        itemDataMapper.applyOptionalClientFields(item, data);
 
         itemDAO.insertWithSellerId(item, sellerId);
 
@@ -31,7 +33,7 @@ public class ItemService {
     }
 
     public void updateItem(Map<String, Object> data, int sellerId) throws Exception {
-        int itemId = getInt(data, "itemId");
+        int itemId = itemDataMapper.getInt(data, "itemId");
 
         Item oldItem = itemDAO.findById(itemId);
         if (oldItem == null) {
@@ -42,12 +44,12 @@ public class ItemService {
             throw new SecurityException("Bạn không có quyền sửa sản phẩm này.");
         }
 
-        String name = getString(data, "name", oldItem.getName());
-        String description = getString(data, "description", oldItem.getDescription());
-        String category = getString(data, "category", oldItem.getCategoryInfo());
+        String name = itemDataMapper.getString(data, "name", oldItem.getName());
+        String description = itemDataMapper.getString(data, "description", oldItem.getDescription());
+        String category = itemDataMapper.getString(data, "category", oldItem.getCategoryInfo());
 
         BigDecimal price = data.get("startingPrice") != null
-                ? getMoney(data, "startingPrice")
+                ? itemDataMapper.getMoney(data, "startingPrice")
                 : oldItem.getStartingPrice();
 
         Item updatedItem = ItemFactory.createItem(category, itemId, name, price, description);
@@ -56,7 +58,7 @@ public class ItemService {
         updatedItem.setImagePath(oldItem.getImagePath());
         updatedItem.setBidIncrement(oldItem.getBidIncrement());
 
-        applyOptionalClientFields(updatedItem, data);
+        itemDataMapper.applyOptionalClientFields(updatedItem, data);
 
         itemDAO.update(updatedItem);
 
@@ -93,64 +95,5 @@ public class ItemService {
 
     public int countAll() throws Exception {
         return itemDAO.findAll().size();
-    }
-
-    private void applyOptionalClientFields(Item item, Map<String, Object> data) {
-        if (item == null || data == null) return;
-
-        if (data.get("imagePath") != null) {
-            item.setImagePath(data.get("imagePath").toString());
-        }
-
-        if (data.get("bidIncrement") != null) {
-            try {
-                item.setBidIncrement(new BigDecimal(data.get("bidIncrement").toString()));
-            } catch (Exception ignored) {
-            }
-        }
-    }
-
-    private String getString(Map<String, Object> data, String key, String defaultValue) {
-        Object value = data.get(key);
-        if (value == null) return defaultValue;
-
-        String text = value.toString().trim();
-        return text.isEmpty() ? defaultValue : text;
-    }
-
-    private int getInt(Map<String, Object> data, String key) {
-        Object value = data.get(key);
-        if (value == null) {
-            throw new IllegalArgumentException("Thiếu trường bắt buộc: " + key);
-        }
-
-        if (value instanceof Number) {
-            return ((Number) value).intValue();
-        }
-
-        try {
-            return (int) Double.parseDouble(value.toString());
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(key + " phải là số nguyên.");
-        }
-    }
-
-    private BigDecimal getMoney(Map<String, Object> data, String key) {
-        Object value = data.get(key);
-        if (value == null) {
-            throw new IllegalArgumentException("Thiếu trường bắt buộc: " + key);
-        }
-
-        try {
-            BigDecimal money = new BigDecimal(value.toString());
-
-            if (money.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Giá tiền phải lớn hơn 0.");
-            }
-
-            return money;
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(key + " phải là số hợp lệ.");
-        }
     }
 }
