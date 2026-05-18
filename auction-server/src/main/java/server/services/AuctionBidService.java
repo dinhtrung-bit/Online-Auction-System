@@ -23,18 +23,20 @@ public class AuctionBidService {
     private final BidMessageDAO bidDAO;
     private final UserDAO userDAO;
     private final AuctionAutoBidService autoBidService;
-
+    private final AuctionNotificationService notificationService;
     public AuctionBidService(
             ConcurrentHashMap<Long, AuctionRoom> activeRooms,
             AuctionRoomDAO roomDAO,
             BidMessageDAO bidDAO,
             UserDAO userDAO,
-            AuctionAutoBidService autoBidService) {
+            AuctionAutoBidService autoBidService,
+            AuctionNotificationService notificationService) {
         this.activeRooms = activeRooms;
         this.roomDAO = roomDAO;
         this.bidDAO = bidDAO;
         this.userDAO = userDAO;
         this.autoBidService = autoBidService;
+        this.notificationService = notificationService;
     }
 
     public String handleBidRequest(Long roomId, Bidder bidder, double amount) {
@@ -72,6 +74,8 @@ public class AuctionBidService {
                 room.placeBid(freshBidder, bidAmount);
                 roomDAO.updateWithOptimisticLock(room, oldPrice);
                 bidDAO.insert(new BidRecord(roomId.intValue(), freshBidder.getUserId(), bidAmount));
+                notificationService.broadcast("UPDATE_PRICE",
+                        roomId + ":" + bidAmount.toPlainString() + ":" + freshBidder.getUsername());
 
                 autoBidService.processAutoBids(room, freshBidder, 0);
 

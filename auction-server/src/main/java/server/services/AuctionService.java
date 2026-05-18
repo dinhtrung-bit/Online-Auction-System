@@ -62,7 +62,8 @@ public class AuctionService {
         this.settlementService = new AuctionSettlementService(roomDAO, userDAO);
         this.autoBidService = new AuctionAutoBidService(
                 activeRooms, roomDAO, bidDAO, userDAO, autoBidDAO, notificationService);
-        this.bidService = new AuctionBidService(activeRooms, roomDAO, bidDAO, userDAO, autoBidService);
+            this.bidService = new AuctionBidService(
+                	                activeRooms, roomDAO, bidDAO, userDAO, autoBidService, notificationService);
         this.statusService = new AuctionStatusService(
                 activeRooms, roomDAO, settlementService, notificationService);
 

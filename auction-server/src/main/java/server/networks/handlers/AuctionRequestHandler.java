@@ -65,10 +65,6 @@ public class AuctionRequestHandler {
                 return new MessageDTO("BID_FAILED", result);
             }
 
-            broadcast(
-                    "UPDATE_PRICE",
-                    bid.roomId() + ":" + bid.amount().toPlainString() + ":" + bidder.getUsername());
-
             return new MessageDTO("BID_SUCCESS", "Đặt giá thành công.");
 
         } catch (IllegalArgumentException e) {
