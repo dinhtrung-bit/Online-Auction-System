@@ -119,8 +119,38 @@ public class AuctionService {
         return new ArrayList<>(activeRooms.values());
     }
 
+    /**
+     * Lấy toàn bộ phiên đấu giá từ DB (bao gồm cả các phiên đã FINISHED/PAID đã bị xoá khỏi RAM).
+     * Ưu tiên dùng instance trong RAM nếu còn tồn tại để đồng bộ trạng thái mới nhất.
+     */
+    public List<AuctionRoom> getAllRoomsFromDb() {
+        try {
+            List<AuctionRoom> rooms = roomDAO.findAll();
+            List<AuctionRoom> result = new ArrayList<>();
+            for (AuctionRoom dbRoom : rooms) {
+                AuctionRoom ramRoom = activeRooms.get((long) dbRoom.getId());
+                result.add(ramRoom != null ? ramRoom : dbRoom);
+            }
+            return result;
+        } catch (Exception e) {
+            System.err.println(">>> [AuctionService] Lỗi getAllRoomsFromDb: " + e.getMessage());
+            return getActiveRooms();
+        }
+    }
+
     public AuctionRoom findRoomById(long roomId) {
-        return activeRooms.get(roomId);
+        AuctionRoom room = activeRooms.get(roomId);
+        if (room != null) {
+            return room;
+        }
+        // [FIX] Fallback xuống DB — khi phiên đã PAID/FINISHED bị xoá khỏi RAM
+        // (sau ROOM_REMOVE_DELAY_MS), user vẫn có thể mở chi tiết để xem kết quả.
+        try {
+            return roomDAO.findById((int) roomId);
+        } catch (Exception e) {
+            System.err.println(">>> [AuctionService] findRoomById fallback DB lỗi: " + e.getMessage());
+            return null;
+        }
     }
 
     public void createAuction(int sellerId, Item item, LocalDateTime startTime, LocalDateTime endTime)

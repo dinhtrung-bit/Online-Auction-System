@@ -15,7 +15,10 @@ import server.models.auction.AuctionStatus;
  */
 public class AuctionStatusService {
 
-    private static final int ROOM_REMOVE_DELAY_MS = 30_000;
+    // [FIX] Tăng thời gian giữ phòng đã kết thúc trong RAM từ 30s → 5 phút
+    // để user còn đang xem trang chi tiết vẫn refresh được, và để các client khác
+    // nhận được dữ liệu mới nhất qua getActiveRooms() ngay sau khi phiên kết thúc.
+    private static final int ROOM_REMOVE_DELAY_MS = 300_000;
 
     private final ConcurrentHashMap<Long, AuctionRoom> activeRooms;
     private final AuctionRoomDAO roomDAO;
@@ -63,7 +66,11 @@ public class AuctionStatusService {
         if (room.getStatus() == AuctionStatus.RUNNING && room.isExpired()) {
             settlementService.processAuctionSettlement(room);
             updateRoomInDb(room);
-            notificationService.broadcastToRoom(room.getId(), "AUCTION_FINISHED", String.valueOf(room.getId()));
+            // [FIX] broadcast TOÀN HỆ THỐNG (không chỉ trong phòng) — để các client đang ở trang
+            // danh sách (đặc biệt là người thắng) cũng nhận được tín hiệu kết thúc phiên,
+            // qua đó refresh tab "Đã thắng" và tăng bộ đếm ngay tức thì. Client detail vẫn
+            // tự lọc theo roomId qua isSameRoomPayload() nên hiển thị popup vẫn đúng phòng.
+            notificationService.broadcast("AUCTION_FINISHED", String.valueOf(room.getId()));
             scheduleRemoveRoom(room.getId());
         }
     }

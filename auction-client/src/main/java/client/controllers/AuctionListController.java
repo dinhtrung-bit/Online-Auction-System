@@ -83,6 +83,8 @@ public class AuctionListController implements Initializable {
         setupTabsAndFilters();
         registerServerListeners();
         loadAuctionsFromServer();
+        // Lấy danh sách vật phẩm đã thắng ngay khi vào trang để bộ đếm hiển thị đúng số
+        loadWonAuctionsFromServer();
         refreshBalance();
     }
 

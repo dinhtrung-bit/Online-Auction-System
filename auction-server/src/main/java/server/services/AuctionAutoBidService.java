@@ -132,7 +132,12 @@ public class AuctionAutoBidService {
         BigDecimal nextBid = room.getCurrentPrice().add(increment);
 
         if (nextBid.compareTo(config.getMaxBid()) > 0) {
-            // Chỉ gửi cho đúng user có AutoBid vượt giới hạn, không broadcast toàn phòng
+            // Xoa config khoi DB de khong bi kich hoat lai o cac lan bid tiep theo
+            try {
+                autoBidDAO.deleteByAuctionIdAndBidderId(room.getId(), autoBidder.getUserId());
+            } catch (Exception ex) {
+                System.err.println(">>> [AutoBid] Khong xoa duoc config sau EXCEEDED: " + ex.getMessage());
+            }
             notificationService.sendToUserInRoom(
                     room.getId(), autoBidder.getUserId(),
                     "AUTO_BID_EXCEEDED", String.valueOf(room.getId()));

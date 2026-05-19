@@ -2,6 +2,7 @@ package server.networks.handlers;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,8 @@ import server.models.users.User;
 import server.networks.dto.MessageDTO;
 import server.services.AuctionService;
 import server.services.ItemService;
+
+import static server.networks.handlers.AuctionMapper.toWonMap;
 
 /**
  * AuctionRequestHandler — Xử lý toàn bộ request liên quan đến phiên đấu giá.
@@ -158,22 +161,31 @@ public class AuctionRequestHandler {
             return new MessageDTO("ERROR", "Lỗi: " + e.getMessage());
         }
     }
-
     public MessageDTO handleGetMyWonAuctions(MessageDTO request, User loggedInUser) {
         if (loggedInUser == null) {
-            return new MessageDTO("ERROR", "Chưa đăng nhập");
+            return new MessageDTO("ERROR", "Chưa đăng nhập!");
         }
+
         try {
-            List<Map<String, Object>> result = auctionService.getActiveRooms().stream()
-                    .filter(r -> (r.getStatus() == AuctionStatus.PAID
-                            || r.getStatus() == AuctionStatus.FINISHED)
-                            && r.getCurrentWinner() != null
-                            && r.getCurrentWinner().getUserId() == loggedInUser.getUserId())
-                    .map(AuctionMapper::toWonMap)
+            List<AuctionRoom> allAuctions = auctionService.getAllRoomsFromDb();
+
+            List<AuctionRoom> wonAuctions = allAuctions.stream()
+                    .filter(r -> r.getCurrentWinner() != null
+                            && r.getCurrentWinner().getUserId() == loggedInUser.getUserId()
+                            && (r.getStatus() == AuctionStatus.PAID
+                            || r.getStatus() == AuctionStatus.FINISHED))
                     .collect(Collectors.toList());
-            return new MessageDTO("WON_AUCTIONS", gson.toJson(result));
+
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (AuctionRoom room : wonAuctions) {
+                result.add(toWonMap(room));
+            }
+
+            return new MessageDTO("WON_AUCTIONS", new Gson().toJson(result));
+
         } catch (Exception e) {
-            return new MessageDTO("ERROR", "Lỗi lấy kho vật phẩm: " + e.getMessage());
+            e.printStackTrace();
+            return new MessageDTO("ERROR", "Lỗi lấy danh sách đã thắng: " + e.getMessage());
         }
     }
 
