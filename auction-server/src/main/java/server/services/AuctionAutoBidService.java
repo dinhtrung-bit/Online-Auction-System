@@ -3,6 +3,9 @@ package server.services;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import server.dao.interfaces.AuctionRoomDAO;
 import server.dao.interfaces.AutoBidDAO;
@@ -22,6 +25,15 @@ import server.models.users.User;
 public class AuctionAutoBidService {
 
     private static final int AUTO_BID_MAX_DEPTH = 20;
+    /** Độ trễ cố định (ms) giữa mỗi lượt auto-bid để tránh bid liên tiếp quá nhanh */
+    private static final long AUTO_BID_DELAY_MS = 2000;
+
+    private final ScheduledExecutorService scheduler =
+            Executors.newScheduledThreadPool(4, r -> {
+                Thread t = new Thread(r, "autobid-scheduler");
+                t.setDaemon(true);
+                return t;
+            });
 
     private final ConcurrentHashMap<Long, AuctionRoom> activeRooms;
     private final AuctionRoomDAO roomDAO;
@@ -76,29 +88,22 @@ public class AuctionAutoBidService {
 
     public void triggerAutoBidsForRoom(long roomId, Bidder trigger) {
         AuctionRoom room = activeRooms.get(roomId);
-        if (room == null) {
-            return;
-        }
-        synchronized (room) {
-            processAutoBids(room, trigger, 0);
-        }
+        if (room == null) return;
+        // Lên lịch xử lý auto-bid sau 2 giây để tránh bid liên tiếp quá nhanh
+        scheduler.schedule(
+                () -> processAutoBids(room, trigger, 0),
+                AUTO_BID_DELAY_MS, TimeUnit.MILLISECONDS);
     }
 
     public void processAutoBids(AuctionRoom room, Bidder lastBidder, int depth) {
-        if (depth > AUTO_BID_MAX_DEPTH) {
-            return;
-        }
+        if (depth > AUTO_BID_MAX_DEPTH) return;
 
         try {
             List<AutoBidConfig> autoBids = autoBidDAO.getAutoBidsByAuctionId(room.getId());
-            if (autoBids == null || autoBids.isEmpty()) {
-                return;
-            }
+            if (autoBids == null || autoBids.isEmpty()) return;
 
             for (AutoBidConfig config : autoBids) {
-                if (!processSingleAutoBid(room, lastBidder, config, depth)) {
-                    continue;
-                }
+                if (!processSingleAutoBid(room, lastBidder, config, depth)) continue;
                 return;
             }
         } catch (Exception e) {
@@ -153,7 +158,12 @@ public class AuctionAutoBidService {
         System.out.println(">>> [AutoBid] " + fullBidder.getUsername()
                 + " bid " + nextBid + " vào phòng " + room.getId());
 
-        processAutoBids(room, fullBidder, depth + 1);
+        // Lên lịch xử lý auto-bid tiếp theo sau 2 giây
+        final int nextDepth = depth + 1;
+        final Bidder bidderRef = fullBidder;
+        scheduler.schedule(
+                () -> processAutoBids(room, bidderRef, nextDepth),
+                AUTO_BID_DELAY_MS, TimeUnit.MILLISECONDS);
         return true;
     }
 }
