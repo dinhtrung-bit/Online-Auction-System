@@ -63,7 +63,7 @@ public class AuctionStatusService {
         if (room.getStatus() == AuctionStatus.RUNNING && room.isExpired()) {
             settlementService.processAuctionSettlement(room);
             updateRoomInDb(room);
-            notificationService.broadcast("AUCTION_FINISHED", String.valueOf(room.getId()));
+            notificationService.broadcastToRoom(room.getId(), "AUCTION_FINISHED", String.valueOf(room.getId()));
             scheduleRemoveRoom(room.getId());
         }
     }

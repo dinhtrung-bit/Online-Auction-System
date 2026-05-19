@@ -910,14 +910,9 @@ public class AuctionDetailController implements Initializable {
     @FXML
     void handleBackToList(ActionEvent event) {
         if (timer != null) timer.cancel();
+        ServerGateway.off(LISTENER_ACTIONS.toArray(String[]::new));
         try {
-            java.net.URL fxmlUrl = getClass().getResource("/client/views/auction-list.fxml");
-            if (fxmlUrl == null) {
-                Dialogs.error("Lỗi", "Không tìm thấy file giao diện auction-list.fxml.");
-                return;
-            }
-            Parent root = FXMLLoader.load(fxmlUrl);
-            ServerGateway.off(LISTENER_ACTIONS.toArray(String[]::new));
+            Parent root = FXMLLoader.load(getClass().getResource("/client/views/auction-list.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.getScene().setRoot(root);
         } catch (Exception e) { e.printStackTrace(); }

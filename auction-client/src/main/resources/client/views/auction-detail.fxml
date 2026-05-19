@@ -184,6 +184,11 @@
                                     <Label text="📈 Biểu đồ giá" styleClass="section-title"/>
                                     <Region HBox.hgrow="ALWAYS"/>
                                     <Label text="Realtime" styleClass="soft-chip-blue"/>
+                                    <Button text="⛶" onAction="#handleExpandChart" styleClass="text-action-button" style="-fx-font-size:14px;">
+                                        <tooltip>
+                                            <Tooltip text="Phóng to biểu đồ"/>
+                                        </tooltip>
+                                    </Button>
                                 </HBox>
                                 <LineChart fx:id="bidHistoryChart" animated="true" legendVisible="false" VBox.vgrow="ALWAYS" styleClass="price-chart">
                                     <xAxis><CategoryAxis label="Lượt đặt" animated="false"/></xAxis>

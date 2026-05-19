@@ -16,7 +16,8 @@ import server.models.users.User;
 
 /**
  * Chỉ phụ trách auto bid.
- * Các điều kiện skip, max depth, cập nhật DB và broadcast giữ nguyên logic cũ.
+ * AUTO_BID_EXCEEDED chỉ gửi tới đúng user có AutoBid vượt giới hạn,
+ * không broadcast tới tất cả người trong phòng.
  */
 public class AuctionAutoBidService {
 
@@ -126,7 +127,10 @@ public class AuctionAutoBidService {
         BigDecimal nextBid = room.getCurrentPrice().add(increment);
 
         if (nextBid.compareTo(config.getMaxBid()) > 0) {
-            notificationService.broadcast("AUTO_BID_EXCEEDED", String.valueOf(room.getId()));
+            // Chỉ gửi cho đúng user có AutoBid vượt giới hạn, không broadcast toàn phòng
+            notificationService.sendToUserInRoom(
+                    room.getId(), autoBidder.getUserId(),
+                    "AUTO_BID_EXCEEDED", String.valueOf(room.getId()));
             return false;
         }
 
@@ -143,7 +147,7 @@ public class AuctionAutoBidService {
         roomDAO.updateWithOptimisticLock(room, oldPrice);
         bidDAO.insert(new BidRecord(room.getId(), fullBidder.getUserId(), nextBid));
 
-        notificationService.broadcast("UPDATE_PRICE",
+        notificationService.broadcastToRoom(room.getId(), "UPDATE_PRICE",
                 room.getId() + ":" + nextBid.toPlainString() + ":" + fullBidder.getUsername());
 
         System.out.println(">>> [AutoBid] " + fullBidder.getUsername()

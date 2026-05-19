@@ -41,6 +41,14 @@ public class ClientHandler implements Runnable {
     public static final CopyOnWriteArrayList<ClientHandler> activeClients =
             new CopyOnWriteArrayList<>();
 
+    /**
+     * Room mà client này đang xem/tham gia đấu giá.
+     * Được cập nhật mỗi khi client gửi GET_AUCTION_DETAIL hoặc BID.
+     * Dùng để lọc broadcast — chỉ gửi UPDATE_PRICE, AUCTION_FINISHED,
+     * AUCTION_CANCELED, AUTO_BID_EXCEEDED tới client đang ở đúng phòng đó.
+     */
+    private volatile long currentRoomId = -1;
+
     private final Socket clientSocket;
     private final Gson gson = new Gson();
     private final UserHolder userHolder = new UserHolder();
@@ -89,8 +97,20 @@ public class ClientHandler implements Runnable {
         router.put("GET_MY_ITEMS", req -> itemHandler.handleGetMyItems(req, userHolder.getUser()));
 
         // AUCTION
-        router.put("BID",                    req -> auctionHandler.handleBid(req, userHolder.getUser()));
-        router.put("GET_AUCTION_DETAIL",     req -> auctionHandler.handleGetDetail(req));
+        router.put("BID", req -> {
+            // Track phòng khi đặt giá
+            try {
+                com.google.gson.JsonObject obj = gson.fromJson(req.getPayload(), com.google.gson.JsonObject.class);
+                if (obj != null && obj.has("roomId")) setCurrentRoomId((long) obj.get("roomId").getAsDouble());
+            } catch (Exception ignored) {}
+            return auctionHandler.handleBid(req, userHolder.getUser());
+        });
+        router.put("GET_AUCTION_DETAIL", req -> {
+            // Track phòng khi client mở chi tiết
+            try { setCurrentRoomId((long) Double.parseDouble(req.getPayload().trim())); }
+            catch (Exception ignored) {}
+            return auctionHandler.handleGetDetail(req);
+        });
         router.put("GET_AVAILABLE_AUCTIONS", req -> auctionHandler.handleGetAvailableAuctions(req));
         router.put("GET_ALL_AUCTIONS",       req -> auctionHandler.handleGetAllAuctions(req));
         router.put("GET_AUCTIONS_BY_STATUS", req -> auctionHandler.handleGetAuctionsByStatus(req));
@@ -213,6 +233,21 @@ public class ClientHandler implements Runnable {
         }
 
         return holder.getUser().getUserId() == userId;
+    }
+
+    /** Kiểm tra client đang ở trong phòng đấu giá có ID khớp không. */
+    public boolean isInRoom(long roomId) {
+        return this.currentRoomId == roomId;
+    }
+
+    /** Kiểm tra client có đang đăng nhập với userId không (public, dùng cho broadcast lọc user). */
+    public boolean isLoggedInUser(int userId) {
+        return isLoggedInUserId(userId);
+    }
+
+    /** Cập nhật phòng đấu giá mà client đang xem (gọi khi GET_AUCTION_DETAIL hoặc BID). */
+    public void setCurrentRoomId(long roomId) {
+        this.currentRoomId = roomId;
     }
 
     @SuppressWarnings("unchecked")

@@ -19,6 +19,7 @@ import server.models.auction.BidRecord;
 import server.models.items.Item;
 import server.models.users.Bidder;
 import server.models.users.User;
+import server.networks.AuctionBroadcastManager;
 import server.networks.interfaces.BroadcastChannel;
 
 /**
@@ -58,12 +59,15 @@ public class AuctionService {
         this.autoBidDAO = autoBidDAO;
         this.broadcaster = broadcaster;
 
-        this.notificationService = new AuctionNotificationService(broadcaster);
+        this.notificationService = (broadcaster instanceof AuctionBroadcastManager mgr)
+                ? new AuctionNotificationService(mgr)
+                : new AuctionNotificationService(new AuctionBroadcastManager(
+                server.networks.ClientHandler.activeClients));
         this.settlementService = new AuctionSettlementService(roomDAO, userDAO);
         this.autoBidService = new AuctionAutoBidService(
                 activeRooms, roomDAO, bidDAO, userDAO, autoBidDAO, notificationService);
-            this.bidService = new AuctionBidService(
-                	                activeRooms, roomDAO, bidDAO, userDAO, autoBidService, notificationService);
+        this.bidService = new AuctionBidService(
+                activeRooms, roomDAO, bidDAO, userDAO, autoBidService, notificationService);
         this.statusService = new AuctionStatusService(
                 activeRooms, roomDAO, settlementService, notificationService);
 

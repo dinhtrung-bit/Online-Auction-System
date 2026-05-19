@@ -228,7 +228,7 @@ public class AuctionRequestHandler {
             String result = auctionService.cancelAuctionBySeller(auctionId, loggedInUser.getUserId());
 
             if ("SUCCESS".equals(result)) {
-                broadcast("AUCTION_CANCELED", String.valueOf(auctionId));
+                broadcastToRoom(auctionId, "AUCTION_CANCELED", String.valueOf(auctionId));
                 return new MessageDTO(
                         "DELETE_AUCTION_SUCCESS", "Đã hủy phiên đấu giá #" + auctionId);
             }
@@ -250,7 +250,7 @@ public class AuctionRequestHandler {
             String result = auctionService.cancelAuctionByAdmin(auctionId);
 
             if ("SUCCESS".equals(result)) {
-                broadcast("AUCTION_CANCELED", String.valueOf(auctionId));
+                broadcastToRoom(auctionId, "AUCTION_CANCELED", String.valueOf(auctionId));
                 return new MessageDTO(
                         "ADMIN_CANCEL_AUCTION_SUCCESS", "Đã hủy phiên đấu giá #" + auctionId);
             }
@@ -349,6 +349,19 @@ public class AuctionRequestHandler {
 
     private void broadcast(String action, String payload) {
         auctionService.getBroadcaster().broadcast(gson.toJson(new MessageDTO(action, payload)));
+    }
+
+    /**
+     * Broadcast action chỉ tới các client đang ở trong phòng có ID = roomId.
+     * Dùng cho AUCTION_CANCELED — chỉ người đang trong phòng đó mới cần thông báo.
+     */
+    private void broadcastToRoom(long roomId, String action, String payload) {
+        var broadcaster = auctionService.getBroadcaster();
+        if (broadcaster instanceof server.networks.AuctionBroadcastManager mgr) {
+            mgr.broadcastToRoom(roomId, gson.toJson(new MessageDTO(action, payload)));
+        } else {
+            broadcast(action, payload);
+        }
     }
 
     private long countByStatus(AuctionStatus status) {

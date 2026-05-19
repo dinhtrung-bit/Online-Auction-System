@@ -388,17 +388,24 @@ public class AuctionListController implements Initializable {
         String auctionId = btn.getUserData() != null ? btn.getUserData().toString() : btn.getId();
         btn.setDisable(true);
         try {
-            ServerGateway.off(LISTENER_ACTIONS.toArray(String[]::new));
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/views/auction-detail.fxml"));
+            java.net.URL fxmlUrl = getClass().getResource("/client/views/auction-detail.fxml");
+            if (fxmlUrl == null) {
+                btn.setDisable(false);
+                Dialogs.error("Lỗi", "Không tìm thấy file giao diện auction-detail.fxml.");
+                return;
+            }
+            FXMLLoader loader = new FXMLLoader(fxmlUrl);
             Parent root = loader.load();
             AuctionDetailController dc = loader.getController();
+            // Chỉ tắt listener SAU KHI load thành công
+            ServerGateway.off(LISTENER_ACTIONS.toArray(String[]::new));
             dc.setRoomId(auctionId);
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.getScene().setRoot(root);
         } catch (Exception e) {
             btn.setDisable(false);
             e.printStackTrace();
-            Dialogs.error("Lỗi", "Không mở được chi tiết phiên đấu giá.");
+            Dialogs.error("Lỗi", "Không mở được chi tiết phiên đấu giá.\nChi tiết: " + e.getMessage());
         }
     }
 

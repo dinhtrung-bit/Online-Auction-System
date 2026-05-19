@@ -74,7 +74,7 @@ public class AuctionBidService {
                 room.placeBid(freshBidder, bidAmount);
                 roomDAO.updateWithOptimisticLock(room, oldPrice);
                 bidDAO.insert(new BidRecord(roomId.intValue(), freshBidder.getUserId(), bidAmount));
-                notificationService.broadcast("UPDATE_PRICE",
+                notificationService.broadcastToRoom(roomId, "UPDATE_PRICE",
                         roomId + ":" + bidAmount.toPlainString() + ":" + freshBidder.getUsername());
 
                 autoBidService.processAutoBids(room, freshBidder, 0);
