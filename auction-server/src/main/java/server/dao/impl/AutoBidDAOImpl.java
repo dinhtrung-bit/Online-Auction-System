@@ -202,7 +202,7 @@ public class AutoBidDAOImpl implements AutoBidDAO {
         if (user instanceof Bidder bidder) {
             autoBid.setBidder(bidder);
         } else {
-            Bidder fallback = new Bidder();
+            Bidder fallback = new Bidder(1, "alice", "hash", "a@x.com", new BigDecimal("1000"));
             fallback.setUserId(bidderId);
             autoBid.setBidder(fallback);
         }

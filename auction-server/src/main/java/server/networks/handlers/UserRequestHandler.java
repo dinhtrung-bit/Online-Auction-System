@@ -14,33 +14,24 @@ import server.networks.dto.MessageDTO;
 import server.services.UserService;
 
 /**
- * UserRequestHandler — Xử lý các request liên quan đến tài khoản người dùng.
+ * UserRequestHandler — parse request và ủy quyền cho UserService.
  *
- * <p>Sau khi loại bỏ tính năng nạp tiền, handler này chỉ còn 5 endpoint:
- *
- * <ul>
- *   <li>LOGIN — Đăng nhập
- *   <li>REGISTER — Đăng ký
- *   <li>GET_ALL_USERS — Admin lấy danh sách user
- *   <li>GET_BALANCE — Lấy số dư của user hiện tại
- *   <li>ADMIN_ADJUST_BALANCE — Admin chỉnh ví user
- * </ul>
+ * Thay đổi so với phiên bản cũ:
+ *   - isAdmin() dùng user.canAdmin() thay vì so sánh chuỗi "ADMIN".equalsIgnoreCase(role).
+ *     Nhất quán với cách Admin model tự khai báo quyền hạn của mình.
  */
 public class UserRequestHandler {
 
     private final UserService userService;
-    private final Gson gson = new Gson();
+    private final Gson        gson = new Gson();
 
     public UserRequestHandler(UserService userService) {
         this.userService = userService;
     }
 
-    // ─── Authentication ──────────────────────────────────────────────────────
-
     public MessageDTO handleLogin(MessageDTO request, UserHolder userHolder) {
         try {
             Map<String, Object> data = PayloadParser.parseJsonPayload(request);
-
             String role     = PayloadParser.getString(data, "role", "");
             String username = PayloadParser.getString(data, "username", "");
             String password = PayloadParser.getString(data, "password", "");
@@ -57,8 +48,6 @@ public class UserRequestHandler {
             userHolder.setUser(user);
             return new MessageDTO("LOGIN_SUCCESS", gson.toJson(user));
 
-        } catch (IllegalArgumentException e) {
-            return new MessageDTO("LOGIN_FAILED", e.getMessage());
         } catch (Exception e) {
             return new MessageDTO("LOGIN_FAILED", "Lỗi hệ thống: " + e.getMessage());
         }
@@ -67,7 +56,6 @@ public class UserRequestHandler {
     public MessageDTO handleRegister(MessageDTO request) {
         try {
             Map<String, Object> data = PayloadParser.parseJsonPayload(request);
-
             String username = PayloadParser.getString(data, "username", "");
             String password = PayloadParser.getString(data, "password", "");
             String role     = PayloadParser.getString(data, "role", "");
@@ -88,20 +76,14 @@ public class UserRequestHandler {
         }
     }
 
-    // ─── User queries ────────────────────────────────────────────────────────
-
     public MessageDTO handleGetAllUsers(MessageDTO request, User loggedInUser) {
-        if (!isAdmin(loggedInUser)) {
+        if (!loggedInUser.canAdmin()) {
             return new MessageDTO("ERROR", "Không có quyền Admin!");
         }
-
         try {
             List<Map<String, Object>> result = userService.findAll().stream()
-                    .map(this::toUserMap)
-                    .collect(Collectors.toList());
-
+                    .map(this::toUserMap).collect(Collectors.toList());
             return new MessageDTO("USER_LIST", gson.toJson(result));
-
         } catch (Exception e) {
             return new MessageDTO("ERROR", "Lỗi lấy danh sách user: " + e.getMessage());
         }
@@ -109,10 +91,7 @@ public class UserRequestHandler {
 
     public MessageDTO handleGetBalance(MessageDTO request, UserHolder userHolder) {
         User loggedInUser = userHolder.getUser();
-        if (loggedInUser == null) {
-            return new MessageDTO("ERROR", "Chưa đăng nhập.");
-        }
-
+        if (loggedInUser == null) return new MessageDTO("ERROR", "Chưa đăng nhập.");
         try {
             User fresh = userService.findByUsername(loggedInUser.getUsername());
             if (fresh != null) {
@@ -120,36 +99,26 @@ public class UserRequestHandler {
                 return new MessageDTO("BALANCE_DATA", fresh.getAccountBalance().toPlainString());
             }
             return new MessageDTO("BALANCE_DATA", loggedInUser.getAccountBalance().toPlainString());
-
         } catch (Exception e) {
             return new MessageDTO("ERROR", "Lỗi lấy số dư: " + e.getMessage());
         }
     }
 
-    // ─── Deposit ─────────────────────────────────────────────────────────────
-
     public MessageDTO handleSelfDeposit(MessageDTO request, UserHolder userHolder) {
         User loggedInUser = userHolder.getUser();
-        if (loggedInUser == null) {
-            return new MessageDTO("DEPOSIT_FAILED", "Chưa đăng nhập.");
-        }
-
+        if (loggedInUser == null) return new MessageDTO("DEPOSIT_FAILED", "Chưa đăng nhập.");
         try {
             Map<String, Object> data = PayloadParser.parseJsonPayload(request);
             BigDecimal amount = PayloadParser.getBigDecimal(data, "amount");
 
             BigDecimal newBalance = userService.selfDeposit(loggedInUser, amount);
 
-            // Cập nhật lại user trong session của connection này.
             User fresh = userService.findById(loggedInUser.getUserId());
-            if (fresh != null) {
-                userHolder.setUser(fresh);
-            }
+            if (fresh != null) userHolder.setUser(fresh);
 
             Map<String, Object> result = new LinkedHashMap<>();
             result.put("newBalance", newBalance.doubleValue());
             result.put("message",    "Nạp tiền thành công!");
-
             return new MessageDTO("DEPOSIT_SUCCESS", gson.toJson(result));
 
         } catch (IllegalArgumentException e) {
@@ -159,38 +128,22 @@ public class UserRequestHandler {
         }
     }
 
-    // ─── Admin actions ───────────────────────────────────────────────────────
-
     public MessageDTO handleAdminAdjustBalance(MessageDTO request, User admin) {
-        if (!isAdmin(admin)) {
+        if (!admin.canAdmin()) {
             return new MessageDTO("ADMIN_BALANCE_FAILED", "Không có quyền Admin!");
         }
-
         try {
             Map<String, Object> data = PayloadParser.parseJsonPayload(request);
-
-            int userId = PayloadParser.getInt(data, "userId");
+            int userId       = PayloadParser.getInt(data, "userId");
             BigDecimal delta = PayloadParser.getBigDecimalAllowNegative(data, "delta");
-            String reason = PayloadParser.getString(data, "reason", "Điều chỉnh bởi Admin");
-
-            if (delta.compareTo(BigDecimal.ZERO) == 0) {
-                return new MessageDTO("ADMIN_BALANCE_FAILED", "Số tiền điều chỉnh phải khác 0.");
-            }
+            String reason    = PayloadParser.getString(data, "reason", "Điều chỉnh bởi Admin");
 
             BigDecimal newBalance = userService.adminAdjustBalance(userId, delta, admin, reason);
 
             Map<String, Object> result = new LinkedHashMap<>();
-            result.put("userId", userId);
-            result.put("delta", delta.doubleValue());
+            result.put("userId",     userId);
             result.put("newBalance", newBalance.doubleValue());
-            result.put("reason", reason);
-
-            if (delta.compareTo(BigDecimal.ZERO) > 0) {
-                result.put("message", "Đã cộng " + delta.toPlainString() + "đ vào ví người dùng #" + userId);
-            } else {
-                result.put("message", "Đã trừ " + delta.abs().toPlainString() + "đ khỏi ví người dùng #" + userId);
-            }
-
+            result.put("message",    "Đã điều chỉnh ví người dùng #" + userId);
             return new MessageDTO("ADMIN_BALANCE_UPDATED", gson.toJson(result));
 
         } catch (IllegalArgumentException e) {
@@ -200,20 +153,14 @@ public class UserRequestHandler {
         }
     }
 
-
-    // ─── Helpers ─────────────────────────────────────────────────────────────
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private Map<String, Object> toUserMap(User u) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id",       u.getUserId());
         m.put("username", u.getUsername());
         m.put("role",     u.getRole());
-        m.put("status",   "ACTIVE");
         m.put("balance",  u.getAccountBalance() != null ? u.getAccountBalance().doubleValue() : 0);
         return m;
-    }
-
-    private boolean isAdmin(User user) {
-        return user != null && "ADMIN".equalsIgnoreCase(user.getRole());
     }
 }

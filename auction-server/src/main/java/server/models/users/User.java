@@ -5,76 +5,83 @@ import java.math.BigDecimal;
 /**
  * User — lớp trừu tượng gốc của hệ phân cấp người dùng.
  *
- * Fix 3.4 (Encapsulation):
- *   Đổi tất cả field từ protected → private.
- *   Subclass truy cập qua getter/setter thay vì trực tiếp (Bidder.canPlaceBid dùng getAccountBalance()).
- *
- * Fix 3.5 (Polymorphism — thay instanceof):
- *   Thêm canBid() và canSell() để handler gọi user.canBid() thay vì instanceof Bidder.
- *   Default trả false; Bidder và Seller override thành true.
+ * Nguyên tắc thiết kế:
+ *   - Chỉ chứa field thực sự được lưu DB và được đọc trong hệ thống.
+ *   - canBid() / canSell() / canAdmin() thay thế instanceof ở handler.
+ *   - Nghiệp vụ tài chính (debit/credit) nằm ở đây, không để service tự cộng trừ.
  */
 public abstract class User {
 
     private int userId;
     private String username;
     private String passwordHash;
-    private String email;
     private BigDecimal accountBalance;
 
-    public User() {}
+    protected User() {}
 
-    public User(int userId, String username, String passwordHash, String email, BigDecimal accountBalance) {
+    protected User(int userId, String username, String passwordHash, BigDecimal accountBalance) {
         this.userId = userId;
         this.username = username;
         this.passwordHash = passwordHash;
-        this.email = email;
-        this.accountBalance = accountBalance;
+        this.accountBalance = accountBalance != null ? accountBalance : BigDecimal.ZERO;
     }
 
-    // ── Quyền hạn — dùng để thay instanceof trong handler (Fix 3.5) ──────────
+    // ── Quyền hạn (thay thế instanceof ở handler) ────────────────────────────
 
-    /** Bidder trả về true; Seller và Admin trả về false. */
-    public boolean canBid() {
-        return false;
-    }
+    /** Trả true nếu user được phép đặt giá. Override trong Bidder. */
+    public boolean canBid()   { return false; }
 
-    /** Seller trả về true; Bidder và Admin trả về false. */
-    public boolean canSell() {
-        return false;
-    }
+    /** Trả true nếu user được phép tạo/quản lý sản phẩm. Override trong Seller. */
+    public boolean canSell()  { return false; }
 
-    // ── Nghiệp vụ ────────────────────────────────────────────────────────────
+    /** Trả true nếu user là admin. Override trong Admin. */
+    public boolean canAdmin() { return false; }
 
-    /**
-     * Cộng/trừ số dư tài khoản.
-     * Trả về true nếu thành công, false nếu số dư sau khi trừ âm (giao dịch bị từ chối).
-     * Caller phải kiểm tra giá trị trả về — không được bỏ qua.
-     */
-    public boolean updateBalance(BigDecimal amount) {
-        BigDecimal newBalance = this.accountBalance.add(amount);
-        if (newBalance.compareTo(BigDecimal.ZERO) >= 0) {
-            this.accountBalance = newBalance;
-            return true;
-        }
-        return false;
-    }
-
-    /** Vai trò cụ thể — bắt buộc subclass tự định nghĩa (Polymorphism). */
+    /** Vai trò cụ thể — bắt buộc subclass định nghĩa. */
     public abstract String getRole();
 
-    // ── Getters ──────────────────────────────────────────────────────────────
+    // ── Nghiệp vụ tài chính ──────────────────────────────────────────────────
 
-    public int getUserId()            { return userId; }
-    public String getUsername()       { return username; }
-    public String getPasswordHash()   { return passwordHash; }
-    public String getEmail()          { return email; }
+    /**
+     * Trừ tiền khỏi ví. Trả về false và không thay đổi số dư nếu không đủ tiền.
+     * Service layer phải kiểm tra giá trị trả về trước khi persist.
+     */
+    public boolean debit(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) return false;
+        BigDecimal after = this.accountBalance.subtract(amount);
+        if (after.compareTo(BigDecimal.ZERO) < 0) return false;
+        this.accountBalance = after;
+        return true;
+    }
+
+    /**
+     * Cộng tiền vào ví. Luôn thành công với amount hợp lệ.
+     */
+    public void credit(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) return;
+        this.accountBalance = this.accountBalance.add(amount);
+    }
+
+    /**
+     * Kiểm tra số dư có đủ để chi một khoản tiền không.
+     * Dùng trong handler/service để validate trước khi gọi debit().
+     */
+    public boolean hasEnoughBalance(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) return false;
+        return this.accountBalance.compareTo(amount) >= 0;
+    }
+
+    // ── Getters / Setters ─────────────────────────────────────────────────────
+
+    public int getUserId()                { return userId; }
+    public String getUsername()           { return username; }
+    public String getPasswordHash()       { return passwordHash; }
     public BigDecimal getAccountBalance() { return accountBalance; }
 
-    // ── Setters ──────────────────────────────────────────────────────────────
-
-    public void setUserId(int userId)               { this.userId = userId; }
-    public void setUsername(String username)         { this.username = username; }
-    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
-    public void setEmail(String email)               { this.email = email; }
-    public void setAccountBalance(BigDecimal accountBalance) { this.accountBalance = accountBalance; }
+    public void setUserId(int userId)                         { this.userId = userId; }
+    public void setUsername(String username)                   { this.username = username; }
+    public void setPasswordHash(String passwordHash)           { this.passwordHash = passwordHash; }
+    public void setAccountBalance(BigDecimal accountBalance)   {
+        this.accountBalance = accountBalance != null ? accountBalance : BigDecimal.ZERO;
+    }
 }

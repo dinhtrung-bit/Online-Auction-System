@@ -4,9 +4,6 @@ import java.math.BigDecimal;
 
 /**
  * Vehicle — lớp con của Item đại diện cho loại sản phẩm là phương tiện.
- * * Fix 3.8 (Dead fields):
- * Đã gán giá trị cho brand, year, engine trong constructor.
- * Thêm getter/setter để các lớp khác (DAO, UI) có thể truy cập dữ liệu.
  */
 public class Vehicle extends Item {
     private String brand;
@@ -28,7 +25,7 @@ public class Vehicle extends Item {
         return "VEHICLE";
     }
 
-    // ── Getters & Setters (Bổ sung để xử lý lỗi không truy cập được dữ liệu) ──
+    // ── Getters & Setters ──
 
     public String getBrand() {
         return brand;
