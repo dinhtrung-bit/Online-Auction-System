@@ -32,7 +32,7 @@ public class ItemFactory {
 
 
             case VEHICLE:
-                return new Vehicle(itemId, name, startingPrice, description, "N/A", 0, "N/A");
+                return new Vehicle(itemId, name, startingPrice, description);
 
             default:
                 throw new IllegalArgumentException("Danh mục chưa được hỗ trợ: " + category);

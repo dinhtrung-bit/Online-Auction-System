@@ -153,7 +153,7 @@ public class AuctionAutoBidService {
         }
 
         BigDecimal oldPrice = room.getCurrentPrice();
-        room.placeAutoBid(fullBidder, nextBid);
+        room.placeBid(fullBidder, nextBid);
         roomDAO.updateWithOptimisticLock(room, oldPrice);
         bidDAO.insert(new BidRecord(room.getId(), fullBidder.getUserId(), nextBid));
 

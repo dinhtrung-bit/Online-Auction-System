@@ -10,7 +10,15 @@ public class Vehicle extends Item {
     private int year;
     private String engine;
 
-    // Constructor đầy đủ tham số để tránh trường bị null hoặc mặc định
+    /** Constructor 4 tham số — dùng bởi ItemFactory và test. */
+    public Vehicle(int itemId, String name, BigDecimal startingPrice, String description) {
+        super(itemId, name, startingPrice, description);
+        this.brand = "N/A";
+        this.year = 0;
+        this.engine = "N/A";
+    }
+
+    /** Constructor đầy đủ tham số để tránh trường bị null hoặc mặc định. */
     public Vehicle(int itemId, String name, BigDecimal startingPrice, String description,
                    String brand, int year, String engine) {
         // Gọi constructor của lớp cha (Item)

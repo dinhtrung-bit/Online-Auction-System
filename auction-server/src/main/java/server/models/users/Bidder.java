@@ -10,7 +10,8 @@ import java.math.BigDecimal;
  */
 public class Bidder extends User {
 
-    public Bidder(int i, String alice, String hash, String mail, BigDecimal bigDecimal) {
+    /** Constructor rỗng — dùng bởi AutoBidDAOImpl khi tạo fallback Bidder. */
+    public Bidder() {
         super();
     }
 

@@ -27,7 +27,7 @@ public final class Validation {
         if (username == null || username.trim().isEmpty()) {
             throw new IllegalArgumentException("Tên đăng nhập không được để trống.");
         }
-        if (!USERNAME_PATTERN.matcher(username.trim()).matches()) {
+        if (!USERNAME_PATTERN.matcher(username).matches()) {
             throw new IllegalArgumentException(
                     "Tên đăng nhập chỉ được chứa chữ cái, số, dấu gạch dưới (3–30 ký tự).");
         }

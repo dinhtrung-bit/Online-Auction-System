@@ -7,6 +7,7 @@ import server.models.auction.AutoBidConfig;
 import server.models.users.Bidder;
 import server.models.users.User;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -202,7 +203,7 @@ public class AutoBidDAOImpl implements AutoBidDAO {
         if (user instanceof Bidder bidder) {
             autoBid.setBidder(bidder);
         } else {
-            Bidder fallback = new Bidder(1, "alice", "hash", "a@x.com", new BigDecimal("1000"));
+            Bidder fallback = new Bidder(1, "alice", "hash", new BigDecimal("1000"));
             fallback.setUserId(bidderId);
             autoBid.setBidder(fallback);
         }

@@ -10,8 +10,12 @@ import java.math.BigDecimal;
  */
 public class Seller extends User {
 
-    public Seller(int i, String bob, String hash, String mail, BigDecimal bigDecimal) {
-        super();
+    /**
+     * Constructor 5-param — dùng bởi ItemDAOImpl để tạo Seller stub khi map item từ DB.
+     * Tham số email bị bỏ qua vì User không còn lưu email.
+     */
+    public Seller(int userId, String username, String passwordHash, String ignoredEmail, BigDecimal accountBalance) {
+        super(userId, username, passwordHash, accountBalance);
     }
 
     public Seller(int userId, String username, String passwordHash, BigDecimal accountBalance) {
