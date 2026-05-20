@@ -3,12 +3,10 @@ package client.controllers;
 import client.models.item.Art;
 import client.models.item.Electronics;
 import client.models.item.Item;
-import client.utils.dialogs.Dialogs;
+import client.models.item.Vehicle;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
@@ -16,15 +14,6 @@ import javafx.stage.Stage;
 
 import java.io.File;
 
-/**
- * AddProductController — form thêm / chỉnh sửa sản phẩm.
- *
- * <p><b>Refactor v2:</b>
- * <ul>
- *   <li>Alert dùng {@link Dialogs}.
- *   <li>Loại helper {@code showAlert} cục bộ.
- * </ul>
- */
 public class AddProductController {
 
     @FXML private ComboBox<String> cmbCategory;
@@ -32,18 +21,20 @@ public class AddProductController {
     @FXML private TextField txtName;
     @FXML private TextField txtPrice;
     @FXML private TextField txtBidIncrement;
-    @FXML private TextArea  txtDescription;
+    @FXML private TextArea txtDescription;
     @FXML private ImageView imgPreview;
 
-    private Item    resultItem = null;
-    private String  selectedImagePath = "";
+    private Item resultItem = null;
+    private String selectedImagePath = "";
     private boolean isEditMode = false;
 
     @FXML
     public void initialize() {
         cmbCategory.setItems(FXCollections.observableArrayList(
                 "Nghệ thuật (Art)",
-                "Đồ điện tử (Electronics)"));
+                "Đồ điện tử (Electronics)",
+                "Phương tiện (Vehicle)"
+        ));
         cmbCategory.getSelectionModel().selectFirst();
         setupMoneyField(txtPrice);
         setupMoneyField(txtBidIncrement);
@@ -54,7 +45,8 @@ public class AddProductController {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Chọn ảnh minh họa sản phẩm");
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.webp"));
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.webp")
+        );
 
         Stage stage = (Stage) txtId.getScene().getWindow();
         File file = fileChooser.showOpenDialog(stage);
@@ -67,6 +59,7 @@ public class AddProductController {
 
     public void setEditData(Item item) {
         if (item == null) return;
+
         isEditMode = true;
 
         txtId.setText(item.getItemId());
@@ -77,11 +70,18 @@ public class AddProductController {
         txtDescription.setText(item.getDescription());
 
         String cat = item.getCategory();
-        if ((cat != null && cat.toUpperCase().contains("ELECT")) || item instanceof Electronics) {
+        if (cat != null && cat.toUpperCase().contains("ELECT")) {
             cmbCategory.getSelectionModel().select("Đồ điện tử (Electronics)");
+        } else if (cat != null && cat.toUpperCase().contains("VEHICLE")) {
+            cmbCategory.getSelectionModel().select("Phương tiện (Vehicle)");
+        } else if (item instanceof Electronics) {
+            cmbCategory.getSelectionModel().select("Đồ điện tử (Electronics)");
+        } else if (item instanceof Vehicle) {
+            cmbCategory.getSelectionModel().select("Phương tiện (Vehicle)");
         } else {
             cmbCategory.getSelectionModel().select("Nghệ thuật (Art)");
         }
+
         cmbCategory.setDisable(true);
 
         if (item.getImagePath() != null && !item.getImagePath().isEmpty()) {
@@ -93,51 +93,54 @@ public class AddProductController {
     @FXML
     private void handleSave() {
         try {
-            String id          = txtId.getText().trim();
-            String name        = txtName.getText().trim();
+            String id = txtId.getText().trim();
+            String name = txtName.getText().trim();
             String description = txtDescription.getText();
 
             if (id.isEmpty() || name.isEmpty()) {
-                Dialogs.error("Thiếu thông tin",
-                        "Vui lòng nhập mã sản phẩm và tên sản phẩm!");
-                return;
-            }
-            if (txtPrice.getText().trim().isEmpty() || txtBidIncrement.getText().trim().isEmpty()) {
-                Dialogs.error("Thiếu thông tin",
-                        "Vui lòng nhập giá khởi điểm và bước nhảy!");
+                showAlert("Thiếu thông tin", "Vui lòng nhập mã sản phẩm và tên sản phẩm!");
                 return;
             }
 
-            double price  = Double.parseDouble(txtPrice.getText().trim());
+            if (txtPrice.getText().trim().isEmpty() || txtBidIncrement.getText().trim().isEmpty()) {
+                showAlert("Thiếu thông tin", "Vui lòng nhập giá khởi điểm và bước nhảy!");
+                return;
+            }
+
+            double price = Double.parseDouble(txtPrice.getText().trim());
             double bidInc = Double.parseDouble(txtBidIncrement.getText().trim());
 
             if (price <= 0 || bidInc <= 0) {
-                Dialogs.error("Lỗi nhập liệu",
-                        "Giá khởi điểm và bước nhảy phải lớn hơn 0!");
+                showAlert("Lỗi nhập liệu", "Giá khởi điểm và bước nhảy phải lớn hơn 0!");
                 return;
             }
+
             if (bidInc > price) {
-                Dialogs.error("Bước giá chưa hợp lý",
-                        "Bước nhảy đang lớn hơn giá khởi điểm. Hãy chọn bước giá nhỏ hơn để người mua dễ tham gia hơn.");
+                showAlert("Bước giá chưa hợp lý", "Bước nhảy đang lớn hơn giá khởi điểm. Hãy chọn bước giá nhỏ hơn để người mua dễ tham gia hơn.");
                 return;
             }
 
             String category = cmbCategory.getValue();
+
             if (category.contains("Art")) {
                 resultItem = new Art(id, name, price, "");
                 resultItem.setCategory("ART");
-            } else {
+            } else if (category.contains("Electronics")) {
                 resultItem = new Electronics(id, name, price, 0);
                 resultItem.setCategory("ELECTRONICS");
+            } else {
+                resultItem = new Vehicle(id, name, price);
+                resultItem.setCategory("VEHICLE");
             }
+
             resultItem.setBidIncrement(bidInc);
             resultItem.setImagePath(selectedImagePath);
             resultItem.setDescription(description);
 
             closeWindow();
+
         } catch (NumberFormatException e) {
-            Dialogs.error("Lỗi nhập liệu",
-                    "Giá khởi điểm và bước nhảy phải là số hợp lệ!");
+            showAlert("Lỗi nhập liệu", "Giá khởi điểm và bước nhảy phải là số hợp lệ!");
         }
     }
 
@@ -152,8 +155,13 @@ public class AddProductController {
         stage.close();
     }
 
-    public Item getResultItem() { return resultItem; }
-    public boolean isEditMode() { return isEditMode; }
+    public Item getResultItem() {
+        return resultItem;
+    }
+
+    public boolean isEditMode() {
+        return isEditMode;
+    }
 
     private void setupMoneyField(TextField field) {
         if (field == null) return;
@@ -162,5 +170,22 @@ public class AddProductController {
             String sanitized = newVal.replaceAll("[^\\d]", "");
             if (!newVal.equals(sanitized)) field.setText(sanitized);
         });
+    }
+
+    private void showAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        if (content != null && content.length() > 180) {
+            TextArea area = new TextArea(content);
+            area.setWrapText(true);
+            area.setEditable(false);
+            area.setPrefWidth(500);
+            area.setPrefHeight(220);
+            alert.getDialogPane().setContent(area);
+        } else {
+            alert.setContentText(content);
+        }
+        alert.showAndWait();
     }
 }
