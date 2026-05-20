@@ -9,18 +9,15 @@ import java.math.BigDecimal;
  */
 public class Seller extends User {
 
-    private double sellerRating;
     private int totalItemsSold;
 
     public Seller() {
         super();
-        this.sellerRating = 5.0;
         this.totalItemsSold = 0;
     }
 
     public Seller(int userId, String username, String passwordHash, String email, BigDecimal accountBalance) {
         super(userId, username, passwordHash, email, accountBalance);
-        this.sellerRating = 5.0;
         this.totalItemsSold = 0;
     }
 
@@ -35,8 +32,6 @@ public class Seller extends User {
         return true;
     }
 
-    public double getSellerRating() { return sellerRating; }
-    public void setSellerRating(double sellerRating) { this.sellerRating = sellerRating; }
     public int getTotalItemsSold() { return totalItemsSold; }
 
     public void incrementItemsSold() {
