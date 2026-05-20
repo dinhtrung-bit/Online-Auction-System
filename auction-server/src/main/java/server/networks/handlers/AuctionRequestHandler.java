@@ -24,13 +24,6 @@ import static server.networks.handlers.AuctionMapper.toWonMap;
 
 /**
  * AuctionRequestHandler — Xử lý toàn bộ request liên quan đến phiên đấu giá.
- *
- * <p>Sau refactor, class này chỉ chứa logic nghiệp vụ thuần túy:
- *
- * <ul>
- *   <li>Parse payload và utility số → {@link PayloadParser}
- *   <li>Chuyển đổi AuctionRoom → Map → {@link AuctionMapper}
- * </ul>
  */
 public class AuctionRequestHandler {
 

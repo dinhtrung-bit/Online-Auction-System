@@ -16,20 +16,6 @@ public class UserFactory {
     private UserFactory() {
         // utility class
     }
-
-    /**
-     * Tạo User đầy đủ — object hợp lệ ngay sau construction.
-     * Dùng khi tạo user mới (register) hoặc khi đã có đủ thông tin.
-     */
-    public static User createUser(String role, int id, String username,
-                                  String passwordHash, String email, BigDecimal balance) {
-        User user = createUser(role, id, username);
-        user.setPasswordHash(passwordHash);
-        user.setEmail(email);
-        user.setAccountBalance(balance);
-        return user;
-    }
-
     /**
      * Tạo User với thông tin tối thiểu — dùng nội bộ trong DAO khi map từ ResultSet.
      * Caller phải gọi setPasswordHash(), setAccountBalance() ngay sau.
