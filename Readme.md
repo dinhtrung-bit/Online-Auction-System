@@ -205,21 +205,21 @@ Bid trong 30 giây cuối → gia hạn thêm 60 giây tính từ thời điểm
 ## 🚀 6. Hướng dẫn chạy
 
 ### Yêu cầu
+- Máy tính đã cài đặt sẵn Java Runtime Environment (JRE) 21 trở lên.
 - Java 21 (server), Java 17 (client)
 - MySQL đang chạy, database `daugia`
 - Maven 3.8+
-
+- Cơ sở dữ liệu MySQL đang chạy, database daugia (đã cấu hình sẵn dữ liệu).
+### Vận hành hệ thống
+- Vui lòng mở 2 cửa sổ Terminal độc lập tại thư mục gốc của dự án (Online-Auction-System/) và khởi chạy hệ thống bằng dòng lệnh theo đúng thứ tự bắt buộc dưới đây:
 ### Server
 ```bash
-cd auction-server
-mvn clean package -DskipTests
-java -jar target/auction-server-1.0-SNAPSHOT-shaded.jar
+java -jar out/auction-server-1.0-SNAPSHOT.jar
 ```
 
 ### Client
 ```bash
-cd auction-client
-mvn javafx:run
+java -jar out/auction-client-1.0-SNAPSHOT.jar
 ```
 
 ---

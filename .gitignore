@@ -1,15 +1,16 @@
 # =============================================
 # FIX 3.1: Sửa typo tên file trong .gitignore
-# Trước: auction-server/src/main/resources/config.propertiess.db  ← SAI (thừa 's.db')
-# Sau:   **/config.properties                                      ← ĐÚNG
 # =============================================
 
 # Ignore file cấu hình chứa thông tin nhạy cảm (DB password, v.v.)
 **/config.properties
 
-# Các file thường bỏ qua
+# Các file hệ thống và build tạm cần bỏ qua
 *.class
-*.jar
 target/
 .idea/
-*.imlmain/resources/config.propertiess.db
+*.iml
+*.log
+data.db
+
+# LƯU Ý: Đã xóa rule chặn thư mục 'out/' để phục vụ nộp bài file JAR cho giảng viên
