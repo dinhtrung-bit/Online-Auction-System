@@ -18,11 +18,11 @@ import static org.junit.jupiter.api.Assertions.*;
  * [2-way] = Pairwise / 2-way Combinatorial Testing (slide 20-24)
  *
  * Thay đổi so với phiên bản cũ:
- *   - Constructor Bidder/Seller/Admin bỏ tham số email.
- *   - updateBalance() đã đổi thành debit() (trừ tiền) và credit() (cộng tiền).
- *   - Thêm NHÓM 1b: kiểm tra credit() riêng.
- *   - Thêm NHÓM 1c: kiểm tra hasEnoughBalance().
- *   - NHÓM 5: canBid()/canSell()/canAdmin() thay cho kiểm tra instanceof.
+ * - Constructor Bidder/Seller/Admin bỏ tham số email.
+ * - updateBalance() đã đổi thành debit() (trừ tiền) và credit() (cộng tiền).
+ * - Thêm NHÓM 1b: kiểm tra credit() riêng.
+ * - Thêm NHÓM 1c: kiểm tra hasEnoughBalance().
+ * - NHÓM 5: canBid()/canSell()/canAdmin() thay cho kiểm tra instanceof.
  */
 public class UserTest {
 
@@ -67,7 +67,6 @@ public class UserTest {
 
     @Test @DisplayName("[BVA] Trừ amount = 0 — boundary zero (không thay đổi balance, trả false)")
     void testDebit_ZeroAmount_BVA() {
-        // debit(0): amount <= 0 → return false ngay, balance không đổi
         assertFalse(bidder.debit(BigDecimal.ZERO));
         assertEquals(new BigDecimal("1000"), bidder.getAccountBalance());
     }
@@ -298,18 +297,6 @@ public class UserTest {
                 () -> UserFactory.createUser("", 1, "x"));
     }
 
-    /**
-     * [2-way] Pairwise testing — kết hợp (role × id) (slide 22-24)
-     * Tham số: role = {BIDDER, SELLER, ADMIN}, id = {0, 1, 999}
-     *
-     * TC | role   | id
-     *  1 | BIDDER | 0
-     *  2 | BIDDER | 999
-     *  3 | SELLER | 1
-     *  4 | SELLER | 0
-     *  5 | ADMIN  | 999
-     *  6 | ADMIN  | 1
-     */
     @Test @DisplayName("[2-way] BIDDER + id=0")
     void testFactory_Pairwise_BidderZeroId() {
         var u = UserFactory.createUser("BIDDER", 0, "u1");

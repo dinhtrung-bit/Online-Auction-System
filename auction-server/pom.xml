@@ -17,7 +17,7 @@
 
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
-        <junit.version>5.10.0</junit.version>
+        <junit.version>5.10.2</junit.version>
     </properties>
 
     <dependencies>
@@ -54,23 +54,19 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <version>${junit.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>${junit.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
             <version>${junit.version}</version>
-            <scope>test</scope>
         </dependency>
-
     </dependencies>
 
     <build>
@@ -78,7 +74,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>3.12.1</version>
                 <configuration>
                     <release>${maven.compiler.release}</release>
                 </configuration>
@@ -140,5 +136,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
