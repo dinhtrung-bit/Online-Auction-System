@@ -1,5 +1,11 @@
 # 🏷️ Hệ thống Đấu giá Trực tuyến — AuctionVN
 
+![Java](https://img.shields.io/badge/Java-21-orange)
+![JavaFX](https://img.shields.io/badge/JavaFX-17-blue)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)
+![Maven](https://img.shields.io/badge/Maven-3.8-red)
+![CI](https://github.com/dinhtrung-bit/Online-Auction-System/actions/workflows/ci.yml/badge.svg)
+
 Dự án Hệ thống Đấu giá Trực tuyến được phát triển theo mô hình **Client-Server**, áp dụng các nguyên lý **OOP**, **Design Patterns** và kiến trúc **MVC**. Giao tiếp qua **Socket + JSON (Gson)**. Giao diện sử dụng **JavaFX + FXML**.
 
 ---
