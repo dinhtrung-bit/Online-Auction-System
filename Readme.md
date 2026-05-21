@@ -191,7 +191,12 @@ Bid trong 30 giây cuối → gia hạn thêm 60 giây tính từ thời điểm
 - `synchronized(room)` + **Optimistic Locking** DB (`WHERE current_highest_price = ?`)
 - `ConcurrentHashMap<Long, AuctionRoom>` + `CopyOnWriteArrayList<ClientHandler>`
 - **Java 21 Virtual Threads** — mỗi client 1 thread cực nhẹ
+## 🚄 Performance Optimization
 
+- Virtual Threads giúp scale nhiều client nhẹ hơn thread truyền thống
+- HikariCP giảm chi phí tạo DB connection
+- ConcurrentHashMap tối ưu truy cập room realtime
+- Async DB update giảm block bid processing
 ### Bid History Visualization
 `LineChart<String, Number>` cập nhật realtime mỗi `UPDATE_PRICE` nhận được — không cần refresh.
 
