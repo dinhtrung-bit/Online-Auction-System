@@ -111,7 +111,7 @@ public class AuctionRoom implements Serializable {
     }
 
     /**
-     * Đặt giá auto-bid từ AuctionService — nhẹ hơn placeBid() vì service đã
+     * chủ yếu là để thực heienj cập thật bid thật vào auction
      * validate trước (freshBidder từ DB, nextBid đã tính sẵn).
      * Vẫn giữ synchronized và kiểm tra trạng thái để đảm bảo thread-safety.
      */

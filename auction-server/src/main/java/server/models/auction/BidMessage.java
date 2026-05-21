@@ -17,7 +17,7 @@ public class BidMessage implements Serializable {
     private int bidderId;
     private BigDecimal bidAmount;
     private LocalDateTime timestamp;
-
+    // contructor rỗng , dùng khi tần tạo object trước rồi set dữ liệu sau
     public BidMessage() {}
 
     // Constructor dùng trong AuctionRoom.applyNewWinner()
