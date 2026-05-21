@@ -120,7 +120,19 @@ Online-Auction-System/
 ```
 
 ---
+## 🛠️ Tech Stack
 
+| Layer | Technology |
+| :--- | :--- |
+| Language | Java 21 / Java 17 |
+| UI | JavaFX + FXML |
+| Communication | Socket + JSON |
+| Database | MySQL |
+| Build Tool | Maven |
+| Testing | JUnit 5 |
+| CI/CD | GitHub Actions |
+
+---
 ## 🏗️ 3. Kiến trúc hệ thống
 
 ```
