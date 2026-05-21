@@ -158,6 +158,14 @@ Online-Auction-System/
 5. `processAutoBids()` → bot tự trả giá đệ quy nếu có config
 6. `ClientHandler.broadcast("UPDATE_PRICE", ...)` → tất cả client cập nhật realtime
 
+## 🔄 Realtime Communication
+
+Hệ thống sử dụng Observer Pattern qua Socket:
+
+- Client subscribe các sự kiện realtime
+- Server broadcast UPDATE_PRICE cho mọi listener
+- JavaFX UI cập nhật ngay khi nhận event
+- Không cần polling liên tục
 ---
 
 ## 🎨 4. Design Patterns áp dụng
