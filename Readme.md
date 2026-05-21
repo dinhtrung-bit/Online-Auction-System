@@ -7,8 +7,6 @@ Dự án Hệ thống Đấu giá Trực tuyến được phát triển theo mô
 ![JavaFX](https://img.shields.io/badge/JavaFX-17-blue)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)
 ![Maven](https://img.shields.io/badge/Maven-3.8-red)
-
-## 👥 1. Phân công công việc
 ## ✨ Key Highlights
 
 - Realtime bidding using Socket + JSON
@@ -18,6 +16,8 @@ Dự án Hệ thống Đấu giá Trực tuyến được phát triển theo mô
 - JavaFX realtime visualization
 - Optimistic locking for concurrent bid safety
 
+---
+## 👥 1. Phân công công việc
 ---
 
 | Thành viên | Vai trò | Trách nhiệm chính |
