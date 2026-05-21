@@ -10,6 +10,6 @@ public class Electronics extends Item {
 
     @Override
     public String getCategoryInfo() {
-        return "ELECTRONIC";
+        return "ELECTRONICS";
     }
 }
