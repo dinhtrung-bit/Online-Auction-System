@@ -43,7 +43,7 @@ public class ItemFactoryTest {
         Item item = ItemFactory.createItem("ELECTRONICS", 2, "Laptop", new BigDecimal("20000"), "desc");
         assertNotNull(item);
         assertInstanceOf(Electronics.class, item);
-        assertEquals("ELECTRONIC", item.getCategoryInfo()); // class trả về "ELECTRONIC"
+        assertEquals("ELECTRONICS", item.getCategoryInfo()); // class trả về "ELECTRONIC"
     }
 
     @Test @DisplayName("[EP] Category = VEHICLE → trả về đối tượng Vehicle")
