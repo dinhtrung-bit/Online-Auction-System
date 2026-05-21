@@ -24,14 +24,14 @@
             </HBox>
 
             <VBox spacing="10">
-                <Label text="Đấu giá trực tuyến\nnhanh, rõ ràng, an toàn" styleClass="auth-hero-title"/>
-                <Label text="Quản lý phiên đấu giá, ví điện tử, sản phẩm và người dùng trên cùng một hệ thống JavaFX." styleClass="auth-hero-desc" wrapText="true"/>
+                <Label text="Đấu giá trực tuyến" styleClass="auth-hero-title"/>
+                <Label text="Quản lý phiên đấu giá, ví điện tử, sản phẩm và người dùng trên cùng một hệ thống." styleClass="auth-hero-desc" wrapText="true"/>
             </VBox>
 
             <VBox spacing="12">
                 <Label text="✓ Đấu giá thời gian thực" styleClass="auth-feature"/>
                 <Label text="✓ Tách quyền Admin / Seller / Bidder" styleClass="auth-feature"/>
-                <Label text="✓ Giao diện FXML dễ bảo trì" styleClass="auth-feature"/>
+                <Label text="✓ Giao dịch nhanh,gọn,tiện lợi." styleClass="auth-feature"/>
             </VBox>
         </VBox>
 
