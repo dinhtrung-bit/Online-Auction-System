@@ -24,7 +24,7 @@
             </HBox>
 
             <VBox spacing="10">
-                <Label text="Tạo tài khoản\ntrong vài giây" styleClass="auth-hero-title"/>
+                <Label text="Tạo tài khoản" styleClass="auth-hero-title"/>
                 <Label text="Người bán có thể đăng sản phẩm và tạo phiên đấu giá. Người mua có thể nạp ví và đặt giá theo thời gian thực." styleClass="auth-hero-desc" wrapText="true"/>
             </VBox>
 
