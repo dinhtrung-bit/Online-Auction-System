@@ -80,43 +80,48 @@ public final class RequestResponse {
 
     /** Gửi request và đăng ký listener. */
     public void send() {
-        if (action == null) throw new IllegalStateException("action chưa được set");
+        String successAction = action + "_SUCCESS";
+        String failedAction  = action + "_FAILED";
 
         final AtomicBoolean handled = new AtomicBoolean(false);
         final Timer timer = new Timer(true);
 
-        // Timeout
+        final Consumer<String>[] successRef = new Consumer[1];
+        final Consumer<String>[] failedRef = new Consumer[1];
+
+        Runnable cleanup = () -> {
+            if (successRef[0] != null) ClientMain.unregisterListener(successAction, successRef[0]);
+            if (failedRef[0]  != null) ClientMain.unregisterListener(failedAction,  failedRef[0]);
+        };
+
+        successRef[0] = payloadIn -> {
+            if (!handled.compareAndSet(false, true)) return;
+            timer.cancel();
+            cleanup.run();
+            Platform.runLater(() -> onSuccess.accept(payloadIn));
+        };
+
+        failedRef[0] = payloadIn -> {
+            if (!handled.compareAndSet(false, true)) return;
+            timer.cancel();
+            cleanup.run();
+            Platform.runLater(() -> onFailed.accept(payloadIn));
+        };
+
         timer.schedule(new TimerTask() {
             @Override public void run() {
                 if (handled.compareAndSet(false, true)) {
-                    cleanup();
+                    cleanup.run();
                     Platform.runLater(onTimeout);
                 }
             }
         }, timeoutMs);
 
-        // SUCCESS
-        ClientMain.registerListener(successAction, payloadIn -> {
-            if (!handled.compareAndSet(false, true)) return;
-            timer.cancel();
-            cleanup();
-            Platform.runLater(() -> onSuccess.accept(payloadIn));
-        });
+        ClientMain.registerListener(successAction, successRef[0]);
+        ClientMain.registerListener(failedAction, failedRef[0]);
 
-        // FAILED
-        ClientMain.registerListener(failedAction, payloadIn -> {
-            if (!handled.compareAndSet(false, true)) return;
-            timer.cancel();
-            cleanup();
-            Platform.runLater(() -> onFailed.accept(payloadIn));
-        });
-
-        // Send
         ServerGateway.sendAsync(action, payload);
     }
 
-    private void cleanup() {
-        ClientMain.unregisterListener(successAction);
-        ClientMain.unregisterListener(failedAction);
-    }
+
 }

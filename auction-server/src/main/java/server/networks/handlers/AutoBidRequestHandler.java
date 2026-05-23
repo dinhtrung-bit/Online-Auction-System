@@ -1,6 +1,9 @@
 package server.networks.handlers;
 
+import com.google.gson.Gson;
+
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import server.models.users.Bidder;
@@ -17,6 +20,7 @@ import server.services.AuctionService;
 public class AutoBidRequestHandler {
 
     private static final BigDecimal DEFAULT_STEP = new BigDecimal("500");
+    private static final Gson GSON = new Gson();
 
     private final AuctionService auctionService;
 
@@ -33,8 +37,14 @@ public class AutoBidRequestHandler {
         try {
             AutoBidPayload p = parseSetAutoBidPayload(request);
             auctionService.registerAutoBid(p.auctionId(), bidder, p.maxBid(), p.step());
-            return new MessageDTO("SET_AUTO_BID_SUCCESS", "Đặt auto bid thành công!");
 
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("auctionId", p.auctionId());
+            response.put("userId", bidder.getUserId());
+            response.put("username", bidder.getUsername());
+            response.put("message", "Đặt auto bid thành công!");
+
+            return new MessageDTO("SET_AUTO_BID_SUCCESS", GSON.toJson(response));
         } catch (IllegalArgumentException e) {
             return new MessageDTO("SET_AUTO_BID_FAILED", e.getMessage());
         } catch (Exception e) {
@@ -49,7 +59,14 @@ public class AutoBidRequestHandler {
         try {
             int auctionId = parseAuctionId(request);
             auctionService.cancelAutoBid(auctionId, loggedInUser.getUserId());
-            return new MessageDTO("CANCEL_AUTO_BID_SUCCESS", "Hủy auto bid thành công!");
+
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("auctionId", auctionId);
+            response.put("userId", loggedInUser.getUserId());
+            response.put("username", loggedInUser.getUsername());
+            response.put("message", "Hủy auto bid thành công!");
+
+            return new MessageDTO("CANCEL_AUTO_BID_SUCCESS", GSON.toJson(response));
 
         } catch (IllegalArgumentException e) {
             return new MessageDTO("CANCEL_AUTO_BID_FAILED", e.getMessage());

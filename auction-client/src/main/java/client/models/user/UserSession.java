@@ -15,6 +15,7 @@ public class UserSession {
 
     private static UserSession instance;
 
+    private int userId = -1;
     private String username = "";
     private String role     = "";
     private double balance  = 0.0;
@@ -30,13 +31,19 @@ public class UserSession {
 
     /** Gọi sau khi đăng nhập thành công. */
     public void login(String username, String role) {
+        login(-1, username, role, 0.0);
+    }
+
+    public void login(int userId, String username, String role, double balance) {
+        this.userId   = userId;
         this.username = username != null ? username : "";
         this.role     = role     != null ? role     : "";
-        this.balance  = 0.0;
+        this.balance  = balance;
     }
 
     /** Gọi khi đăng xuất — reset toàn bộ về trạng thái ban đầu. */
     public void logout() {
+        this.userId   = -1;
         this.username = "";
         this.role     = "";
         this.balance  = 0.0;
@@ -44,9 +51,12 @@ public class UserSession {
 
     // ── Getters ────────────────────────────────────────────────────
 
+
+    public int getUserId()      { return userId; }
     public String getUsername() { return username; }
     public String getRole()     { return role; }
     public double getBalance()  { return balance; }
+
 
     // ── Setters (chỉ cho balance vì được server cập nhật real-time) ─
 

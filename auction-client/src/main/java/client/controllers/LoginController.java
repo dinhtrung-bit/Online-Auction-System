@@ -117,7 +117,34 @@ public class LoginController {
                 .request("LOGIN", new com.google.gson.Gson().toJson(loginData))
                 .onSuccess(payload -> {
                     loginBtn.setDisable(false);
-                    UserSession.getInstance().login(username, selectedRole);
+
+                    int userId = -1;
+                    double balance = 0.0;
+
+                    try {
+                        java.lang.reflect.Type type =
+                                new com.google.gson.reflect.TypeToken<Map<String, Object>>() {}.getType();
+
+                        Map<String, Object> userData = new com.google.gson.Gson().fromJson(payload, type);
+
+                        if (userData != null) {
+                            Object idObj = userData.getOrDefault("userId", userData.get("id"));
+                            if (idObj instanceof Number n) {
+                                userId = n.intValue();
+                            } else if (idObj != null) {
+                                userId = (int) Double.parseDouble(String.valueOf(idObj));
+                            }
+
+                            Object balanceObj = userData.getOrDefault("accountBalance", userData.get("balance"));
+                            if (balanceObj instanceof Number n) {
+                                balance = n.doubleValue();
+                            } else if (balanceObj != null) {
+                                balance = Double.parseDouble(String.valueOf(balanceObj));
+                            }
+                        }
+                    } catch (Exception ignored) {}
+
+                    UserSession.getInstance().login(userId, username, selectedRole, balance);
                     switchScene(loginBtn);
                 })
                 .onFailed(payload -> {

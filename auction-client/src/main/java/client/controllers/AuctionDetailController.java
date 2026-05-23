@@ -118,6 +118,8 @@ public class AuctionDetailController implements Initializable {
     private int    myBidCountInRoom  = 0;
     private double myBestBid         = 0;
     private boolean isAutoBidActive  = false;
+    private boolean pendingAutoBidRequest = false;
+    private boolean pendingCancelAutoBidRequest = false;
     private boolean roomCanBid       = false;
     private boolean finishOverlayShown = false;
 
@@ -136,9 +138,8 @@ public class AuctionDetailController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Dọn sạch listener cũ trước khi đăng ký mới
-        // (tránh tích lũy listener khi controller được khởi tạo lại)
-        ServerGateway.off(LISTENER_ACTIONS.toArray(String[]::new));
+        // Không gọi ServerGateway.off(...) ở đây.
+        // Nếu mở nhiều client/cửa sổ trong IntelliJ, controller mới có thể xóa listener của controller khác.
 
         myUsername = UserSession.getInstance().getUsername();
         priceSeries = new XYChart.Series<>();
@@ -281,7 +282,8 @@ public class AuctionDetailController implements Initializable {
         });
 
         ServerGateway.onString("AUTO_BID_EXCEEDED", payload -> {
-            if (!payload.equals(currentRoomId)) return;
+            if (!isAutoBidExceededForMe(payload)) return;
+
             deactivateAutoBidUI();
             Dialogs.info("AutoBid", "AutoBid đã đạt giới hạn tối đa và tự dừng.");
         });
@@ -765,23 +767,44 @@ public class AuctionDetailController implements Initializable {
             Dialogs.warn("AutoBid", "Chỉ có thể bật AutoBid khi phiên đang chạy.");
             return;
         }
+
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("../views/autobid-dialog.fxml"));
+            java.net.URL fxmlUrl = getClass().getResource("/client/views/autobid-dialog.fxml");
+            if (fxmlUrl == null) {
+                Dialogs.error("Lỗi", "Không tìm thấy file /client/views/autobid-dialog.fxml");
+                return;
+            }
+
+            FXMLLoader loader = new FXMLLoader(fxmlUrl);
             Parent root = loader.load();
+
             AutoBidDialogController ctrl = loader.getController();
             ctrl.setup(currentRoomId, currentPriceVal, (mode, cfg) -> {
                 Map<String, Object> payload = new LinkedHashMap<>();
                 payload.put("auctionId", (long) SafeParser.parseDouble(currentRoomId, 0));
                 payload.put("maxBid",    (long) cfg.maxBid);
                 payload.put("step",      (long) cfg.increment);
+                payload.put("mode",      cfg.mode);
+
+                pendingAutoBidRequest = true;
 
                 RequestResponse.exchange()
                         .request("SET_AUTO_BID", new com.google.gson.Gson().toJson(payload))
-                        .onSuccess(p -> { isAutoBidActive = true; activateAutoBidUI(cfg); })
-                        .onFailed(p -> Dialogs.warn("Kích hoạt AutoBid thất bại",
-                                "Server báo: " + safeMessage(p, "Không bật được AutoBid.")))
+                        .onSuccess(p -> {
+                            if (!isAutoBidSuccessForMe(p)) return;
+
+                            pendingAutoBidRequest = false;
+                            isAutoBidActive = true;
+                            activateAutoBidUI(cfg);
+                        })
+                        .onFailed(p -> {
+                            pendingAutoBidRequest = false;
+                            Dialogs.warn("Kích hoạt AutoBid thất bại",
+                                    "Server báo: " + safeMessage(p, "Không bật được AutoBid."));
+                        })
                         .send();
             });
+
             Stage dialog = new Stage();
             dialog.setTitle("Cài đặt AutoBid");
             dialog.initModality(Modality.APPLICATION_MODAL);
@@ -789,6 +812,7 @@ public class AuctionDetailController implements Initializable {
             dialog.setScene(new Scene(root, 460, 640));
             dialog.setResizable(false);
             dialog.show();
+
         } catch (Exception e) {
             e.printStackTrace();
             Dialogs.error("Lỗi", "Không mở được AutoBid dialog: " + e.getMessage());
@@ -816,11 +840,24 @@ public class AuctionDetailController implements Initializable {
 
     @FXML
     void handleCancelAutoBid() {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("auctionId", (long) SafeParser.parseDouble(currentRoomId, 0));
+
+        pendingCancelAutoBidRequest = true;
+
         RequestResponse.exchange()
-                .request("CANCEL_AUTO_BID", currentRoomId)
-                .onSuccess(p -> deactivateAutoBidUI())
-                .onFailed(p -> Dialogs.warn("Hủy AutoBid thất bại",
-                        "Server báo: " + safeMessage(p, "Không hủy được AutoBid.")))
+                .request("CANCEL_AUTO_BID", new com.google.gson.Gson().toJson(payload))
+                .onSuccess(p -> {
+                    if (!isAutoBidCancelForMe(p)) return;
+
+                    pendingCancelAutoBidRequest = false;
+                    deactivateAutoBidUI();
+                })
+                .onFailed(p -> {
+                    pendingCancelAutoBidRequest = false;
+                    Dialogs.warn("Hủy AutoBid thất bại",
+                            "Server báo: " + safeMessage(p, "Không hủy được AutoBid."));
+                })
                 .send();
     }
 
@@ -832,6 +869,72 @@ public class AuctionDetailController implements Initializable {
             btnOpenAutoBid.getStyleClass().remove("autobid-button-active");
             if (!btnOpenAutoBid.getStyleClass().contains("autobid-button"))
                 btnOpenAutoBid.getStyleClass().add("autobid-button");
+        }
+    }
+
+    private boolean isAutoBidSuccessForMe(String payload) {
+        // Nếu server đã trả JSON có auctionId + username/userId thì kiểm tra chính xác.
+        if (isAutoBidJsonForMe(payload)) return true;
+
+        // Nếu server vẫn trả legacy text: "Đặt auto bid thành công!",
+        // chỉ controller vừa gửi request mới được nhận.
+        return pendingAutoBidRequest;
+    }
+
+    private boolean isAutoBidCancelForMe(String payload) {
+        if (isAutoBidJsonForMe(payload)) return true;
+
+        // Legacy cancel success chỉ controller vừa gửi hủy mới được nhận.
+        return pendingCancelAutoBidRequest;
+    }
+
+    private boolean isAutoBidExceededForMe(String payload) {
+        // Nếu server đã trả JSON có user/phòng thì lọc chính xác.
+        if (isAutoBidJsonForMe(payload)) return true;
+
+        // Nếu server vẫn gửi legacy chỉ có roomId, ví dụ "24",
+        // thì chỉ client đang bật AutoBid mới hiện popup.
+        return isAutoBidActive && isSameRoomPayload(payload);
+    }
+
+    private boolean isAutoBidJsonForMe(String payload) {
+        try {
+            if (payload == null || payload.isBlank()) return false;
+
+            String trimmed = payload.trim();
+            if (!trimmed.startsWith("{")) return false;
+
+            java.lang.reflect.Type type =
+                    new com.google.gson.reflect.TypeToken<Map<String, Object>>() {}.getType();
+
+            Map<String, Object> data = new com.google.gson.Gson().fromJson(trimmed, type);
+            if (data == null) return false;
+
+            Object auctionObj = data.containsKey("auctionId")
+                    ? data.get("auctionId")
+                    : data.get("roomId");
+
+            if (auctionObj == null) return false;
+
+            int responseAuctionId;
+            if (auctionObj instanceof Number n) {
+                responseAuctionId = n.intValue();
+            } else {
+                responseAuctionId = (int) Double.parseDouble(String.valueOf(auctionObj));
+            }
+
+            int currentAuctionId = (int) SafeParser.parseDouble(currentRoomId, -1);
+            if (responseAuctionId != currentAuctionId) return false;
+
+            String responseUsername = String.valueOf(data.getOrDefault("username", ""));
+            String currentUsername = UserSession.getInstance().getUsername();
+
+            return !responseUsername.isBlank()
+                    && responseUsername.equalsIgnoreCase(currentUsername);
+
+        } catch (Exception e) {
+            System.err.println("[AutoBid] Bỏ qua response không thuộc client hiện tại: " + payload);
+            return false;
         }
     }
 

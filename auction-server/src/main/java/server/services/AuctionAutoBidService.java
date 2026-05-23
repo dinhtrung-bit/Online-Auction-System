@@ -138,9 +138,18 @@ public class AuctionAutoBidService {
             } catch (Exception ex) {
                 System.err.println(">>> [AutoBid] Khong xoa duoc config sau EXCEEDED: " + ex.getMessage());
             }
+            java.util.Map<String, Object> payload = new java.util.LinkedHashMap<>();
+            payload.put("auctionId", room.getId());
+            payload.put("userId", autoBidder.getUserId());
+            payload.put("username", autoBidder.getUsername());
+            payload.put("message", "AutoBid đã đạt giới hạn tối đa và tự dừng.");
+
             notificationService.sendToUserInRoom(
-                    room.getId(), autoBidder.getUserId(),
-                    "AUTO_BID_EXCEEDED", String.valueOf(room.getId()));
+                    room.getId(),
+                    autoBidder.getUserId(),
+                    "AUTO_BID_EXCEEDED",
+                    new com.google.gson.Gson().toJson(payload)
+            );
             return false;
         }
 
