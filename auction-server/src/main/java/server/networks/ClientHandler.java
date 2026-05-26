@@ -52,7 +52,7 @@ public class ClientHandler implements Runnable {
     private final Socket clientSocket;
     private final Gson gson = new Gson();
     private final UserHolder userHolder = new UserHolder();
-    private final Map<String, RequestProcessor> router = new HashMap<>();
+    private final Map<String, RequestProcessor> router = new HashMap<>();  // command pattern
 
     private final UserRequestHandler userHandler;
     private final ItemRequestHandler itemHandler;

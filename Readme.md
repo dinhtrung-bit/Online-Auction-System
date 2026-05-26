@@ -1,209 +1,116 @@
-# 🏷️ Hệ thống Đấu giá Trực tuyến — AuctionVN
+# 🏷️ Hệ thống Đấu giá Trực tuyến — AuctionVN (Online Auction System)
 
+> Bài tập lớn môn **Lập trình Nâng cao** — Năm học 2025–2026
+> Đề tài: Xây dựng hệ thống đấu giá trực tuyến hoàn chỉnh theo mô hình **Client–Server**, áp dụng **OOP**, **Design Patterns**, **Concurrency** và **JavaFX MVC**.
 
-
-Dự án Hệ thống Đấu giá Trực tuyến được phát triển theo mô hình **Client-Server**, áp dụng các nguyên lý **OOP**, **Design Patterns** và kiến trúc **MVC**. Giao tiếp qua **Socket + JSON (Gson)**. Giao diện sử dụng **JavaFX + FXML**.
 ![Java](https://img.shields.io/badge/Java-21-orange)
 ![JavaFX](https://img.shields.io/badge/JavaFX-17-blue)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)
-![Maven](https://img.shields.io/badge/Maven-3.8-red)
-## ✨ Key Highlights
-
-- Realtime bidding using Socket + JSON
-- Java 21 Virtual Threads for scalable concurrency
-- Auto-bidding with recursive processing
-- Anti-sniping mechanism for fair bidding
-- JavaFX realtime visualization
-- Optimistic locking for concurrent bid safety
-
----
-## 👥 1. Phân công công việc
----
-
-| Thành viên | Vai trò | Trách nhiệm chính |
-| :--- | :--- | :--- |
-| **Thành viên 1 (Leader)** | Backend Core | Thiết kế kiến trúc OOP, Design Patterns, thuật toán Auto-bid & Anti-sniping |
-| **Thành viên 2** | Backend Business | CRUD sản phẩm, vòng đời phiên đấu giá (`OPEN→RUNNING→FINISHED→PAID/CANCELED`), Unit Test |
-| **Thành viên 3** | Frontend JavaFX | Màn hình Login, AuctionList, AuctionDetail (realtime), SellerDashboard, biểu đồ giá LineChart |
-| **Thành viên 4** | Server/DB/DevOps | DB Schema, Socket Server, Concurrency, CI/CD GitHub Actions |
+![Maven](https://img.shields.io/badge/Maven-3.8+-red)
+![HikariCP](https://img.shields.io/badge/HikariCP-5.1.0-success)
+![License](https://img.shields.io/badge/License-Educational-lightgrey)
 
 ---
 
-## 📂 2. Cấu trúc thư mục thực tế
+## 📌 1. Mô tả bài toán & Phạm vi hệ thống
 
-```text
-Online-Auction-System/
-├── .github/
-│   └── workflows/
-│       ├── ci.yml                  # GitHub Actions: build + test server, compile client
-│       └── qodana_code_quality.yml # Qodana static analysis
-├── auction-server/                 # Module Server (Java 21, Maven)
-│   ├── pom.xml
-│   └── src/
-│       ├── server/
-│       │   ├── application/
-│       │   │   └── MainServer.java         # Entry point — Virtual Threads + scheduler
-│       │   ├── networks/
-│       │   │   ├── ClientHandler.java      # Xử lý từng client, Command Pattern
-│       │   │   └── dto/
-│       │   │       └── MessageDTO.java     # DTO gửi/nhận qua Socket (JSON)
-│       │   ├── services/
-│       │   │   ├── AuctionService.java     # Singleton — orchestrate bid, auto-bid, status
-│       │   │   ├── UserService.java
-│       │   │   └── PasswordUtil.java       # BCrypt hash/verify
-│       │   ├── dao/
-│       │   │   ├── core/
-│       │   │   │   ├── DBConnection.java   # Singleton HikariCP connection pool
-│       │   │   │   └── GenericDAO.java
-│       │   │   ├── interfaces/
-│       │   │   │   ├── AuctionRoomDAO.java
-│       │   │   │   ├── AutoBidDAO.java
-│       │   │   │   ├── BidMessageDAO.java
-│       │   │   │   ├── ItemDAO.java
-│       │   │   │   └── UserDAO.java
-│       │   │   └── impl/
-│       │   │       ├── AuctionRoomDAOImpl.java   # Optimistic locking
-│       │   │       ├── AutoBidDAOImpl.java
-│       │   │       ├── BidMessageDAOImpl.java
-│       │   │       ├── ItemDAOImpl.java
-│       │   │       └── UserDAOImpl.java
-│       │   ├── models/
-│       │   │   ├── auction/
-│       │   │   │   ├── AuctionRoom.java    # placeBid, placeAutoBid, Anti-sniping
-│       │   │   │   ├── AuctionStatus.java  # Enum: OPEN, RUNNING, FINISHED, PAID, CANCELED
-│       │   │   │   ├── AutoBidConfig.java
-│       │   │   │   └── BidMessage.java
-│       │   │   ├── items/
-│       │   │   │   ├── Item.java (abstract), Art.java, Electronics.java, Vehicle.java
-│       │   │   │   ├── ItemCategory.java, ItemFactory.java
-│       │   │   └── users/
-│       │   │       ├── User.java (abstract), Admin.java, Bidder.java, Seller.java
-│       │   │       ├── UserRole.java, UserFactory.java, CreateAdmin.java
-│       │   ├── exceptions/
-│       │   │   ├── DAOException.java, DatabaseConnectionException.java
-│       │   │   ├── DuplicateDataException.java, InvalidBidException.java
-│       │   │   └── NotFoundException.java
-│       │   └── utils/
-│       │       └── Validation.java         # Validate email, password, bid, state transition
-│       └── test/java/
-│           ├── AuctionRoomTest.java        # 10 tests: bid, anti-snipe, auto-bid, tie-breaker
-│           ├── AuctionServiceTest.java     # autoUpdateStatuses
-│           ├── UserTest.java               # updateBalance
-│           └── ValidationTest.java        # validate email, bid, payment, transition
+**AuctionVN** là một hệ thống đấu giá trực tuyến cho phép nhiều người dùng cùng tham gia đặt giá cạnh tranh trên cùng một sản phẩm trong một khoảng thời gian xác định. Hệ thống được triển khai theo mô hình **Client–Server**, giao tiếp qua **TCP Socket** với định dạng **JSON**.
+
+**Phạm vi hệ thống** bao gồm 3 vai trò người dùng:
+- 👤 **Bidder** — Người tham gia đấu giá, có ví điện tử, có thể đặt giá thủ công hoặc bật **Auto-Bid**.
+- 🏪 **Seller** — Người bán, đăng sản phẩm và mở phiên đấu giá.
+- 🛡️ **Admin** — Quản trị viên, duyệt sản phẩm, quản lý người dùng, điều chỉnh số dư ví.
+
+---
+
+## 🧰 2. Công nghệ sử dụng
+
+| Thành phần | Công nghệ |
+|---|---|
+| Ngôn ngữ | **Java 21** (Virtual Threads) |
+| Giao diện | **JavaFX 17** (FXML + MVC) |
+| CSDL | **MySQL 8.0** |
+| Connection Pool | **HikariCP 5.1.0** |
+| JSON | **Gson 2.10.1** |
+| Mã hoá mật khẩu | **BCrypt 0.10.2** |
+| Unit Test | **JUnit 5 (5.10.2)** |
+| Build tool | **Maven (multi-module)** |
+| Giao tiếp | **TCP Socket** |
+| Logging | SLF4J Simple |
+
+### 📋 Yêu cầu môi trường
+- **JDK 21+** (bắt buộc cho server, dùng Virtual Threads)
+- **JavaFX SDK 17** (đã được Maven Shade đóng gói sẵn vào file `.jar` client)
+- **MySQL 8.0+** (có thể dùng cloud — dự án mặc định dùng Aiven Cloud)
+- **Maven 3.8+** (nếu build lại từ source)
+
+---
+
+## 🗂️ 3. Cấu trúc thư mục
+
+```
+Online-Auction-System-main/
+├── pom.xml                            # Maven parent (multi-module)
+├── Readme.md                          # File README này
+├── out/                               # ⭐ Chứa các file .jar đã build sẵn
+│   ├── auction-server-1.0-SNAPSHOT.jar
+│   └── auction-client-1.0-SNAPSHOT.jar
 │
-└── auction-client/                 # Module Client (Java 17, Maven + JavaFX 17)
+├── auction-server/                    # 📦 Module Server
+│   ├── pom.xml
+│   └── src/main/java/server/
+│       ├── application/MainServer.java      # Entry point — mở ServerSocket :8080
+│       ├── dao/                              # Tầng DAO (Generic + Impl)
+│       │   ├── core/ (DBConnection, GenericDAO)
+│       │   ├── interfaces/ (UserDAO, ItemDAO, AuctionRoomDAO...)
+│       │   └── impl/       (UserDAOImpl, ItemDAOImpl...)
+│       ├── models/                           # Entity + Factory + Enum
+│       │   ├── users/  (User, Admin, Seller, Bidder, UserFactory)
+│       │   ├── items/  (Item, Art, Electronics, Vehicle, ItemFactory)
+│       │   └── auction/(AuctionRoom, BidMessage, AutoBidConfig…)
+│       ├── services/                         # Tầng nghiệp vụ
+│       │   ├── AuctionService.java          # Facade + Singleton
+│       │   ├── AuctionBidService.java       # Logic đặt giá
+│       │   ├── AuctionAutoBidService.java   # Auto-bid đệ quy
+│       │   ├── AuctionStatusService.java    # Scheduler đổi trạng thái
+│       │   ├── AuctionSettlementService.java# Thanh toán ACID
+│       │   ├── AuctionNotificationService.java
+│       │   ├── WalletService.java
+│       │   └── UserService.java, ItemService.java
+│       ├── networks/                         # Tầng mạng
+│       │   ├── ClientHandler.java           # Mỗi client = 1 virtual thread
+│       │   ├── AuctionBroadcastManager.java # Observer Pattern
+│       │   └── handlers/ (Auction/User/Item/AutoBid RequestHandler)
+│       └── exceptions/                       # Custom exceptions
+│   ├── src/main/resources/config.properties # ⚙️ Cấu hình DB
+│   └── src/test/java/                        # JUnit 5 tests
+│
+└── auction-client/                    # 📦 Module Client (JavaFX)
     ├── pom.xml
-    └── src/client/
-        ├── ClientApp.java          # JavaFX Application entry point
-        ├── Launcher.java           # Wrapper tránh lỗi classpath JavaFX
-        ├── controllers/
-        │   ├── LoginController.java
-        │   ├── RegisterController.java
-        │   ├── AuctionListController.java
-        │   ├── AuctionDetailController.java  # Realtime + LineChart
-        │   ├── SellerDashboardController.java
-        │   ├── AddProductController.java
-        │   └── AdminDashboardController.java
-        ├── models/
-        │   ├── auction/AuctionViewModel.java
-        │   ├── item/  Item.java, Art.java, Electronics.java
-        │   └── user/  User.java, Seller.java, UserSession.java, UserViewModel.java
-        ├── networks/
-        │   ├── ClientMain.java     # Singleton Socket — Observer listener (action→callback)
-        │   └── MessageDTO.java
-        └── views/
-            ├── login.fxml, register.fxml
-            ├── auction-list.fxml, auction-detail.fxml
-            ├── seller-dashboard.fxml, add-product-dialog.fxml
-            ├── admin-dashboard.fxml
-            └── app.css
+    └── src/main/java/client/
+        ├── ClientApp.java, Launcher.java
+        ├── controllers/  (Login, Register, AuctionList, AuctionDetail,
+        │                   SellerDashboard, AdminDashboard, AutoBidDialog…)
+        ├── models/       (User, Item, AuctionViewModel, UserSession)
+        ├── networks/     (ClientMain — kết nối Socket :8080)
+        ├── services/     (ServerGateway, RequestResponse)
+        └── utils/        (Formatter, Dialogs, StyledComponents…)
+    └── src/main/resources/client/views/      # FXML views
 ```
 
 ---
-## 🛠️ Tech Stack
 
-| Layer | Technology |
-| :--- | :--- |
-| Language | Java 21 / Java 17 |
-| UI | JavaFX + FXML |
-| Communication | Socket + JSON |
-| Database | MySQL |
-| Build Tool | Maven |
-| Testing | JUnit 5 |
-| CI/CD | GitHub Actions |
+## 📦 4. Vị trí các file `.jar`
+
+> ⚠️ **GIỮ NGUYÊN VỊ TRÍ — KHÔNG DI CHUYỂN**
+
+| File | Đường dẫn | Vai trò |
+|---|---|---|
+| **Server** | `out/auction-server-1.0-SNAPSHOT.jar` | Fat-jar Server (Shade-plugin, đã gồm HikariCP + MySQL Connector + Gson + BCrypt) |
+| **Client** | `out/auction-client-1.0-SNAPSHOT.jar` | Fat-jar Client (Shade-plugin, đã gồm JavaFX Controls + FXML + Gson) |
 
 ---
-## 🏗️ 3. Kiến trúc hệ thống
-
-```
-[Client JavaFX]  ←── Socket + JSON ──→  [Server MainServer]
-     │                                          │
- Controllers                            ClientHandler
- (FXML + @FXML)                         (Command Pattern:
-     │                                   Map<action, processor>)
- ClientMain                                     │
- (Observer:                             AuctionService
-  action→callback)                      (Singleton)
-                                                │
-                                      DAO Layer (HikariCP)
-                                                │
-                                           MySQL DB
-```
-
-**Luồng Bid thủ công:**
-1. Client gửi `{"action":"BID","payload":"roomId:username:amount"}`
-2. `ClientHandler.handleBid()` → `AuctionService.handleBidRequest()`
-3. `synchronized(room)` → `room.placeBid()` (validate + Anti-sniping)
-4. Async: `roomDAO.update(room, oldPrice)` (Optimistic Lock) + `bidDAO.insert()`
-5. `processAutoBids()` → bot tự trả giá đệ quy nếu có config
-6. `ClientHandler.broadcast("UPDATE_PRICE", ...)` → tất cả client cập nhật realtime
-
-## 🔄 Realtime Communication
-
-Hệ thống sử dụng Observer Pattern qua Socket:
-
-- Client subscribe các sự kiện realtime
-- Server broadcast UPDATE_PRICE cho mọi listener
-- JavaFX UI cập nhật ngay khi nhận event
-- Không cần polling liên tục
----
-
-## 🎨 4. Design Patterns áp dụng
-
-| Pattern | Vị trí | Mô tả |
-| :--- | :--- | :--- |
-| **Singleton** | `AuctionService`, `DBConnection` | 1 instance duy nhất toàn server |
-| **Factory Method** | `ItemFactory`, `UserFactory` | Tạo đúng subclass theo category/role |
-| **Observer** | `ClientMain` + `ClientHandler.broadcast()` | Realtime update không polling |
-| **Command** | `Map<String, RequestProcessor>` trong `ClientHandler` | Mỗi action → 1 handler method |
-
----
-
-## ⚙️ 5. Tính năng nâng cao
-
-### Auto-Bidding
-User thiết lập `maxBid` + `increment`. Khi có bid mới, `AuctionService.processAutoBids()` tự động trả giá thay user, xử lý ALL-IN khi bước giá vượt trần, tie-breaker theo thứ tự đăng ký.
-
-### Anti-Sniping
-Bid trong 30 giây cuối → gia hạn thêm 60 giây tính từ thời điểm bid (đảm bảo luôn còn ≥60s). Tối đa 5 lần gia hạn.
-
-### Concurrent Bidding Safety
-- `synchronized(room)` + **Optimistic Locking** DB (`WHERE current_highest_price = ?`)
-- `ConcurrentHashMap<Long, AuctionRoom>` + `CopyOnWriteArrayList<ClientHandler>`
-- **Java 21 Virtual Threads** — mỗi client 1 thread cực nhẹ
-## 🚄 Performance Optimization
-
-- Virtual Threads giúp scale nhiều client nhẹ hơn thread truyền thống
-- HikariCP giảm chi phí tạo DB connection
-- ConcurrentHashMap tối ưu truy cập room realtime
-- Async DB update giảm block bid processing
-### Bid History Visualization
-`LineChart<String, Number>` cập nhật realtime mỗi `UPDATE_PRICE` nhận được — không cần refresh.
-
----
-
-## 🚀 6. Hướng dẫn chạy
-
+## 🚀 5. Hướng dẫn chạy hệ thống
 ### Yêu cầu
 - Máy tính đã cài đặt sẵn Java Runtime Environment (JRE) 21 trở lên.
 - Java 21 (server), Java 17 (client)
@@ -224,28 +131,73 @@ java -jar out/auction-client-1.0-SNAPSHOT.jar
 
 ---
 
-## 🧪 7. Unit Test
 
-```bash
-cd auction-server
-mvn test
-```
+## ✅ 6. Danh sách chức năng đã hoàn thành
 
-| File | Số test | Nội dung |
-| :--- | :--- | :--- |
-| `AuctionRoomTest` | 10 | Bid hợp lệ/không hợp lệ, Anti-sniping, Auto-bid war, Tie-breaker |
-| `AuctionServiceTest` | 1 | autoUpdateStatuses: OPEN→RUNNING, RUNNING→CANCELED |
-| `UserTest` | 3 | updateBalance nạp/trừ/không đủ số dư |
-| `ValidationTest` | 4 | Email, bid amount, payment ability, state transition |
+### 👥 Quản lý người dùng
+- [x] Đăng ký / Đăng nhập với mật khẩu mã hoá **BCrypt**
+- [x] Phân quyền 3 vai trò: **Admin / Seller / Bidder**
+- [x] Quản lý phiên đăng nhập (`UserSession`)
+- [x] Admin điều chỉnh số dư ví người dùng
+
+### 🛒 Quản lý sản phẩm & phiên đấu giá
+- [x] CRUD sản phẩm (Seller đăng sản phẩm)
+- [x] 3 loại sản phẩm: **Art / Electronics / Vehicle** (Factory Pattern)
+- [x] Admin duyệt / từ chối sản phẩm
+- [x] Vòng đời phiên: `OPEN → RUNNING → FINISHED → PAID / CANCELED`
+- [x] Scheduler tự động chuyển trạng thái phiên (mỗi 1 giây)
+
+### 💰 Đấu giá thời gian thực
+- [x] Đặt giá thủ công với validate số dư ví
+- [x] **Auto-Bidding**: Cấu hình giá tối đa + bước nhảy, server tự động đặt giá hộ (delay 2000ms)
+- [x] **Anti-sniping**: Gia hạn phiên thêm 60s nếu có bid trong 30s cuối (tối đa 5 lần)
+- [x] **Realtime Broadcast**: Mọi client trong phòng đều nhận cập nhật giá tức thời (Observer Pattern)
+- [x] **Realtime Price Curve**: Biểu đồ `LineChart` JavaFX vẽ đường giá theo thời gian
+- [x] Lịch sử bid hiển thị trong AuctionDetail
+
+### 💳 Thanh toán & Ví điện tử
+- [x] Transaction **ACID**: trừ ví người thắng + cộng ví người bán nguyên tử
+- [x] Rollback khi lỗi
+- [x] WalletService nạp / rút / xem số dư
+
+### 🛡️ Concurrency & An toàn dữ liệu
+- [x] **3 lớp bảo vệ**:
+    - L1 — `synchronized(room)` tại Service Layer (JVM-level)
+    - L2 — **Optimistic Locking** tại SQL (`WHERE version = ?`)
+    - L3 — `ConcurrentHashMap` cho cache phòng đấu giá
+- [x] **Virtual Threads** (Java 21) — mỗi client một thread, mở rộng hàng nghìn kết nối
+
+### 🎨 Design Patterns áp dụng
+- [x] **Singleton** — `AuctionService`, `DBConnection`
+- [x] **Factory Method** — `UserFactory`, `ItemFactory`
+- [x] **Observer** — `AuctionBroadcastManager`
+- [x] **Facade** — `AuctionService` che chắn 5 sub-service
+- [x] **DAO** — `GenericDAO<T>` + các DAO con
+
+### 🧪 Unit Test (JUnit 5)
+- [x] `AuctionRoomTest` — logic phòng đấu giá
+- [x] `ItemFactoryTest` — Factory Pattern
+- [x] `UserTest` — Entity người dùng
+- [x] `ValidationTest` — kiểm tra ràng buộc input
 
 ---
 
-## 🔧 8. CI/CD
+## 📑 7. Tài liệu & Demo
 
-GitHub Actions (`.github/workflows/ci.yml`) tự động trên mỗi push/PR vào `main`:
+- 📄 **Báo cáo PDF**: [BaoCao_BTL_DauGia_6Trang.pdf](https://www.genspark.ai/api/files/s/EPEFMJ6N)
+- 🎬 **Video Demo**: https://drive.google.com/drive/folders/19Z-iZPKaPooJiFqMM8asxWtwOLgjEX77?usp=sharing
 
-1. **build-server** — `mvn clean verify`: build + chạy JUnit, upload surefire report, đóng gói JAR
-2. **build-client** — `mvn clean compile`: kiểm tra client compile thành công
-3. **ci-success** — gate tổng hợp: chỉ green khi cả 2 job trên pass
+---
 
-**Qodana** (`qodana_code_quality.yml`) phân tích chất lượng code tĩnh mỗi PR, post comment kết quả.
+## 👥 8. Phân công công việc
+
+| STT | Thành viên | Phân công chính |
+|:--:|---|---|
+| 1 | Thành viên 1 | Model, Factory Pattern, Unit Test |
+| 2 | Thành viên 2 | Service Layer, Concurrency, ACID Transaction |
+| 3 | Thành viên 3 | Network, Observer, Auto-bid, Anti-sniping |
+| 4 | Thành viên 4 | DAO, HikariCP, Client JavaFX (MVC, FXML) |
+
+
+---
+

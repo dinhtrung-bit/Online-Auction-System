@@ -42,7 +42,7 @@ public final class Validation {
     /**
      * Kiểm tra chuyển trạng thái phòng đấu giá có hợp lệ không.
      * Được gọi trong AuctionService.processRoomStatusTick() để tập trung
-     * state machine logic thay vì hard-code điều kiện rải rác.
+     * state machine logic thay vì hard-code điều kiện rải rác.\
      *
      * Sơ đồ hợp lệ:
      *   OPEN → RUNNING | CANCELED
