@@ -184,8 +184,8 @@ java -jar out/auction-client-1.0-SNAPSHOT.jar
 
 ## 📑 7. Tài liệu & Demo
 
-- 📄 **Báo cáo PDF**: [BaoCao_BTL_DauGia_6Trang.pdf](https://www.genspark.ai/api/files/s/EPEFMJ6N)
-- 🎬 **Video Demo**: https://drive.google.com/drive/folders/19Z-iZPKaPooJiFqMM8asxWtwOLgjEX77?usp=sharing
+- 📄 **Báo cáo PDF**: [Bao_Cao_BTL]()
+- 🎬 **Video Demo**: [video demo](https://drive.google.com/drive/folders/19Z-iZPKaPooJiFqMM8asxWtwOLgjEX77?usp=sharing)
 
 ---
 
