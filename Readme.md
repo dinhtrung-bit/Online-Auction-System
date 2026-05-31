@@ -184,7 +184,7 @@ java -jar out/auction-client-1.0-SNAPSHOT.jar
 
 ## 📑 7. Tài liệu & Demo
 
-- 📄 **Báo cáo PDF**: [Bao_Cao_BTL]()
+- 📄 **Báo cáo PDF**: [Bao_Cao_BTL](https://drive.google.com/file/d/17lqNRvey9kXlIf-PhSQNkexJG7kqb80q/view?usp=drive_link)
 - 🎬 **Video Demo**: [Video_Demo](https://youtu.be/AAIfJ4IhYmM?si=ySFTm3btiSTW2ReB)
 
 ---
