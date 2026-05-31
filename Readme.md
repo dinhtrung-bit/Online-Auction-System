@@ -184,19 +184,19 @@ java -jar out/auction-client-1.0-SNAPSHOT.jar
 
 ## 📑 7. Tài liệu & Demo
 
-- 📄 **Báo cáo PDF**: [Bao_Cao_BTL](https://drive.google.com/file/d/17lqNRvey9kXlIf-PhSQNkexJG7kqb80q/view?usp=drive_link)
+- 📄 **Báo cáo PDF**: [Bao_Cao_BTL](https://drive.google.com/file/d/1GUMEkYx3WXHQrgP4o0aQ504HS5KXK0Mg/view?usp=drive_link)
 - 🎬 **Video Demo**: [Video_Demo](https://youtu.be/AAIfJ4IhYmM?si=ySFTm3btiSTW2ReB)
 
 ---
 
 ## 👥 8. Phân công công việc
 
-| STT | Thành viên | Phân công chính |
-|:--:|---|---|
-| 1 | Thành viên 1 | Model, Factory Pattern, Unit Test |
-| 2 | Thành viên 2 | Service Layer, Concurrency, ACID Transaction |
-| 3 | Thành viên 3 | Network, Observer, Auto-bid, Anti-sniping |
-| 4 | Thành viên 4 | DAO, HikariCP, Client JavaFX (MVC, FXML) |
+| STT | Thành viên        | Phân công chính                             |
+|:--:|-------------------|---------------------------------------------|
+| 1 | Nguyễn Mạnh Thắng | ModelClient,DAOLayer,exceptions,DATAbase    |
+| 2 | Nguyễn Đình Trung | Service Layer,UnitTest,Auto bid,Model server |
+| 3 | Trần Tiến Thành   | Network,Client Hander,exceptions,MainServer |
+| 4 | Phan Mạnh Toàn    | Client JavaFX (MVC, FXML),Anti-sniping      |
 
 
 ---
